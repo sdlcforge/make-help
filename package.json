@@ -4,7 +4,13 @@
   "description": "",
   "main": "dist/make-help.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "make build",
+    "test": "make test",
+    "preversion": "make qa",
+    "lint": "make lint",
+    "lint:fix": "make lint-fix",
+    "prepack": "make",
+    "qa": "make qa"
   },
   "keywords": [],
   "author": "Zane Rockenbaugh <zane@liquid-labs.com>",
@@ -14,5 +20,10 @@
   "bugs": {
     "url": "https://github.com/sdlcforge/make-help/issues"
   },
-  "homepage": "https://github.com/sdlcforge/make-help#readme"
+  "homepage": "https://github.com/sdlcforge/make-help#readme",
+  "dependencies": {
+    "@liquid-labs/sdlc-resource-babel-and-rollup": "^1.0.0-alpha.13",
+    "@liquid-labs/sdlc-resource-jest": "^1.0.0-alpha.10",
+    "@sdlcforge/format-and-lint": "^1.0.0-alpha.30"
+  }
 }
