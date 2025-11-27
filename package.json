@@ -20,10 +20,5 @@
   "bugs": {
     "url": "https://github.com/sdlcforge/make-help/issues"
   },
-  "homepage": "https://github.com/sdlcforge/make-help#readme",
-  "dependencies": {
-    "@liquid-labs/sdlc-resource-babel-and-rollup": "^1.0.0-alpha.13",
-    "@liquid-labs/sdlc-resource-jest": "^1.0.0-alpha.10",
-    "@sdlcforge/format-and-lint": "^1.0.0-alpha.30"
-  }
+  "homepage": "https://github.com/sdlcforge/make-help#readme"
 }
