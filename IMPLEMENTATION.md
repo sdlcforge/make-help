@@ -176,11 +176,13 @@ Test cases for helper functions.
 
 ### Phase 2 Acceptance Criteria
 
-- [ ] Parser correctly extracts all directive types
-- [ ] Target names extracted from various formats
-- [ ] Documentation associated with correct targets
-- [ ] All unit tests pass
-- [ ] Test coverage ≥ 95%
+- [x] Parser correctly extracts all directive types
+- [x] Target names extracted from various formats
+- [x] Documentation associated with correct targets
+- [x] All unit tests pass
+- [x] Test coverage ≥ 95% (achieved: 97.3%)
+
+**Status: COMPLETE** (2024-11-28)
 
 ---
 
@@ -239,12 +241,14 @@ Critical test cases from design section 6.4:
 
 ### Phase 3 Acceptance Criteria
 
-- [ ] All regex patterns compile correctly
-- [ ] First sentence extracted accurately
-- [ ] Edge cases (ellipsis, IPs) handled correctly
-- [ ] Markdown formatting stripped
-- [ ] All unit tests pass
-- [ ] Test coverage = 100%
+- [x] All regex patterns compile correctly
+- [x] First sentence extracted accurately
+- [x] Edge cases (ellipsis, IPs) handled correctly
+- [x] Markdown formatting stripped
+- [x] All unit tests pass
+- [x] Test coverage = 100% (achieved: 100.0%)
+
+**Status: COMPLETE** (2024-11-28)
 
 ---
 
@@ -768,16 +772,17 @@ Contents:
 - [x] Implement `internal/errors/errors.go`
 - [x] Create all `doc.go` files
 
-### Phase 2: Parser Service
-- [ ] Implement `internal/parser/scanner.go`
-- [ ] Implement `internal/parser/directive.go`
-- [ ] Write `internal/parser/scanner_test.go`
-- [ ] Write `internal/parser/directive_test.go`
+### Phase 2: Parser Service (COMPLETE)
+- [x] Implement `internal/parser/scanner.go`
+- [x] Implement `internal/parser/directive.go`
+- [x] Write `internal/parser/scanner_test.go`
+- [x] Write `internal/parser/directive_test.go`
+- [x] Write `internal/parser/types_test.go` (bonus)
 
-### Phase 3: Summary Extractor
-- [ ] Implement `internal/summary/extractor.go`
-- [ ] Implement `internal/summary/markdown.go`
-- [ ] Write `internal/summary/extractor_test.go`
+### Phase 3: Summary Extractor (COMPLETE)
+- [x] Implement `internal/summary/extractor.go`
+- [x] Write `internal/summary/extractor_test.go`
+- N/A `internal/summary/markdown.go` - not needed, functionality in extractor.go
 
 ### Phase 4: Model Builder
 - [ ] Implement `internal/model/builder.go`
