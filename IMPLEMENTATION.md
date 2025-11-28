@@ -372,12 +372,14 @@ Test cases:
 
 ### Phase 5 Acceptance Criteria
 
-- [ ] Alphabetical ordering works correctly
-- [ ] Discovery order preserved when flags set
-- [ ] Explicit category order applied correctly
-- [ ] Unknown category error with available categories listed
-- [ ] All unit tests pass
-- [ ] Test coverage ≥ 95%
+- [x] Alphabetical ordering works correctly
+- [x] Discovery order preserved when flags set
+- [x] Explicit category order applied correctly
+- [x] Unknown category error with available categories listed
+- [x] All unit tests pass
+- [x] Test coverage ≥ 95% (achieved: 100.0%)
+
+**Status: COMPLETE** (2024-11-28)
 
 ---
 
@@ -451,12 +453,14 @@ Test cases for color scheme creation.
 
 ### Phase 6 Acceptance Criteria
 
-- [ ] Help output matches expected format
-- [ ] Colors applied correctly when enabled
-- [ ] Colors omitted when disabled
-- [ ] All elements rendered (categories, targets, aliases, vars)
-- [ ] All unit tests pass
-- [ ] Test coverage ≥ 85%
+- [x] Help output matches expected format
+- [x] Colors applied correctly when enabled
+- [x] Colors omitted when disabled
+- [x] All elements rendered (categories, targets, aliases, vars)
+- [x] All unit tests pass
+- [x] Test coverage ≥ 85% (achieved: 100.0%)
+
+**Status: COMPLETE** (2024-11-28)
 
 ---
 
@@ -792,16 +796,19 @@ Contents:
 - [x] Write `internal/model/builder_test.go`
 - [x] Write `internal/model/validator_test.go`
 
-### Phase 5: Ordering Service
-- [ ] Implement `internal/ordering/service.go`
-- [ ] Implement `internal/ordering/strategy.go`
-- [ ] Write `internal/ordering/service_test.go`
+### Phase 5: Ordering Service (COMPLETE)
+- [x] Implement `internal/ordering/service.go`
+- [x] Implement `internal/ordering/strategy.go`
+- [x] Write `internal/ordering/service_test.go`
+- [x] Create `internal/ordering/doc.go`
 
-### Phase 6: Formatter Service
-- [ ] Implement `internal/format/color.go`
-- [ ] Implement `internal/format/renderer.go`
-- [ ] Write `internal/format/renderer_test.go`
-- [ ] Write `internal/format/color_test.go`
+### Phase 6: Formatter Service (COMPLETE)
+- [x] Implement `internal/format/color.go`
+- [x] Implement `internal/format/renderer.go`
+- [x] Write `internal/format/renderer_test.go`
+- [x] Write `internal/format/color_test.go`
+- [x] Write `internal/format/example_test.go` (bonus)
+- [x] Create `internal/format/doc.go`
 
 ### Phase 7: Discovery Service & CLI Layer
 - [ ] Implement `internal/discovery/executor.go`
