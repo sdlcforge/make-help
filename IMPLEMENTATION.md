@@ -308,13 +308,15 @@ Test cases for validation logic.
 
 ### Phase 4 Acceptance Criteria
 
-- [ ] HelpModel correctly built from parsed files
-- [ ] Categories properly grouped
-- [ ] Discovery order tracked correctly
-- [ ] Mixed categorization detected and error thrown
-- [ ] Default category applied when specified
-- [ ] All unit tests pass
-- [ ] Test coverage ≥ 90%
+- [x] HelpModel correctly built from parsed files
+- [x] Categories properly grouped
+- [x] Discovery order tracked correctly
+- [x] Mixed categorization detected and error thrown
+- [x] Default category applied when specified
+- [x] All unit tests pass
+- [x] Test coverage ≥ 90% (achieved: 97.0%)
+
+**Status: COMPLETE** (2024-11-28)
 
 ---
 
@@ -784,11 +786,11 @@ Contents:
 - [x] Write `internal/summary/extractor_test.go`
 - N/A `internal/summary/markdown.go` - not needed, functionality in extractor.go
 
-### Phase 4: Model Builder
-- [ ] Implement `internal/model/builder.go`
-- [ ] Implement `internal/model/validator.go`
-- [ ] Write `internal/model/builder_test.go`
-- [ ] Write `internal/model/validator_test.go`
+### Phase 4: Model Builder (COMPLETE)
+- [x] Implement `internal/model/builder.go`
+- [x] Implement `internal/model/validator.go`
+- [x] Write `internal/model/builder_test.go`
+- [x] Write `internal/model/validator_test.go`
 
 ### Phase 5: Ordering Service
 - [ ] Implement `internal/ordering/service.go`
