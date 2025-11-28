@@ -1,8 +1,8 @@
-# Architect Brief: gen-make
+# Architect Brief: make-help
 
 ## Overview
 
-Design a Go CLI tool called `gen-make` that provides dynamic help generation for Makefiles. The tool parses specially formatted documentation comments in Makefiles and generates user-friendly help output.
+Design a Go CLI tool called `make-help` that provides dynamic help generation for Makefiles. The tool parses specially formatted documentation comments in Makefiles and generates user-friendly help output.
 
 ## Deliverable
 
@@ -12,9 +12,9 @@ Create `docs/design.md` describing the high-level design, major components, data
 
 ### CLI Commands
 
-1. **`gen-make`** (default): Generate help output from Makefile documentation
-2. **`gen-make add-target`**: Add a `help` target to the Makefile
-3. **`gen-make remove-target`**: Remove `help` target artifacts
+1. **`make-help`** (default): Generate help output from Makefile documentation
+2. **`make-help add-target`**: Add a `help` target to the Makefile
+3. **`make-help remove-target`**: Remove `help` target artifacts
 
 ### Global Options
 
@@ -118,7 +118,7 @@ Generated help target format:
 ```makefile
 .PHONY: help
 help:
-	gen-make [options...]
+	make-help [options...]
 ```
 
 ### Ordering Rules

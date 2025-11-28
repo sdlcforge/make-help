@@ -1,4 +1,4 @@
-# Design Document: gen-make
+# Design Document: make-help
 
 ## 1. Architecture Overview
 
@@ -91,7 +91,7 @@
 ## 2. Package Structure
 
 ```
-gen-make/
+make-help/
 ├── cmd/
 │   └── genmake/
 │       └── main.go                    # Entry point
@@ -163,7 +163,7 @@ Each package MUST include a doc.go file with package-level documentation:
 ```go
 // internal/cli/doc.go
 
-// Package cli provides the command-line interface for gen-make using Cobra.
+// Package cli provides the command-line interface for make-help using Cobra.
 //
 // This package handles argument parsing, flag validation, terminal detection,
 // and delegates to the appropriate service packages for actual functionality.
@@ -283,7 +283,7 @@ package target
 ```go
 // internal/errors/doc.go
 
-// Package errors defines custom error types for gen-make.
+// Package errors defines custom error types for make-help.
 //
 // Error types include:
 //   - MixedCategorizationError: categorized and uncategorized targets mixed
@@ -452,7 +452,7 @@ func NewRootCmd() *cobra.Command {
     var config Config
 
     rootCmd := &cobra.Command{
-        Use:   "gen-make",
+        Use:   "make-help",
         Short: "Dynamic help generation for Makefiles",
         RunE: func(cmd *cobra.Command, args []string) error {
             return runHelp(&config)
@@ -1509,7 +1509,7 @@ func (s *AddService) generateHelpTarget() string {
 
     buf.WriteString(".PHONY: help\n")
     buf.WriteString("help:\n")
-    buf.WriteString("\t@gen-make")
+    buf.WriteString("\t@make-help")
 
     // Add flags from config
     if s.config.KeepOrderCategories {
@@ -1811,7 +1811,7 @@ func (s *RemoveService) removeHelpTargetFiles(makefilePath string) error {
 
 3. Generate Help Target Content
    ├─> Build .PHONY: help line
-   └─> Build help: target with gen-make + flags
+   └─> Build help: target with make-help + flags
 
 4. Write Target File
    ├─> If appending to Makefile:
@@ -2363,7 +2363,7 @@ func TestHelpGeneration(t *testing.T) {
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             // Execute CLI command
-            cmd := exec.Command("gen-make", append([]string{"--makefile-path", tt.fixture}, tt.args...)...)
+            cmd := exec.Command("make-help", append([]string{"--makefile-path", tt.fixture}, tt.args...)...)
             output, err := cmd.Output()
             require.NoError(t, err)
 
@@ -2415,7 +2415,7 @@ func TestAddTarget(t *testing.T) {
             copyFile(tt.fixture, tmpMakefile)
 
             // Execute add-target
-            cmd := exec.Command("gen-make", append([]string{"add-target", "--makefile-path", tmpMakefile}, tt.args...)...)
+            cmd := exec.Command("make-help", append([]string{"add-target", "--makefile-path", tmpMakefile}, tt.args...)...)
             err := cmd.Run()
             require.NoError(t, err)
 
