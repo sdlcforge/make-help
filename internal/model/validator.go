@@ -1,14 +1,13 @@
 package model
 
 import (
-	"github.com/sdlcforge/make-help/internal/cli"
 	"github.com/sdlcforge/make-help/internal/errors"
 )
 
 // ValidateCategorization ensures that the categorization rules are followed:
-// - If any categories exist, all targets must be categorized (unless --default-category is set)
-// - Mixed categorization (some with categories, some without) is an error without --default-category
-func ValidateCategorization(model *HelpModel, config *cli.Config) error {
+// - If any categories exist, all targets must be categorized (unless a default category will be used)
+// - Mixed categorization (some with categories, some without) is an error without a default category
+func ValidateCategorization(model *HelpModel, defaultCategory string) error {
 	if !model.HasCategories {
 		// No categories defined, all targets are uncategorized - OK
 		return nil
@@ -28,7 +27,7 @@ func ValidateCategorization(model *HelpModel, config *cli.Config) error {
 
 	// Check for mixed categorization
 	if categorizedCount > 0 && uncategorizedCount > 0 {
-		if config.DefaultCategory == "" {
+		if defaultCategory == "" {
 			return errors.NewMixedCategorizationError(
 				"found both categorized and uncategorized targets; use --default-category to resolve",
 			)

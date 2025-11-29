@@ -4,7 +4,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sdlcforge/make-help/internal/cli"
 	"github.com/sdlcforge/make-help/internal/parser"
 	"github.com/sdlcforge/make-help/internal/summary"
 )
@@ -13,15 +12,16 @@ import (
 // It aggregates file documentation, groups targets by category,
 // and associates aliases and variables with targets.
 type Builder struct {
-	config    *cli.Config
-	extractor *summary.Extractor
+	defaultCategory string
+	extractor       *summary.Extractor
 }
 
-// NewBuilder creates a new Builder with the given configuration.
-func NewBuilder(config *cli.Config) *Builder {
+// NewBuilder creates a new Builder with the given default category.
+// The default category is used for uncategorized targets when categories are mixed.
+func NewBuilder(defaultCategory string) *Builder {
 	return &Builder{
-		config:    config,
-		extractor: summary.NewExtractor(),
+		defaultCategory: defaultCategory,
+		extractor:       summary.NewExtractor(),
 	}
 }
 
@@ -73,13 +73,13 @@ func (b *Builder) Build(parsedFiles []*parser.ParsedFile) (*HelpModel, error) {
 	}
 
 	// Validate categorization
-	if err := ValidateCategorization(model, b.config); err != nil {
+	if err := ValidateCategorization(model, b.defaultCategory); err != nil {
 		return nil, err
 	}
 
 	// Apply default category if needed
-	if model.HasCategories && b.config.DefaultCategory != "" {
-		ApplyDefaultCategory(model, b.config.DefaultCategory)
+	if model.HasCategories && b.defaultCategory != "" {
+		ApplyDefaultCategory(model, b.defaultCategory)
 	}
 
 	return model, nil

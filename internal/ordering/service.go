@@ -1,19 +1,22 @@
 package ordering
 
 import (
-	"github.com/sdlcforge/make-help/internal/cli"
 	"github.com/sdlcforge/make-help/internal/model"
 )
 
 // Service handles category and target ordering based on configuration.
 type Service struct {
-	config *cli.Config
+	keepOrderCategories bool
+	keepOrderTargets    bool
+	categoryOrder       []string
 }
 
-// NewService creates a new ordering service with the given configuration.
-func NewService(config *cli.Config) *Service {
+// NewService creates a new ordering service with the given ordering preferences.
+func NewService(keepOrderCategories, keepOrderTargets bool, categoryOrder []string) *Service {
 	return &Service{
-		config: config,
+		keepOrderCategories: keepOrderCategories,
+		keepOrderTargets:    keepOrderTargets,
+		categoryOrder:       categoryOrder,
 	}
 }
 
@@ -35,12 +38,12 @@ func (s *Service) ApplyOrdering(helpModel *model.HelpModel) error {
 // orderCategories applies the configured category ordering strategy.
 func (s *Service) orderCategories(helpModel *model.HelpModel) error {
 	// If explicit category order is specified, use it
-	if len(s.config.CategoryOrder) > 0 {
-		return applyExplicitCategoryOrder(helpModel, s.config.CategoryOrder)
+	if len(s.categoryOrder) > 0 {
+		return applyExplicitCategoryOrder(helpModel, s.categoryOrder)
 	}
 
 	// If keep-order-categories is set, sort by discovery order
-	if s.config.KeepOrderCategories {
+	if s.keepOrderCategories {
 		sortCategoriesByDiscoveryOrder(helpModel.Categories)
 		return nil
 	}
@@ -53,7 +56,7 @@ func (s *Service) orderCategories(helpModel *model.HelpModel) error {
 // orderTargets applies the configured target ordering strategy to a category.
 func (s *Service) orderTargets(category *model.Category) {
 	// If keep-order-targets is set, sort by discovery order
-	if s.config.KeepOrderTargets {
+	if s.keepOrderTargets {
 		sortTargetsByDiscoveryOrder(category.Targets)
 		return
 	}

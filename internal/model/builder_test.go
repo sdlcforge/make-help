@@ -3,7 +3,6 @@ package model
 import (
 	"testing"
 
-	"github.com/sdlcforge/make-help/internal/cli"
 	"github.com/sdlcforge/make-help/internal/errors"
 	"github.com/sdlcforge/make-help/internal/parser"
 	"github.com/stretchr/testify/assert"
@@ -11,17 +10,17 @@ import (
 )
 
 func TestNewBuilder(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	assert.NotNil(t, builder)
-	assert.NotNil(t, builder.config)
+	assert.NotNil(t, builder)
 	assert.NotNil(t, builder.extractor)
 }
 
 func TestBuild_EmptyParsedFiles(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	model, err := builder.Build([]*parser.ParsedFile{})
 
@@ -33,8 +32,8 @@ func TestBuild_EmptyParsedFiles(t *testing.T) {
 }
 
 func TestBuild_FileDocumentation(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -56,8 +55,8 @@ func TestBuild_FileDocumentation(t *testing.T) {
 }
 
 func TestBuild_BasicTargetWithDocs(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -93,8 +92,8 @@ func TestBuild_BasicTargetWithDocs(t *testing.T) {
 }
 
 func TestBuild_TargetWithCategory(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -120,8 +119,8 @@ func TestBuild_TargetWithCategory(t *testing.T) {
 }
 
 func TestBuild_MultipleCategories(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -154,8 +153,8 @@ func TestBuild_MultipleCategories(t *testing.T) {
 }
 
 func TestBuild_TargetWithVariables(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -186,8 +185,8 @@ func TestBuild_TargetWithVariables(t *testing.T) {
 }
 
 func TestBuild_TargetWithAliases(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -215,8 +214,8 @@ func TestBuild_TargetWithAliases(t *testing.T) {
 }
 
 func TestBuild_MixedCategorizationError(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -248,9 +247,9 @@ func TestBuild_MixedCategorizationError(t *testing.T) {
 }
 
 func TestBuild_MixedCategorizationWithDefaultCategory(t *testing.T) {
-	config := cli.NewConfig()
-	config.DefaultCategory = "Other"
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	defaultCategory = "Other"
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -288,8 +287,8 @@ func TestBuild_MixedCategorizationWithDefaultCategory(t *testing.T) {
 }
 
 func TestBuild_SplitCategories(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -326,8 +325,8 @@ func TestBuild_SplitCategories(t *testing.T) {
 }
 
 func TestBuild_DiscoveryOrder(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -360,8 +359,8 @@ func TestBuild_DiscoveryOrder(t *testing.T) {
 }
 
 func TestBuild_SummaryExtraction(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -386,8 +385,8 @@ func TestBuild_SummaryExtraction(t *testing.T) {
 }
 
 func TestBuild_TargetSourceTracking(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -413,8 +412,8 @@ func TestBuild_TargetSourceTracking(t *testing.T) {
 }
 
 func TestBuild_MultipleFilesAggregation(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -448,7 +447,7 @@ func TestBuild_MultipleFilesAggregation(t *testing.T) {
 }
 
 func TestParseVarDirective(t *testing.T) {
-	builder := NewBuilder(cli.NewConfig())
+	builder := NewBuilder("")
 
 	tests := []struct {
 		name        string
@@ -492,7 +491,7 @@ func TestParseVarDirective(t *testing.T) {
 }
 
 func TestParseAliasDirective(t *testing.T) {
-	builder := NewBuilder(cli.NewConfig())
+	builder := NewBuilder("")
 
 	tests := []struct {
 		name  string
@@ -530,8 +529,8 @@ func TestParseAliasDirective(t *testing.T) {
 }
 
 func TestBuild_NoDocTargetsStillIncluded(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -552,8 +551,8 @@ func TestBuild_NoDocTargetsStillIncluded(t *testing.T) {
 }
 
 func TestBuild_EmptyFileDocValue(t *testing.T) {
-	config := cli.NewConfig()
-	builder := NewBuilder(config)
+	defaultCategory := ""
+	builder := NewBuilder(defaultCategory)
 
 	parsedFiles := []*parser.ParsedFile{
 		{

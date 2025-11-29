@@ -3,7 +3,6 @@ package format_test
 import (
 	"fmt"
 
-	"github.com/sdlcforge/make-help/internal/cli"
 	"github.com/sdlcforge/make-help/internal/format"
 	"github.com/sdlcforge/make-help/internal/model"
 )
@@ -12,8 +11,8 @@ import (
 // to format help output from a HelpModel.
 func ExampleRenderer() {
 	// Create a config without colors for reproducible output
-	config := &cli.Config{UseColor: false}
-	renderer := format.NewRenderer(config)
+	useColor := false
+	renderer := format.NewRenderer(useColor)
 
 	// Create a sample HelpModel
 	helpModel := &model.HelpModel{
@@ -54,8 +53,8 @@ func ExampleRenderer() {
 // ExampleRenderer_RenderDetailedTarget demonstrates rendering
 // a detailed view of a single target.
 func ExampleRenderer_RenderDetailedTarget() {
-	config := &cli.Config{UseColor: false}
-	renderer := format.NewRenderer(config)
+	useColor := false
+	renderer := format.NewRenderer(useColor)
 
 	target := &model.Target{
 		Name:    "test",

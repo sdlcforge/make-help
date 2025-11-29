@@ -3,7 +3,6 @@ package model
 import (
 	"testing"
 
-	"github.com/sdlcforge/make-help/internal/cli"
 	"github.com/sdlcforge/make-help/internal/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,9 +15,8 @@ func TestValidateCategorization_NoCategories(t *testing.T) {
 			{Name: "", Targets: []Target{{Name: "build"}, {Name: "test"}}},
 		},
 	}
-	config := cli.NewConfig()
 
-	err := ValidateCategorization(model, config)
+	err := ValidateCategorization(model, "")
 
 	assert.NoError(t, err)
 }
@@ -31,9 +29,8 @@ func TestValidateCategorization_AllCategorized(t *testing.T) {
 			{Name: "Test", Targets: []Target{{Name: "test"}}},
 		},
 	}
-	config := cli.NewConfig()
 
-	err := ValidateCategorization(model, config)
+	err := ValidateCategorization(model, "")
 
 	assert.NoError(t, err)
 }
@@ -45,9 +42,8 @@ func TestValidateCategorization_AllUncategorized(t *testing.T) {
 			{Name: "", Targets: []Target{{Name: "build"}, {Name: "test"}}},
 		},
 	}
-	config := cli.NewConfig()
 
-	err := ValidateCategorization(model, config)
+	err := ValidateCategorization(model, "")
 
 	assert.NoError(t, err)
 }
@@ -60,9 +56,8 @@ func TestValidateCategorization_MixedWithoutDefault(t *testing.T) {
 			{Name: "", Targets: []Target{{Name: "test"}}},
 		},
 	}
-	config := cli.NewConfig()
 
-	err := ValidateCategorization(model, config)
+	err := ValidateCategorization(model, "")
 
 	require.Error(t, err)
 	assert.IsType(t, &errors.MixedCategorizationError{}, err)
@@ -76,10 +71,8 @@ func TestValidateCategorization_MixedWithDefault(t *testing.T) {
 			{Name: "", Targets: []Target{{Name: "test"}}},
 		},
 	}
-	config := cli.NewConfig()
-	config.DefaultCategory = "Other"
 
-	err := ValidateCategorization(model, config)
+	err := ValidateCategorization(model, "Other")
 
 	assert.NoError(t, err)
 }

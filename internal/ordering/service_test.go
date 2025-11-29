@@ -3,7 +3,6 @@ package ordering
 import (
 	"testing"
 
-	"github.com/sdlcforge/make-help/internal/cli"
 	"github.com/sdlcforge/make-help/internal/errors"
 	"github.com/sdlcforge/make-help/internal/model"
 	"github.com/stretchr/testify/assert"
@@ -50,16 +49,14 @@ func createTestModel() *model.HelpModel {
 }
 
 func TestNewService(t *testing.T) {
-	config := cli.NewConfig()
-	service := NewService(config)
+	service := NewService(false, false, []string{})
 
 	assert.NotNil(t, service)
-	assert.Equal(t, config, service.config)
+	assert.NotNil(t, service)
 }
 
 func TestApplyOrdering_DefaultAlphabeticalCategories(t *testing.T) {
-	config := cli.NewConfig()
-	service := NewService(config)
+	service := NewService(false, false, []string{})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -72,8 +69,7 @@ func TestApplyOrdering_DefaultAlphabeticalCategories(t *testing.T) {
 }
 
 func TestApplyOrdering_DefaultAlphabeticalTargets(t *testing.T) {
-	config := cli.NewConfig()
-	service := NewService(config)
+	service := NewService(false, false, []string{})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -90,9 +86,7 @@ func TestApplyOrdering_DefaultAlphabeticalTargets(t *testing.T) {
 }
 
 func TestApplyOrdering_KeepOrderCategories(t *testing.T) {
-	config := cli.NewConfig()
-	config.KeepOrderCategories = true
-	service := NewService(config)
+	service := NewService(true, false, []string{})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -105,9 +99,7 @@ func TestApplyOrdering_KeepOrderCategories(t *testing.T) {
 }
 
 func TestApplyOrdering_KeepOrderTargets(t *testing.T) {
-	config := cli.NewConfig()
-	config.KeepOrderTargets = true
-	service := NewService(config)
+	service := NewService(false, true, []string{})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -124,10 +116,7 @@ func TestApplyOrdering_KeepOrderTargets(t *testing.T) {
 }
 
 func TestApplyOrdering_KeepOrderBoth(t *testing.T) {
-	config := cli.NewConfig()
-	config.KeepOrderCategories = true
-	config.KeepOrderTargets = true
-	service := NewService(config)
+	service := NewService(true, true, []string{})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -148,9 +137,7 @@ func TestApplyOrdering_KeepOrderBoth(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder(t *testing.T) {
-	config := cli.NewConfig()
-	config.CategoryOrder = []string{"Development", "CI"}
-	service := NewService(config)
+	service := NewService(false, false, []string{"Development", "CI"})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -163,9 +150,7 @@ func TestApplyOrdering_ExplicitCategoryOrder(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder_AllSpecified(t *testing.T) {
-	config := cli.NewConfig()
-	config.CategoryOrder = []string{"CI", "Development", "Deployment"}
-	service := NewService(config)
+	service := NewService(false, false, []string{"CI", "Development", "Deployment"})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -177,9 +162,7 @@ func TestApplyOrdering_ExplicitCategoryOrder_AllSpecified(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder_UnknownCategory(t *testing.T) {
-	config := cli.NewConfig()
-	config.CategoryOrder = []string{"Development", "NonExistent", "CI"}
-	service := NewService(config)
+	service := NewService(false, false, []string{"Development", "NonExistent", "CI"})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -194,10 +177,7 @@ func TestApplyOrdering_ExplicitCategoryOrder_UnknownCategory(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder_WithKeepOrderTargets(t *testing.T) {
-	config := cli.NewConfig()
-	config.CategoryOrder = []string{"Deployment"}
-	config.KeepOrderTargets = true
-	service := NewService(config)
+	service := NewService(false, true, []string{"Deployment"})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -212,8 +192,7 @@ func TestApplyOrdering_ExplicitCategoryOrder_WithKeepOrderTargets(t *testing.T) 
 }
 
 func TestApplyOrdering_EmptyModel(t *testing.T) {
-	config := cli.NewConfig()
-	service := NewService(config)
+	service := NewService(false, false, []string{})
 	helpModel := &model.HelpModel{
 		Categories:    []model.Category{},
 		HasCategories: false,
@@ -226,8 +205,7 @@ func TestApplyOrdering_EmptyModel(t *testing.T) {
 }
 
 func TestApplyOrdering_SingleCategory(t *testing.T) {
-	config := cli.NewConfig()
-	service := NewService(config)
+	service := NewService(false, false, []string{})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
 			{
@@ -353,12 +331,7 @@ func TestApplyExplicitCategoryOrder_DuplicatesInOrder(t *testing.T) {
 }
 
 func TestService_String(t *testing.T) {
-	config := &cli.Config{
-		KeepOrderCategories: true,
-		KeepOrderTargets:    false,
-		CategoryOrder:       []string{"Build", "Deploy"},
-	}
-	service := NewService(config)
+	service := NewService(true, false, []string{"Build", "Deploy"})
 
 	result := service.String()
 	assert.Contains(t, result, "keepOrderCategories=true")
@@ -367,8 +340,7 @@ func TestService_String(t *testing.T) {
 }
 
 func TestApplyOrdering_CaseInsensitiveSorting(t *testing.T) {
-	config := cli.NewConfig()
-	service := NewService(config)
+	service := NewService(false, false, []string{})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
 			{
@@ -396,8 +368,7 @@ func TestApplyOrdering_CaseInsensitiveSorting(t *testing.T) {
 }
 
 func TestApplyOrdering_PreservesOtherFields(t *testing.T) {
-	config := cli.NewConfig()
-	service := NewService(config)
+	service := NewService(false, false, []string{})
 	helpModel := &model.HelpModel{
 		FileDocs: []string{"File documentation"},
 		Categories: []model.Category{

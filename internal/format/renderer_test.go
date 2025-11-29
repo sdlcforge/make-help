@@ -4,24 +4,20 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sdlcforge/make-help/internal/cli"
 	"github.com/sdlcforge/make-help/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewRenderer(t *testing.T) {
-	config := &cli.Config{UseColor: true}
-	renderer := NewRenderer(config)
+	renderer := NewRenderer(true)
 
-	assert.NotNil(t, renderer.config)
 	assert.NotNil(t, renderer.colors)
 	assert.NotNil(t, renderer.extractor)
 }
 
 func TestRender_EmptyModel(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	renderer := NewRenderer(false)
 
 	helpModel := &model.HelpModel{}
 	output, err := renderer.Render(helpModel)
@@ -32,8 +28,7 @@ func TestRender_EmptyModel(t *testing.T) {
 }
 
 func TestRender_WithFileDocumentation(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	renderer := NewRenderer(false)
 
 	helpModel := &model.HelpModel{
 		FileDocs: []string{
@@ -49,8 +44,8 @@ func TestRender_WithFileDocumentation(t *testing.T) {
 }
 
 func TestRender_BasicTargetsNoCategories(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -81,8 +76,8 @@ func TestRender_BasicTargetsNoCategories(t *testing.T) {
 }
 
 func TestRender_WithCategories(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
 		HasCategories: true,
@@ -123,8 +118,8 @@ func TestRender_WithCategories(t *testing.T) {
 }
 
 func TestRender_TargetWithAliases(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -148,8 +143,8 @@ func TestRender_TargetWithAliases(t *testing.T) {
 }
 
 func TestRender_TargetWithVariables(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -177,8 +172,8 @@ func TestRender_TargetWithVariables(t *testing.T) {
 }
 
 func TestRender_TargetWithAliasesAndVariables(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -206,8 +201,8 @@ func TestRender_TargetWithAliasesAndVariables(t *testing.T) {
 }
 
 func TestRender_TargetWithNoDocumentation(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -238,8 +233,8 @@ func TestRender_TargetWithNoDocumentation(t *testing.T) {
 }
 
 func TestRender_WithColorsEnabled(t *testing.T) {
-	config := &cli.Config{UseColor: true}
-	renderer := NewRenderer(config)
+	useColor := true
+	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -272,8 +267,8 @@ func TestRender_WithColorsEnabled(t *testing.T) {
 }
 
 func TestRender_WithColorsDisabled(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -298,8 +293,8 @@ func TestRender_WithColorsDisabled(t *testing.T) {
 }
 
 func TestRender_ComplexHelpModel(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
 		FileDocs: []string{
@@ -361,8 +356,8 @@ func TestRender_ComplexHelpModel(t *testing.T) {
 }
 
 func TestRenderDetailedTarget_Complete(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	target := &model.Target{
 		Name:    "build",
@@ -398,8 +393,8 @@ func TestRenderDetailedTarget_Complete(t *testing.T) {
 }
 
 func TestRenderDetailedTarget_MinimalTarget(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	target := &model.Target{
 		Name: "simple",
@@ -415,8 +410,8 @@ func TestRenderDetailedTarget_MinimalTarget(t *testing.T) {
 }
 
 func TestRenderDetailedTarget_WithColors(t *testing.T) {
-	config := &cli.Config{UseColor: true}
-	renderer := NewRenderer(config)
+	useColor := true
+	renderer := NewRenderer(useColor)
 
 	target := &model.Target{
 		Name:          "build",
@@ -440,8 +435,8 @@ func TestRenderDetailedTarget_WithColors(t *testing.T) {
 }
 
 func TestRenderDetailedTarget_VariableWithoutDescription(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	target := &model.Target{
 		Name: "build",
@@ -458,8 +453,8 @@ func TestRenderDetailedTarget_VariableWithoutDescription(t *testing.T) {
 }
 
 func TestRender_SummaryExtraction(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -486,8 +481,8 @@ func TestRender_SummaryExtraction(t *testing.T) {
 }
 
 func TestRender_MarkdownInSummary(t *testing.T) {
-	config := &cli.Config{UseColor: false}
-	renderer := NewRenderer(config)
+	useColor := false
+	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{

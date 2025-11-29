@@ -98,5 +98,5 @@ func sortTargetsByDiscoveryOrder(targets []model.Target) {
 // String representation for debugging
 func (s *Service) String() string {
 	return fmt.Sprintf("OrderingService{keepOrderCategories=%v, keepOrderTargets=%v, categoryOrder=%v}",
-		s.config.KeepOrderCategories, s.config.KeepOrderTargets, s.config.CategoryOrder)
+		s.keepOrderCategories, s.keepOrderTargets, s.categoryOrder)
 }

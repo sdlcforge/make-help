@@ -576,15 +576,17 @@ Test cases:
 
 ### Phase 7 Acceptance Criteria
 
-- [ ] `make-help` command runs successfully
-- [ ] Makefile discovery works with includes
-- [ ] Target discovery extracts all targets
-- [ ] Flags parsed correctly
-- [ ] Color auto-detection works
-- [ ] Verbose output shows discovery info
-- [ ] 30-second timeout on make commands
-- [ ] All unit tests pass
-- [ ] Test coverage ≥ 80%
+- [x] `make-help` command runs successfully
+- [x] Makefile discovery works with includes
+- [x] Target discovery extracts all targets
+- [x] Flags parsed correctly
+- [x] Color auto-detection works
+- [x] Verbose output shows discovery info
+- [x] 30-second timeout on make commands
+- [x] All unit tests pass
+- [ ] Test coverage ≥ 80% (current: discovery 43.7%, cli 46.2% - needs improvement)
+
+**Status: MOSTLY COMPLETE** (2024-11-28) - Core functionality implemented, test coverage needs improvement
 
 ---
 
@@ -810,18 +812,20 @@ Contents:
 - [x] Write `internal/format/example_test.go` (bonus)
 - [x] Create `internal/format/doc.go`
 
-### Phase 7: Discovery Service & CLI Layer
-- [ ] Implement `internal/discovery/executor.go`
-- [ ] Implement `internal/discovery/service.go`
-- [ ] Implement `internal/discovery/makefile.go`
-- [ ] Implement `internal/discovery/filelist.go`
-- [ ] Implement `internal/discovery/targets.go`
-- [ ] Implement `internal/cli/root.go`
-- [ ] Implement `internal/cli/help.go`
-- [ ] Implement `internal/cli/terminal.go`
-- [ ] Implement `cmd/make-help/main.go`
-- [ ] Write `internal/discovery/service_test.go`
-- [ ] Write `internal/cli/root_test.go`
+### Phase 7: Discovery Service & CLI Layer (MOSTLY COMPLETE)
+- [x] Implement `internal/discovery/executor.go`
+- [x] Implement `internal/discovery/service.go`
+- [x] Implement `internal/discovery/makefile.go`
+- [x] Implement `internal/discovery/filelist.go`
+- [x] Implement `internal/discovery/targets.go`
+- [x] Implement `internal/cli/root.go`
+- [x] Implement `internal/cli/help.go`
+- [x] Implement `internal/cli/terminal.go`
+- [x] Implement `cmd/make-help/main.go`
+- [x] Write `internal/discovery/service_test.go`
+- [x] Write `internal/cli/root_test.go`
+- [x] Create `internal/discovery/doc.go`
+- [ ] Improve test coverage to ≥ 80%
 
 ### Phase 8: Target Manipulation
 - [ ] Implement `internal/target/file.go`

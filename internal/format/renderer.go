@@ -4,24 +4,21 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sdlcforge/make-help/internal/cli"
 	"github.com/sdlcforge/make-help/internal/model"
 	"github.com/sdlcforge/make-help/internal/summary"
 )
 
 // Renderer handles the formatting and rendering of help output.
 type Renderer struct {
-	config    *cli.Config
 	colors    *ColorScheme
 	extractor *summary.Extractor
 }
 
-// NewRenderer creates a new Renderer with the given configuration.
-// The color scheme is determined by the config's UseColor setting.
-func NewRenderer(config *cli.Config) *Renderer {
+// NewRenderer creates a new Renderer with the given color mode.
+// The color scheme is determined by the useColor setting.
+func NewRenderer(useColor bool) *Renderer {
 	return &Renderer{
-		config:    config,
-		colors:    NewColorScheme(config.UseColor),
+		colors:    NewColorScheme(useColor),
 		extractor: summary.NewExtractor(),
 	}
 }
