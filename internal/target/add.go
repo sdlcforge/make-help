@@ -112,7 +112,7 @@ func (s *AddService) determineTargetFile(makefilePath string) (string, bool, err
 		return "", false, fmt.Errorf("failed to read Makefile: %w", err)
 	}
 
-	includeRegex := regexp.MustCompile(`(?m)^include\s+make/\*\.mk`)
+	includeRegex := regexp.MustCompile(`(?m)^-?include\s+make/\*\.mk`)
 	if includeRegex.Match(content) {
 		// Create make/01-help.mk
 		makeDir := filepath.Join(filepath.Dir(makefilePath), "make")

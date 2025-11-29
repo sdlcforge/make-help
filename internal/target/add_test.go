@@ -335,6 +335,13 @@ func TestDetermineTargetFile(t *testing.T) {
 			wantInclude:     false,
 		},
 		{
+			name:            "-include make/*.mk pattern (optional include)",
+			makefileContent: "-include make/*.mk\n\nall:\n\t@echo test\n",
+			targetFile:      "",
+			wantFile:        "make/01-help.mk",
+			wantInclude:     false,
+		},
+		{
 			name:            "no pattern - append to makefile",
 			makefileContent: "all:\n\t@echo test\n",
 			targetFile:      "",
