@@ -40,7 +40,7 @@ All configuration flags are passed through to the generated help target.`,
 			// Convert to target config
 			targetConfig := &target.Config{
 				MakefilePath:        config.MakefilePath,
-				TargetFile:          config.TargetFile,
+				TargetFile:          config.HelpFilePath,
 				KeepOrderCategories: config.KeepOrderCategories,
 				KeepOrderTargets:    config.KeepOrderTargets,
 				CategoryOrder:       config.CategoryOrder,
@@ -57,7 +57,7 @@ All configuration flags are passed through to the generated help target.`,
 	}
 
 	// Add-target specific flag
-	cmd.Flags().StringVar(&config.TargetFile,
+	cmd.Flags().StringVar(&config.HelpFilePath,
 		"target-file", "", "Explicit path for the help target file")
 
 	// Inherit help generation flags
@@ -105,7 +105,7 @@ func runAddTarget(config *Config) error {
 	// Convert to target config
 	targetConfig := &target.Config{
 		MakefilePath:        config.MakefilePath,
-		TargetFile:          config.TargetFile,
+		TargetFile:          config.HelpFilePath,
 		KeepOrderCategories: config.KeepOrderCategories,
 		KeepOrderTargets:    config.KeepOrderTargets,
 		CategoryOrder:       config.CategoryOrder,

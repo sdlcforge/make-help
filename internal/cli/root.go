@@ -16,6 +16,9 @@ func NewRootCmd() *cobra.Command {
 	var noColor bool
 	var forceColor bool
 
+	// --keep-order-all is a convenience flag that sets both order flags
+	var keepOrderAll bool
+
 	rootCmd := &cobra.Command{
 		Use:   "make-help",
 		Short: "Dynamic help generation for Makefiles",
@@ -30,17 +33,78 @@ It supports special directives:
 Documentation lines start with ## and are associated with the next target.`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			// Process color flags
 			if err := processColorFlags(&config.ColorMode, noColor, forceColor); err != nil {
 				return err
 			}
 
+			// Process --keep-order-all flag
+			if keepOrderAll {
+				config.KeepOrderCategories = true
+				config.KeepOrderTargets = true
+			}
+
+			// Mutual exclusivity validation
+			if config.CreateHelpTarget && config.RemoveHelpTarget {
+				return fmt.Errorf("cannot use both --create-help-target and --remove-help-target")
+			}
+
+			// --remove-help-target only allows --verbose and --makefile-path
+			if config.RemoveHelpTarget {
+				// Check that no other flags are set
+				if config.Target != "" {
+					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
+				}
+				if len(config.IncludeTargets) > 0 {
+					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
+				}
+				if config.IncludeAllPhony {
+					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
+				}
+				if config.CreateHelpTarget {
+					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
+				}
+				if config.Version != "" {
+					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
+				}
+				if config.HelpFilePath != "" {
+					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
+				}
+				if config.KeepOrderCategories {
+					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
+				}
+				if config.KeepOrderTargets {
+					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
+				}
+				if len(config.CategoryOrder) > 0 {
+					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
+				}
+				if config.DefaultCategory != "" {
+					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
+				}
+			}
+
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Normalize IncludeTargets from comma-separated + repeatable flags
+			config.IncludeTargets = parseIncludeTargets(config.IncludeTargets)
+
 			// Resolve color mode
 			config.UseColor = ResolveColorMode(config)
 
-			// Run the help command
-			return runHelp(config)
+			// Dispatch to appropriate handler
+			if config.RemoveHelpTarget {
+				return fmt.Errorf("--remove-help-target not yet implemented")
+			} else if config.CreateHelpTarget {
+				return fmt.Errorf("--create-help-target not yet implemented")
+			} else if config.Target != "" {
+				return fmt.Errorf("--target not yet implemented")
+			} else {
+				// Default behavior: run help command
+				return runHelp(config)
+			}
 		},
 	}
 
@@ -61,7 +125,6 @@ Documentation lines start with ## and are associated with the next target.`,
 		"keep-order-targets", false, "Preserve target discovery order within categories")
 
 	// --keep-order-all is a convenience flag that sets both
-	var keepOrderAll bool
 	rootCmd.Flags().BoolVar(&keepOrderAll,
 		"keep-order-all", false, "Preserve both category and target discovery order")
 
@@ -70,18 +133,21 @@ Documentation lines start with ## and are associated with the next target.`,
 	rootCmd.Flags().StringVar(&config.DefaultCategory,
 		"default-category", "", "Default category for uncategorized targets")
 
-	// Process --keep-order-all flag
-	rootCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		if keepOrderAll {
-			config.KeepOrderCategories = true
-			config.KeepOrderTargets = true
-		}
-		return nil
-	}
-
-	// Add subcommands
-	rootCmd.AddCommand(newAddTargetCmd(config))
-	rootCmd.AddCommand(newRemoveTargetCmd(config))
+	// New flags for target creation/removal and filtering
+	rootCmd.Flags().BoolVar(&config.CreateHelpTarget,
+		"create-help-target", false, "Generate help target file with local binary installation")
+	rootCmd.Flags().BoolVar(&config.RemoveHelpTarget,
+		"remove-help-target", false, "Remove help target from Makefile")
+	rootCmd.Flags().StringVar(&config.Version,
+		"version", "", "Version to pin in generated go install (e.g., v1.2.3)")
+	rootCmd.Flags().StringSliceVar(&config.IncludeTargets,
+		"include-target", []string{}, "Include undocumented target in help (repeatable, comma-separated)")
+	rootCmd.Flags().BoolVar(&config.IncludeAllPhony,
+		"include-all-phony", false, "Include all .PHONY targets in help output")
+	rootCmd.Flags().StringVar(&config.Target,
+		"target", "", "Show detailed help for a specific target")
+	rootCmd.Flags().StringVar(&config.HelpFilePath,
+		"help-file-path", "", "Explicit path for generated help target file")
 
 	return rootCmd
 }

@@ -60,9 +60,28 @@ type Config struct {
 
 	// Add-target options
 
-	// TargetFile specifies explicit path for the generated help target file.
+	// HelpFilePath specifies explicit path for the generated help target file.
 	// If empty, location is determined automatically.
-	TargetFile string
+	HelpFilePath string
+
+	// CreateHelpTarget indicates whether to generate help target file.
+	CreateHelpTarget bool
+
+	// RemoveHelpTarget indicates whether to remove help target from Makefile.
+	RemoveHelpTarget bool
+
+	// Version for go install (e.g., "v1.2.3"), empty = @latest.
+	Version string
+
+	// IncludeTargets lists undocumented targets to include in help.
+	// Populated from --include-target flag (repeatable, comma-separated).
+	IncludeTargets []string
+
+	// IncludeAllPhony includes all .PHONY targets in help output.
+	IncludeAllPhony bool
+
+	// Target specifies a target name for detailed help view.
+	Target string
 
 	// Derived state (computed at runtime)
 

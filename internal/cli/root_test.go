@@ -622,3 +622,217 @@ clean:
 	err = runHelp(config)
 	assert.NoError(t, err)
 }
+
+func TestMutualExclusivityFlags(t *testing.T) {
+	tests := []struct {
+		name        string
+		args        []string
+		expectError bool
+		errorText   string
+	}{
+		{
+			name:        "create-help-target and remove-help-target together",
+			args:        []string{"--create-help-target", "--remove-help-target"},
+			expectError: true,
+			errorText:   "cannot use both --create-help-target and --remove-help-target",
+		},
+		{
+			name:        "only create-help-target",
+			args:        []string{"--create-help-target"},
+			expectError: true,
+			errorText:   "not yet implemented",
+		},
+		{
+			name:        "only remove-help-target",
+			args:        []string{"--remove-help-target"},
+			expectError: true,
+			errorText:   "not yet implemented",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := NewRootCmd()
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorText != "" {
+					assert.Contains(t, err.Error(), tt.errorText)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestRemoveHelpTargetFlagRestrictions(t *testing.T) {
+	tests := []struct {
+		name        string
+		args        []string
+		expectError bool
+	}{
+		{
+			name:        "remove-help-target with verbose",
+			args:        []string{"--remove-help-target", "--verbose"},
+			expectError: false,
+		},
+		{
+			name:        "remove-help-target with makefile-path",
+			args:        []string{"--remove-help-target", "--makefile-path", "/tmp/Makefile"},
+			expectError: false,
+		},
+		{
+			name:        "remove-help-target with target",
+			args:        []string{"--remove-help-target", "--target", "build"},
+			expectError: true,
+		},
+		{
+			name:        "remove-help-target with include-target",
+			args:        []string{"--remove-help-target", "--include-target", "foo"},
+			expectError: true,
+		},
+		{
+			name:        "remove-help-target with include-all-phony",
+			args:        []string{"--remove-help-target", "--include-all-phony"},
+			expectError: true,
+		},
+		{
+			name:        "remove-help-target with version",
+			args:        []string{"--remove-help-target", "--version", "v1.0.0"},
+			expectError: true,
+		},
+		{
+			name:        "remove-help-target with help-file-path",
+			args:        []string{"--remove-help-target", "--help-file-path", "/tmp/help.mk"},
+			expectError: true,
+		},
+		{
+			name:        "remove-help-target with keep-order-categories",
+			args:        []string{"--remove-help-target", "--keep-order-categories"},
+			expectError: true,
+		},
+		{
+			name:        "remove-help-target with keep-order-targets",
+			args:        []string{"--remove-help-target", "--keep-order-targets"},
+			expectError: true,
+		},
+		{
+			name:        "remove-help-target with category-order",
+			args:        []string{"--remove-help-target", "--category-order", "Build"},
+			expectError: true,
+		},
+		{
+			name:        "remove-help-target with default-category",
+			args:        []string{"--remove-help-target", "--default-category", "Other"},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := NewRootCmd()
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "--remove-help-target only accepts --verbose and --makefile-path flags")
+			} else {
+				// Should get "not yet implemented" error, not validation error
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "not yet implemented")
+			}
+		})
+	}
+}
+
+func TestNewFlags(t *testing.T) {
+	cmd := NewRootCmd()
+
+	// Check that new flags are registered
+	flags := cmd.Flags()
+
+	assert.NotNil(t, flags.Lookup("create-help-target"))
+	assert.NotNil(t, flags.Lookup("remove-help-target"))
+	assert.NotNil(t, flags.Lookup("version"))
+	assert.NotNil(t, flags.Lookup("include-target"))
+	assert.NotNil(t, flags.Lookup("include-all-phony"))
+	assert.NotNil(t, flags.Lookup("target"))
+	assert.NotNil(t, flags.Lookup("help-file-path"))
+}
+
+func TestIncludeTargetFlag(t *testing.T) {
+	// Create a temp Makefile for the test
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## Documented target
+all:
+	@echo hello
+`), 0644)
+	require.NoError(t, err)
+
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{
+			name: "single include-target",
+			args: []string{"--makefile-path", makefilePath, "--include-target", "foo", "--no-color"},
+		},
+		{
+			name: "comma-separated include-target",
+			args: []string{"--makefile-path", makefilePath, "--include-target", "foo,bar", "--no-color"},
+		},
+		{
+			name: "multiple include-target flags",
+			args: []string{"--makefile-path", makefilePath, "--include-target", "foo", "--include-target", "bar", "--no-color"},
+		},
+		{
+			name: "mixed include-target",
+			args: []string{"--makefile-path", makefilePath, "--include-target", "foo,bar", "--include-target", "baz", "--no-color"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := NewRootCmd()
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+			// Should succeed (filtering not yet implemented, but flag should parse)
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestTargetFlag(t *testing.T) {
+	cmd := NewRootCmd()
+	cmd.SetArgs([]string{"--target", "build"})
+
+	err := cmd.Execute()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "--target not yet implemented")
+}
+
+func TestIncludeAllPhonyFlag(t *testing.T) {
+	// Create a temp Makefile for the test
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## Documented target
+all:
+	@echo hello
+`), 0644)
+	require.NoError(t, err)
+
+	cmd := NewRootCmd()
+	cmd.SetArgs([]string{"--makefile-path", makefilePath, "--include-all-phony", "--no-color"})
+
+	err = cmd.Execute()
+	// Should succeed (filtering not yet implemented, but flag should work)
+	assert.NoError(t, err)
+}
