@@ -79,6 +79,10 @@ Documentation lines start with ## and are associated with the next target.`,
 		return nil
 	}
 
+	// Add subcommands
+	rootCmd.AddCommand(newAddTargetCmd(config))
+	rootCmd.AddCommand(newRemoveTargetCmd(config))
+
 	return rootCmd
 }
 
