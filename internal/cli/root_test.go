@@ -1,9 +1,13 @@
 package cli
 
 import (
+	"bytes"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProcessColorFlags(t *testing.T) {
@@ -51,6 +55,7 @@ func TestProcessColorFlags(t *testing.T) {
 
 			if tt.expectError {
 				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "cannot use both")
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected, mode)
@@ -79,6 +84,11 @@ func TestResolveColorMode(t *testing.T) {
 			name:     "auto mode",
 			mode:     ColorAuto,
 			expected: false, // Usually false in test environment (not a TTY)
+		},
+		{
+			name:     "unknown mode defaults to false",
+			mode:     ColorMode(999),
+			expected: false,
 		},
 	}
 
@@ -137,6 +147,21 @@ func TestParseCategoryOrder(t *testing.T) {
 			input:    []string{"Build", "", "Test"},
 			expected: []string{"Build", "Test"},
 		},
+		{
+			name:     "empty input",
+			input:    []string{},
+			expected: nil,
+		},
+		{
+			name:     "only whitespace",
+			input:    []string{"  ", "  ,  "},
+			expected: nil,
+		},
+		{
+			name:     "trailing comma",
+			input:    []string{"Build,Test,"},
+			expected: []string{"Build", "Test"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -154,6 +179,12 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, ColorAuto, config.ColorMode)
 	assert.NotNil(t, config.CategoryOrder)
 	assert.Equal(t, 0, len(config.CategoryOrder))
+	assert.False(t, config.UseColor)
+	assert.False(t, config.Verbose)
+	assert.False(t, config.KeepOrderCategories)
+	assert.False(t, config.KeepOrderTargets)
+	assert.Empty(t, config.DefaultCategory)
+	assert.Empty(t, config.MakefilePath)
 }
 
 func TestColorModeString(t *testing.T) {
@@ -192,6 +223,8 @@ func TestNewRootCmd(t *testing.T) {
 
 	assert.NotNil(t, cmd)
 	assert.Equal(t, "make-help", cmd.Use)
+	assert.NotEmpty(t, cmd.Short)
+	assert.NotEmpty(t, cmd.Long)
 
 	// Check that essential flags are registered
 	flags := cmd.Flags()
@@ -207,4 +240,385 @@ func TestNewRootCmd(t *testing.T) {
 	assert.NotNil(t, persistentFlags.Lookup("no-color"))
 	assert.NotNil(t, persistentFlags.Lookup("color"))
 	assert.NotNil(t, persistentFlags.Lookup("verbose"))
+}
+
+func TestRootCmd_FlagDefaults(t *testing.T) {
+	cmd := NewRootCmd()
+
+	// Check default values
+	makefilePath, err := cmd.PersistentFlags().GetString("makefile-path")
+	assert.NoError(t, err)
+	assert.Empty(t, makefilePath)
+
+	noColor, err := cmd.PersistentFlags().GetBool("no-color")
+	assert.NoError(t, err)
+	assert.False(t, noColor)
+
+	forceColor, err := cmd.PersistentFlags().GetBool("color")
+	assert.NoError(t, err)
+	assert.False(t, forceColor)
+
+	verbose, err := cmd.PersistentFlags().GetBool("verbose")
+	assert.NoError(t, err)
+	assert.False(t, verbose)
+}
+
+func TestRootCmd_ConflictingColorFlags(t *testing.T) {
+	cmd := NewRootCmd()
+	cmd.SetArgs([]string{"--color", "--no-color"})
+
+	// Capture output
+	var errBuf bytes.Buffer
+	cmd.SetErr(&errBuf)
+
+	err := cmd.Execute()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot use both")
+}
+
+func TestRootCmd_KeepOrderAll(t *testing.T) {
+	// Create a temp Makefile for the test
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## Build the project
+all:
+	@echo hello
+`), 0644)
+	require.NoError(t, err)
+
+	cmd := NewRootCmd()
+	cmd.SetArgs([]string{"--makefile-path", makefilePath, "--keep-order-all", "--no-color"})
+
+	// Capture output
+	var outBuf bytes.Buffer
+	cmd.SetOut(&outBuf)
+
+	err = cmd.Execute()
+	assert.NoError(t, err)
+}
+
+func TestRootCmd_VerboseFlag(t *testing.T) {
+	// Create a temp Makefile for the test
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## Build the project
+all:
+	@echo hello
+`), 0644)
+	require.NoError(t, err)
+
+	cmd := NewRootCmd()
+	cmd.SetArgs([]string{"--makefile-path", makefilePath, "--verbose", "--no-color"})
+
+	// Capture output - verbose output goes to stderr
+	var errBuf bytes.Buffer
+	cmd.SetErr(&errBuf)
+
+	err = cmd.Execute()
+	assert.NoError(t, err)
+}
+
+func TestRootCmd_MissingMakefile(t *testing.T) {
+	cmd := NewRootCmd()
+	cmd.SetArgs([]string{"--makefile-path", "/nonexistent/Makefile"})
+
+	err := cmd.Execute()
+	assert.Error(t, err)
+}
+
+func TestRootCmd_CategoryOrder(t *testing.T) {
+	// Create a temp Makefile with categories
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## @category Build
+## Build the project
+build:
+	@echo build
+
+## @category Test
+## Run tests
+test:
+	@echo test
+`), 0644)
+	require.NoError(t, err)
+
+	cmd := NewRootCmd()
+	cmd.SetArgs([]string{
+		"--makefile-path", makefilePath,
+		"--category-order", "Test,Build",
+		"--no-color",
+	})
+
+	var outBuf bytes.Buffer
+	cmd.SetOut(&outBuf)
+
+	err = cmd.Execute()
+	assert.NoError(t, err)
+}
+
+func TestRootCmd_DefaultCategory(t *testing.T) {
+	// Create a temp Makefile with mixed categorization
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## @category Build
+## Build the project
+build:
+	@echo build
+
+## Uncategorized target
+clean:
+	@echo clean
+`), 0644)
+	require.NoError(t, err)
+
+	cmd := NewRootCmd()
+	cmd.SetArgs([]string{
+		"--makefile-path", makefilePath,
+		"--default-category", "Other",
+		"--no-color",
+	})
+
+	var outBuf bytes.Buffer
+	cmd.SetOut(&outBuf)
+
+	err = cmd.Execute()
+	assert.NoError(t, err)
+}
+
+func TestIsTerminal(t *testing.T) {
+	// Test with stdout - may or may not be a terminal
+	result := IsTerminal(os.Stdout.Fd())
+	assert.IsType(t, false, result)
+
+	// Test with stderr
+	result = IsTerminal(os.Stderr.Fd())
+	assert.IsType(t, false, result)
+
+	// Test with stdin
+	result = IsTerminal(os.Stdin.Fd())
+	assert.IsType(t, false, result)
+}
+
+func TestRunHelp_Success(t *testing.T) {
+	// Create a temp Makefile
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## @file
+## This is a test Makefile
+
+## @category Build
+## Build the project
+## This target compiles everything.
+## @var VERBOSE Print verbose output
+build:
+	@echo build
+
+## @alias t
+## Run tests
+test:
+	@echo test
+`), 0644)
+	require.NoError(t, err)
+
+	config := NewConfig()
+	config.MakefilePath = makefilePath
+	config.UseColor = false
+
+	err = runHelp(config)
+	assert.NoError(t, err)
+}
+
+func TestRunHelp_WithOrdering(t *testing.T) {
+	// Create a temp Makefile with categories
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## @category Build
+## Build the project
+build:
+	@echo build
+
+## @category Test
+## Run tests
+test:
+	@echo test
+
+## @category Deploy
+## Deploy the project
+deploy:
+	@echo deploy
+`), 0644)
+	require.NoError(t, err)
+
+	config := NewConfig()
+	config.MakefilePath = makefilePath
+	config.UseColor = false
+	config.KeepOrderCategories = true
+	config.KeepOrderTargets = true
+
+	err = runHelp(config)
+	assert.NoError(t, err)
+}
+
+func TestRunHelp_ResolutionError(t *testing.T) {
+	config := NewConfig()
+	// Empty path should resolve to current dir which may not have a Makefile
+	config.MakefilePath = "/nonexistent/deeply/nested/path/Makefile"
+
+	err := runHelp(config)
+	assert.Error(t, err)
+}
+
+func TestRunHelp_ValidationError(t *testing.T) {
+	config := NewConfig()
+	config.MakefilePath = "/nonexistent/Makefile"
+
+	err := runHelp(config)
+	assert.Error(t, err)
+}
+
+func TestRunHelp_Verbose(t *testing.T) {
+	// Create a temp Makefile
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## Build the project
+build:
+	@echo build
+`), 0644)
+	require.NoError(t, err)
+
+	config := NewConfig()
+	config.MakefilePath = makefilePath
+	config.UseColor = false
+	config.Verbose = true
+
+	err = runHelp(config)
+	assert.NoError(t, err)
+}
+
+func TestRunHelp_WithDefaultCategory(t *testing.T) {
+	// Create a temp Makefile with mixed categorization
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## @category Build
+## Build the project
+build:
+	@echo build
+
+## Uncategorized target
+clean:
+	@echo clean
+`), 0644)
+	require.NoError(t, err)
+
+	config := NewConfig()
+	config.MakefilePath = makefilePath
+	config.UseColor = false
+	config.DefaultCategory = "Other"
+
+	err = runHelp(config)
+	assert.NoError(t, err)
+}
+
+func TestRunHelp_CategoryOrder(t *testing.T) {
+	// Create a temp Makefile with categories
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## @category Build
+## Build the project
+build:
+	@echo build
+
+## @category Test
+## Run tests
+test:
+	@echo test
+`), 0644)
+	require.NoError(t, err)
+
+	config := NewConfig()
+	config.MakefilePath = makefilePath
+	config.UseColor = false
+	config.CategoryOrder = []string{"Test", "Build"}
+
+	err = runHelp(config)
+	assert.NoError(t, err)
+}
+
+func TestRunHelp_InvalidCategoryOrder(t *testing.T) {
+	// Create a temp Makefile with categories
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## @category Build
+## Build the project
+build:
+	@echo build
+`), 0644)
+	require.NoError(t, err)
+
+	config := NewConfig()
+	config.MakefilePath = makefilePath
+	config.UseColor = false
+	config.CategoryOrder = []string{"NonExistent"}
+
+	err = runHelp(config)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ordering")
+}
+
+func TestRunHelp_EmptyMakefile(t *testing.T) {
+	// Create an empty temp Makefile
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(""), 0644)
+	require.NoError(t, err)
+
+	config := NewConfig()
+	config.MakefilePath = makefilePath
+	config.UseColor = false
+
+	// Empty Makefile should still work (just produce minimal output)
+	err = runHelp(config)
+	assert.NoError(t, err)
+}
+
+func TestRunHelp_WithInclude(t *testing.T) {
+	// Create a temp Makefile with include using -include (optional include)
+	// to avoid errors when the file is copied to a temp location
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	includePath := filepath.Join(tmpDir, "common.mk")
+
+	// Use -include which silently ignores missing files
+	err := os.WriteFile(makefilePath, []byte(`
+-include common.mk
+
+## Build the project
+build:
+	@echo build
+`), 0644)
+	require.NoError(t, err)
+
+	err = os.WriteFile(includePath, []byte(`
+## Common target
+clean:
+	@echo clean
+`), 0644)
+	require.NoError(t, err)
+
+	config := NewConfig()
+	config.MakefilePath = makefilePath
+	config.UseColor = false
+
+	err = runHelp(config)
+	assert.NoError(t, err)
 }

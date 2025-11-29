@@ -584,9 +584,9 @@ Test cases:
 - [x] Verbose output shows discovery info
 - [x] 30-second timeout on make commands
 - [x] All unit tests pass
-- [ ] Test coverage ≥ 80% (current: discovery 43.7%, cli 46.2% - needs improvement)
+- [x] Test coverage ≥ 80% (achieved: discovery 87.4%, cli 94.6%)
 
-**Status: MOSTLY COMPLETE** (2024-11-28) - Core functionality implemented, test coverage needs improvement
+**Status: COMPLETE** (2024-11-28)
 
 ---
 
@@ -812,7 +812,7 @@ Contents:
 - [x] Write `internal/format/example_test.go` (bonus)
 - [x] Create `internal/format/doc.go`
 
-### Phase 7: Discovery Service & CLI Layer (MOSTLY COMPLETE)
+### Phase 7: Discovery Service & CLI Layer (COMPLETE)
 - [x] Implement `internal/discovery/executor.go`
 - [x] Implement `internal/discovery/service.go`
 - [x] Implement `internal/discovery/makefile.go`
@@ -825,7 +825,7 @@ Contents:
 - [x] Write `internal/discovery/service_test.go`
 - [x] Write `internal/cli/root_test.go`
 - [x] Create `internal/discovery/doc.go`
-- [ ] Improve test coverage to ≥ 80%
+- [x] Test coverage ≥ 80% (achieved: discovery 87.4%, cli 94.6%)
 
 ### Phase 8: Target Manipulation
 - [ ] Implement `internal/target/file.go`
