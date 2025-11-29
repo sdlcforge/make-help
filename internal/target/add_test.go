@@ -79,7 +79,9 @@ test:
 	contentStr := string(content)
 	assert.Contains(t, contentStr, ".PHONY: help")
 	assert.Contains(t, contentStr, "help:")
-	assert.Contains(t, contentStr, "@make-help")
+	assert.Contains(t, contentStr, "GOBIN ?= .bin")
+	assert.Contains(t, contentStr, "MAKE_HELP_BIN := $(GOBIN)/make-help")
+	assert.Contains(t, contentStr, "@$(MAKE_HELP_CMD)")
 	assert.Contains(t, contentStr, "--keep-order-categories")
 	assert.Contains(t, contentStr, "--default-category General")
 }
@@ -128,7 +130,8 @@ all:
 	contentStr := string(content)
 	assert.Contains(t, contentStr, ".PHONY: help")
 	assert.Contains(t, contentStr, "help:")
-	assert.Contains(t, contentStr, "@make-help")
+	assert.Contains(t, contentStr, "GOBIN ?= .bin")
+	assert.Contains(t, contentStr, "@$(MAKE_HELP_CMD)")
 
 	// Verify Makefile was NOT modified (no include directive added)
 	makefileContentAfter, err := os.ReadFile(makefilePath)
