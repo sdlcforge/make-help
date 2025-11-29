@@ -185,3 +185,30 @@ func (r *Renderer) RenderDetailedTarget(target *model.Target) string {
 
 	return buf.String()
 }
+
+// RenderBasicTarget renders minimal info for a target without documentation.
+// This is used when a target exists but has no associated documentation.
+// Shows target name and source location if available.
+func (r *Renderer) RenderBasicTarget(name string, sourceFile string, lineNumber int) string {
+	var buf strings.Builder
+
+	// Target name
+	buf.WriteString(r.colors.TargetName)
+	buf.WriteString("Target: ")
+	buf.WriteString(name)
+	buf.WriteString(r.colors.Reset)
+	buf.WriteString("\n")
+
+	// No documentation message
+	buf.WriteString("\n")
+	buf.WriteString(r.colors.Documentation)
+	buf.WriteString("No documentation available.\n")
+	buf.WriteString(r.colors.Reset)
+
+	// Source information (if available)
+	if sourceFile != "" {
+		buf.WriteString(fmt.Sprintf("\nSource: %s:%d\n", sourceFile, lineNumber))
+	}
+
+	return buf.String()
+}

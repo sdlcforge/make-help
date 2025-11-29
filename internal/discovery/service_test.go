@@ -158,10 +158,10 @@ test:
 `)
 
 	service := NewService(mock, false)
-	targets, err := service.DiscoverTargets(makefilePath)
+	result, err := service.DiscoverTargets(makefilePath)
 
 	require.NoError(t, err)
-	assert.Equal(t, []string{"all", "build", "test"}, targets)
+	assert.Equal(t, []string{"all", "build", "test"}, result.Targets)
 }
 
 func TestDiscoverTargets_Verbose(t *testing.T) {
@@ -178,10 +178,10 @@ build:
 `)
 
 	service := NewService(mock, true) // verbose mode
-	targets, err := service.DiscoverTargets(makefilePath)
+	result, err := service.DiscoverTargets(makefilePath)
 
 	require.NoError(t, err)
-	assert.Equal(t, []string{"all", "build"}, targets)
+	assert.Equal(t, []string{"all", "build"}, result.Targets)
 }
 
 func TestDiscoverTargets_Timeout(t *testing.T) {
@@ -440,7 +440,7 @@ my+target:
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := parseTargetsFromDatabase(tt.input)
-			assert.Equal(t, tt.expected, result)
+			assert.Equal(t, tt.expected, result.Targets)
 		})
 	}
 }

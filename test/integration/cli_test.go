@@ -440,3 +440,106 @@ build:
 	// File documentation should appear
 	assert.Contains(t, stdout, "This is the file documentation")
 }
+
+func TestDetailedHelp_DocumentedTarget(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "with_undocumented.mk")
+
+	stdout, stderr, err := runMakeHelp(t, binary,
+		"--makefile-path", fixture,
+		"--no-color",
+		"--target", "build")
+	require.NoError(t, err, "stderr: %s", stderr)
+
+	// Should show target name
+	assert.Contains(t, stdout, "Target: build")
+
+	// Should show aliases
+	assert.Contains(t, stdout, "Aliases: b, compile")
+
+	// Should show variables with full descriptions
+	assert.Contains(t, stdout, "Variables:")
+	assert.Contains(t, stdout, "BUILD_FLAGS: Flags passed to go build")
+	assert.Contains(t, stdout, "OUTPUT_DIR: Directory for build output")
+
+	// Should show full documentation (not just summary)
+	assert.Contains(t, stdout, "Documentation:")
+	assert.Contains(t, stdout, "Build the project.")
+	assert.Contains(t, stdout, "This compiles all source files and generates")
+	assert.Contains(t, stdout, "the binary in the output directory.")
+
+	// Should show source location
+	assert.Contains(t, stdout, "Source:")
+}
+
+func TestDetailedHelp_UndocumentedTarget(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "with_undocumented.mk")
+
+	stdout, stderr, err := runMakeHelp(t, binary,
+		"--makefile-path", fixture,
+		"--no-color",
+		"--target", "undocumented")
+	require.NoError(t, err, "stderr: %s", stderr)
+
+	// Should show target name
+	assert.Contains(t, stdout, "Target: undocumented")
+
+	// Should show "no documentation" message
+	assert.Contains(t, stdout, "No documentation available.")
+
+	// Should not show sections for aliases, variables, or documentation
+	assert.NotContains(t, stdout, "Aliases:")
+	assert.NotContains(t, stdout, "Variables:")
+	assert.NotContains(t, stdout, "Documentation:")
+}
+
+func TestDetailedHelp_NonexistentTarget(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "basic.mk")
+
+	_, _, err := runMakeHelp(t, binary,
+		"--makefile-path", fixture,
+		"--no-color",
+		"--target", "nonexistent")
+
+	// Should error for nonexistent target
+	require.Error(t, err)
+}
+
+func TestDetailedHelp_WithColors(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "with_undocumented.mk")
+
+	stdout, stderr, err := runMakeHelp(t, binary,
+		"--makefile-path", fixture,
+		"--color",
+		"--target", "build")
+	require.NoError(t, err, "stderr: %s", stderr)
+
+	// Should contain ANSI color codes
+	assert.Contains(t, stdout, "\033[")
+	assert.Contains(t, stdout, "Target: build")
+}
+
+func TestDetailedHelp_MinimalTarget(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "basic.mk")
+
+	stdout, stderr, err := runMakeHelp(t, binary,
+		"--makefile-path", fixture,
+		"--no-color",
+		"--target", "build")
+	require.NoError(t, err, "stderr: %s", stderr)
+
+	// Should show target name
+	assert.Contains(t, stdout, "Target: build")
+
+	// Should show documentation
+	assert.Contains(t, stdout, "Documentation:")
+	assert.Contains(t, stdout, "Build the project")
+
+	// Should not have aliases or variables for this simple target
+	assert.NotContains(t, stdout, "Aliases:")
+	assert.NotContains(t, stdout, "Variables:")
+}

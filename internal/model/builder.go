@@ -8,20 +8,40 @@ import (
 	"github.com/sdlcforge/make-help/internal/summary"
 )
 
+// BuilderConfig holds configuration for the Builder.
+type BuilderConfig struct {
+	// DefaultCategory is used for uncategorized targets when categories are mixed.
+	DefaultCategory string
+
+	// IncludeTargets lists undocumented targets to include in help.
+	IncludeTargets []string
+
+	// IncludeAllPhony includes all .PHONY targets in help output.
+	IncludeAllPhony bool
+
+	// PhonyTargets maps target names to their .PHONY status.
+	PhonyTargets map[string]bool
+}
+
 // Builder constructs a HelpModel from parsed Makefile directives.
 // It aggregates file documentation, groups targets by category,
 // and associates aliases and variables with targets.
 type Builder struct {
-	defaultCategory string
-	extractor       *summary.Extractor
+	config    *BuilderConfig
+	extractor *summary.Extractor
 }
 
-// NewBuilder creates a new Builder with the given default category.
-// The default category is used for uncategorized targets when categories are mixed.
-func NewBuilder(defaultCategory string) *Builder {
+// NewBuilder creates a new Builder with the given configuration.
+func NewBuilder(config *BuilderConfig) *Builder {
+	if config == nil {
+		config = &BuilderConfig{}
+	}
+	if config.PhonyTargets == nil {
+		config.PhonyTargets = make(map[string]bool)
+	}
 	return &Builder{
-		defaultCategory: defaultCategory,
-		extractor:       summary.NewExtractor(),
+		config:    config,
+		extractor: summary.NewExtractor(),
 	}
 }
 
@@ -45,8 +65,17 @@ func (b *Builder) Build(parsedFiles []*parser.ParsedFile) (*HelpModel, error) {
 		b.processFile(file, model, categoryMap, targetMap, targetToCategory, &categoryOrder, &targetOrder)
 	}
 
-	// Assign targets to categories
+	// Assign targets to categories with filtering
 	for targetName, target := range targetMap {
+		// Apply filtering logic
+		shouldInclude := b.shouldIncludeTarget(target)
+		if !shouldInclude {
+			continue
+		}
+
+		// Set phony status
+		target.IsPhony = b.config.PhonyTargets[targetName]
+
 		categoryName := targetToCategory[targetName]
 
 		// Compute summary from documentation
@@ -73,16 +102,42 @@ func (b *Builder) Build(parsedFiles []*parser.ParsedFile) (*HelpModel, error) {
 	}
 
 	// Validate categorization
-	if err := ValidateCategorization(model, b.defaultCategory); err != nil {
+	if err := ValidateCategorization(model, b.config.DefaultCategory); err != nil {
 		return nil, err
 	}
 
 	// Apply default category if needed
-	if model.HasCategories && b.defaultCategory != "" {
-		ApplyDefaultCategory(model, b.defaultCategory)
+	if model.HasCategories && b.config.DefaultCategory != "" {
+		ApplyDefaultCategory(model, b.config.DefaultCategory)
 	}
 
 	return model, nil
+}
+
+// shouldIncludeTarget determines if a target should be included in the help output.
+// A target is included if:
+// 1. It has documentation (len(Documentation) > 0), OR
+// 2. It's in the IncludeTargets list, OR
+// 3. It's .PHONY and IncludeAllPhony is true
+func (b *Builder) shouldIncludeTarget(target *Target) bool {
+	// Include if documented
+	if len(target.Documentation) > 0 {
+		return true
+	}
+
+	// Include if explicitly listed
+	for _, includedName := range b.config.IncludeTargets {
+		if target.Name == includedName {
+			return true
+		}
+	}
+
+	// Include if phony and IncludeAllPhony is set
+	if b.config.IncludeAllPhony && b.config.PhonyTargets[target.Name] {
+		return true
+	}
+
+	return false
 }
 
 // processFile handles directives and targets from a single parsed file.

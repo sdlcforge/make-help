@@ -810,12 +810,22 @@ all:
 }
 
 func TestTargetFlag(t *testing.T) {
-	cmd := NewRootCmd()
-	cmd.SetArgs([]string{"--target", "build"})
+	// Create a temp Makefile with a build target
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## Build the project
+build:
+	@echo building
+`), 0644)
+	require.NoError(t, err)
 
-	err := cmd.Execute()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "--target not yet implemented")
+	cmd := NewRootCmd()
+	cmd.SetArgs([]string{"--makefile-path", makefilePath, "--target", "build", "--no-color"})
+
+	// The --target flag is now implemented and should work without error
+	err = cmd.Execute()
+	require.NoError(t, err, "should successfully run with --target flag")
 }
 
 func TestIncludeAllPhonyFlag(t *testing.T) {

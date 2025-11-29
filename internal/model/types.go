@@ -56,6 +56,9 @@ type Target struct {
 
 	// LineNumber is the line number where the target definition appears.
 	LineNumber int
+
+	// IsPhony indicates whether this target is declared as .PHONY.
+	IsPhony bool
 }
 
 // Variable represents a documented environment variable associated with a target.

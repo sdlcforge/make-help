@@ -8,9 +8,18 @@ import (
 	"time"
 )
 
+// DiscoverTargetsResult contains discovered targets and their metadata.
+type DiscoverTargetsResult struct {
+	// Targets contains all discovered target names in order.
+	Targets []string
+
+	// IsPhony maps target names to their .PHONY status.
+	IsPhony map[string]bool
+}
+
 // discoverTargets extracts all targets from make -p output.
 // It executes make -p -r to get the database output and parses target names.
-func (s *Service) discoverTargets(makefilePath string) ([]string, error) {
+func (s *Service) discoverTargets(makefilePath string) (*DiscoverTargetsResult, error) {
 	// Execute make with timeout to prevent indefinite hangs
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -20,28 +29,47 @@ func (s *Service) discoverTargets(makefilePath string) ([]string, error) {
 		if ctx.Err() == context.DeadlineExceeded {
 			return nil, fmt.Errorf("make command timed out after 30s")
 		}
+		// Empty Makefiles cause "No targets" error - this is acceptable
+		if strings.Contains(stderr, "No targets") {
+			return &DiscoverTargetsResult{
+				Targets: []string{},
+				IsPhony: map[string]bool{},
+			}, nil
+		}
 		return nil, fmt.Errorf("failed to discover targets: %w\nstderr: %s", err, stderr)
 	}
 
-	targets := parseTargetsFromDatabase(stdout)
+	result := parseTargetsFromDatabase(stdout)
 
 	if s.verbose {
-		fmt.Printf("Discovered %d target(s) from make database\n", len(targets))
+		fmt.Printf("Discovered %d target(s) from make database\n", len(result.Targets))
 	}
 
-	return targets, nil
+	return result, nil
 }
 
-// parseTargetsFromDatabase extracts target names from make -p output.
+// parseTargetsFromDatabase extracts target names and .PHONY status from make -p output.
 // It filters out comments, whitespace-prefixed lines, and built-in targets.
-func parseTargetsFromDatabase(output string) []string {
+func parseTargetsFromDatabase(output string) *DiscoverTargetsResult {
 	var targets []string
 	seen := make(map[string]bool)
+	isPhony := make(map[string]bool)
 
 	// Match target definitions: <target>: or <target>::
 	targetRegex := regexp.MustCompile(`^([a-zA-Z0-9_/.@%+-][a-zA-Z0-9_/.@%+-]*)\s*:`)
 
 	for _, line := range strings.Split(output, "\n") {
+		// Parse .PHONY declarations
+		if strings.HasPrefix(line, ".PHONY:") {
+			// Extract all targets from .PHONY line
+			phonyLine := strings.TrimPrefix(line, ".PHONY:")
+			phonyTargets := strings.Fields(phonyLine)
+			for _, target := range phonyTargets {
+				isPhony[target] = true
+			}
+			continue
+		}
+
 		// Skip comments
 		if strings.HasPrefix(line, "#") {
 			continue
@@ -71,7 +99,10 @@ func parseTargetsFromDatabase(output string) []string {
 		}
 	}
 
-	return targets
+	return &DiscoverTargetsResult{
+		Targets: targets,
+		IsPhony: isPhony,
+	}
 }
 
 // isSpecialTarget returns true if the target is a special or built-in Make target.

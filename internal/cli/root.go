@@ -100,7 +100,7 @@ Documentation lines start with ## and are associated with the next target.`,
 			} else if config.CreateHelpTarget {
 				return fmt.Errorf("--create-help-target not yet implemented")
 			} else if config.Target != "" {
-				return fmt.Errorf("--target not yet implemented")
+				return runDetailedHelp(config)
 			} else {
 				// Default behavior: run help command
 				return runHelp(config)

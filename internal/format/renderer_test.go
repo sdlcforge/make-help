@@ -509,3 +509,39 @@ func TestRender_MarkdownInSummary(t *testing.T) {
 	assert.NotContains(t, output, "`")
 	assert.NotContains(t, output, "[docs]")
 }
+
+func TestRenderBasicTarget_Complete(t *testing.T) {
+	useColor := false
+	renderer := NewRenderer(useColor)
+
+	output := renderer.RenderBasicTarget("undocumented", "/path/to/Makefile", 15)
+
+	assert.Contains(t, output, "Target: undocumented")
+	assert.Contains(t, output, "No documentation available.")
+	assert.Contains(t, output, "Source: /path/to/Makefile:15")
+}
+
+func TestRenderBasicTarget_NoSourceInfo(t *testing.T) {
+	useColor := false
+	renderer := NewRenderer(useColor)
+
+	output := renderer.RenderBasicTarget("undocumented", "", 0)
+
+	assert.Contains(t, output, "Target: undocumented")
+	assert.Contains(t, output, "No documentation available.")
+	assert.NotContains(t, output, "Source:")
+}
+
+func TestRenderBasicTarget_WithColors(t *testing.T) {
+	useColor := true
+	renderer := NewRenderer(useColor)
+
+	output := renderer.RenderBasicTarget("undocumented", "/path/to/Makefile", 20)
+
+	// Should contain color codes
+	assert.Contains(t, output, "\033[1;32m", "Should contain green for target")
+	assert.Contains(t, output, "\033[0;37m", "Should contain white for documentation message")
+	assert.Contains(t, output, "\033[0m", "Should contain reset code")
+	assert.Contains(t, output, "Target: undocumented")
+	assert.Contains(t, output, "No documentation available.")
+}

@@ -33,11 +33,11 @@ func (s *Service) DiscoverMakefiles(mainPath string) ([]string, error) {
 }
 
 // DiscoverTargets discovers all targets in the given Makefile using make -p.
-// It returns a list of target names extracted from the make database output.
+// It returns target names and their .PHONY status extracted from the make database output.
 //
 // The function filters out special targets, pattern rules, and built-in targets,
 // returning only user-defined targets.
-func (s *Service) DiscoverTargets(makefilePath string) ([]string, error) {
+func (s *Service) DiscoverTargets(makefilePath string) (*DiscoverTargetsResult, error) {
 	if s.verbose {
 		fmt.Printf("Discovering targets from: %s\n", makefilePath)
 	}

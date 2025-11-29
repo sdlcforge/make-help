@@ -10,17 +10,17 @@ import (
 )
 
 func TestNewBuilder(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	assert.NotNil(t, builder)
-	assert.NotNil(t, builder)
+	assert.NotNil(t, builder.config)
 	assert.NotNil(t, builder.extractor)
 }
 
 func TestBuild_EmptyParsedFiles(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	model, err := builder.Build([]*parser.ParsedFile{})
 
@@ -32,8 +32,8 @@ func TestBuild_EmptyParsedFiles(t *testing.T) {
 }
 
 func TestBuild_FileDocumentation(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -55,8 +55,8 @@ func TestBuild_FileDocumentation(t *testing.T) {
 }
 
 func TestBuild_BasicTargetWithDocs(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -92,8 +92,8 @@ func TestBuild_BasicTargetWithDocs(t *testing.T) {
 }
 
 func TestBuild_TargetWithCategory(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -119,8 +119,8 @@ func TestBuild_TargetWithCategory(t *testing.T) {
 }
 
 func TestBuild_MultipleCategories(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -153,8 +153,8 @@ func TestBuild_MultipleCategories(t *testing.T) {
 }
 
 func TestBuild_TargetWithVariables(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -185,8 +185,8 @@ func TestBuild_TargetWithVariables(t *testing.T) {
 }
 
 func TestBuild_TargetWithAliases(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -214,8 +214,8 @@ func TestBuild_TargetWithAliases(t *testing.T) {
 }
 
 func TestBuild_MixedCategorizationError(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -247,9 +247,9 @@ func TestBuild_MixedCategorizationError(t *testing.T) {
 }
 
 func TestBuild_MixedCategorizationWithDefaultCategory(t *testing.T) {
-	defaultCategory := ""
-	defaultCategory = "Other"
-	builder := NewBuilder(defaultCategory)
+	defaultCategory := "Other"
+	config := &BuilderConfig{DefaultCategory: defaultCategory}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -287,8 +287,8 @@ func TestBuild_MixedCategorizationWithDefaultCategory(t *testing.T) {
 }
 
 func TestBuild_SplitCategories(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -325,8 +325,8 @@ func TestBuild_SplitCategories(t *testing.T) {
 }
 
 func TestBuild_DiscoveryOrder(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -359,8 +359,8 @@ func TestBuild_DiscoveryOrder(t *testing.T) {
 }
 
 func TestBuild_SummaryExtraction(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -385,8 +385,8 @@ func TestBuild_SummaryExtraction(t *testing.T) {
 }
 
 func TestBuild_TargetSourceTracking(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -412,8 +412,8 @@ func TestBuild_TargetSourceTracking(t *testing.T) {
 }
 
 func TestBuild_MultipleFilesAggregation(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -447,7 +447,7 @@ func TestBuild_MultipleFilesAggregation(t *testing.T) {
 }
 
 func TestParseVarDirective(t *testing.T) {
-	builder := NewBuilder("")
+	builder := NewBuilder(&BuilderConfig{DefaultCategory: ""})
 
 	tests := []struct {
 		name        string
@@ -491,7 +491,7 @@ func TestParseVarDirective(t *testing.T) {
 }
 
 func TestParseAliasDirective(t *testing.T) {
-	builder := NewBuilder("")
+	builder := NewBuilder(&BuilderConfig{DefaultCategory: ""})
 
 	tests := []struct {
 		name  string
@@ -528,9 +528,10 @@ func TestParseAliasDirective(t *testing.T) {
 	}
 }
 
-func TestBuild_NoDocTargetsStillIncluded(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+func TestBuild_NoDocTargetsFiltered(t *testing.T) {
+	// Test that targets without documentation are filtered by default
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -546,13 +547,15 @@ func TestBuild_NoDocTargetsStillIncluded(t *testing.T) {
 	model, err := builder.Build(parsedFiles)
 
 	require.NoError(t, err)
-	require.Len(t, model.Categories, 1)
-	assert.Len(t, model.Categories[0].Targets, 2)
+	// With no documentation, targets should be filtered out
+	if len(model.Categories) > 0 {
+		assert.Len(t, model.Categories[0].Targets, 0)
+	}
 }
 
 func TestBuild_EmptyFileDocValue(t *testing.T) {
-	defaultCategory := ""
-	builder := NewBuilder(defaultCategory)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
 
 	parsedFiles := []*parser.ParsedFile{
 		{
@@ -581,4 +584,198 @@ func findCategory(model *HelpModel, name string) *Category {
 		}
 	}
 	return nil
+}
+
+func TestBuild_FilterUndocumented(t *testing.T) {
+	// Test that undocumented targets are excluded by default
+	config := &BuilderConfig{
+		DefaultCategory: "",
+		PhonyTargets:    map[string]bool{},
+	}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveDoc, Value: "Documented target.", SourceFile: "Makefile", LineNumber: 1},
+			},
+			TargetMap: map[string]int{
+				"build":          2, // documented
+				"undocumented":   3, // undocumented - should be filtered out
+				"another-hidden": 4, // undocumented - should be filtered out
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1)
+	assert.Len(t, model.Categories[0].Targets, 1)
+	assert.Equal(t, "build", model.Categories[0].Targets[0].Name)
+}
+
+func TestBuild_IncludeTargets(t *testing.T) {
+	// Test --include-target includes specific undocumented targets
+	config := &BuilderConfig{
+		DefaultCategory: "",
+		IncludeTargets:  []string{"undocumented"},
+		PhonyTargets:    map[string]bool{},
+	}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveDoc, Value: "Documented target.", SourceFile: "Makefile", LineNumber: 1},
+			},
+			TargetMap: map[string]int{
+				"build":        2, // documented
+				"undocumented": 3, // undocumented but explicitly included
+				"hidden":       4, // undocumented and not included
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1)
+	assert.Len(t, model.Categories[0].Targets, 2)
+
+	// Check both targets are present
+	targetNames := []string{model.Categories[0].Targets[0].Name, model.Categories[0].Targets[1].Name}
+	assert.Contains(t, targetNames, "build")
+	assert.Contains(t, targetNames, "undocumented")
+}
+
+func TestBuild_IncludeAllPhony(t *testing.T) {
+	// Test --include-all-phony includes all .PHONY targets
+	config := &BuilderConfig{
+		DefaultCategory: "",
+		IncludeAllPhony: true,
+		PhonyTargets: map[string]bool{
+			"clean": true,
+			"test":  true,
+		},
+	}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveDoc, Value: "Documented target.", SourceFile: "Makefile", LineNumber: 1},
+			},
+			TargetMap: map[string]int{
+				"build":  2, // documented
+				"clean":  3, // undocumented but .PHONY
+				"test":   4, // undocumented but .PHONY
+				"hidden": 5, // undocumented and not .PHONY - should be filtered out
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1)
+	assert.Len(t, model.Categories[0].Targets, 3)
+
+	// Check expected targets are present
+	targetNames := make(map[string]bool)
+	for _, target := range model.Categories[0].Targets {
+		targetNames[target.Name] = true
+	}
+	assert.True(t, targetNames["build"])
+	assert.True(t, targetNames["clean"])
+	assert.True(t, targetNames["test"])
+	assert.False(t, targetNames["hidden"])
+}
+
+func TestBuild_PhonyStatusSet(t *testing.T) {
+	// Test that IsPhony field is correctly set on targets
+	config := &BuilderConfig{
+		DefaultCategory: "",
+		PhonyTargets: map[string]bool{
+			"clean": true,
+			"test":  true,
+		},
+	}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveDoc, Value: "Build target.", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "Clean target.", SourceFile: "Makefile", LineNumber: 3},
+			},
+			TargetMap: map[string]int{
+				"build": 2, // not phony
+				"clean": 4, // phony
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1)
+	assert.Len(t, model.Categories[0].Targets, 2)
+
+	// Find each target and check IsPhony
+	for _, target := range model.Categories[0].Targets {
+		if target.Name == "build" {
+			assert.False(t, target.IsPhony, "build should not be phony")
+		} else if target.Name == "clean" {
+			assert.True(t, target.IsPhony, "clean should be phony")
+		}
+	}
+}
+
+func TestBuild_CombinedFiltering(t *testing.T) {
+	// Test combination of documented, included, and phony targets
+	config := &BuilderConfig{
+		DefaultCategory: "",
+		IncludeTargets:  []string{"special"},
+		IncludeAllPhony: true,
+		PhonyTargets: map[string]bool{
+			"clean": true,
+		},
+	}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveDoc, Value: "Documented target.", SourceFile: "Makefile", LineNumber: 1},
+			},
+			TargetMap: map[string]int{
+				"build":   2, // documented
+				"clean":   3, // undocumented but phony
+				"special": 4, // undocumented but explicitly included
+				"hidden":  5, // undocumented, not phony, not included - should be filtered
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1)
+	assert.Len(t, model.Categories[0].Targets, 3)
+
+	// Check expected targets are present
+	targetNames := make(map[string]bool)
+	for _, target := range model.Categories[0].Targets {
+		targetNames[target.Name] = true
+	}
+	assert.True(t, targetNames["build"])
+	assert.True(t, targetNames["clean"])
+	assert.True(t, targetNames["special"])
+	assert.False(t, targetNames["hidden"])
 }
