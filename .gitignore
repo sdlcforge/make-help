@@ -6,6 +6,7 @@
 /qa
 /test-staging
 /yalc.lock
+/worktrees
 /*.log
 /*.pid
 
