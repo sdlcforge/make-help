@@ -1,0 +1,6 @@
+Usage: make [<target>...] [<ENV_VAR>=<value>...]
+
+Targets:
+  - build: Build the project
+  - clean: Clean build artifacts
+  - test: Run tests
