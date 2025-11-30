@@ -1,89 +1,127 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Quick reference for AI agents working on this codebase. For comprehensive details, see the documentation links below.
 
-## Build and Test Commands
+## What This Project Does
+
+`make-help` is a Go CLI tool that generates formatted help output from specially-formatted Makefile comments. It processes Makefiles through a pipeline: CLI → Discovery → Parser → Model Builder → Ordering → Summary → Formatter → Output.
+
+## Essential Commands
 
 ```bash
-# Build the binary
+# Build and run
 go build ./cmd/make-help
-
-# Run all tests
-go test ./...
-
-# Run tests with coverage
-go test -cover ./...
-
-# Run a specific package's tests
-go test ./internal/parser/...
-
-# Run a specific test by name
-go test ./internal/parser/... -run TestScanFile
-
-# Run integration tests only
-go test ./test/integration/...
-
-# Run the built binary
 ./make-help --makefile-path path/to/Makefile
+
+# Testing
+go test ./...                          # All tests
+go test -cover ./...                   # With coverage
+go test ./internal/parser/... -run TestScanFile  # Specific test
+go test ./test/integration/...         # Integration tests only
+
+# Development
+./make-help --verbose --makefile-path test.mk  # Debug mode
 ```
 
-## Architecture Overview
+## Key Entry Points
 
-`make-help` is a CLI tool that generates formatted help output from specially-formatted Makefile comments. The processing pipeline flows through these stages:
+- **`internal/cli/root.go`**: CLI flag registration and command routing (uses Cobra)
+- **`internal/cli/help.go`**: Main orchestration in `runHelp()` function
+- **`cmd/make-help/main.go`**: Binary entry point (thin wrapper)
+
+## Architecture Quick Reference
+
+### Processing Pipeline
 
 ```
 CLI Layer → Discovery → Parser → Model Builder → Ordering → Summary → Formatter → Output
 ```
 
-### Key Packages
+### Package Map (what does what)
 
-- **`internal/cli/`**: Cobra-based CLI using flags (not subcommands). `help.go` contains the main orchestration in `runHelp()`. `root.go` handles flag-based command dispatching.
-- **`internal/discovery/`**: Uses `make` commands to discover included files (via `MAKEFILE_LIST`) and targets (via `make -p`). Uses `CommandExecutor` interface for testability.
-- **`internal/parser/`**: Stateful scanner that extracts `@file`, `@category`, `@var`, `@alias` directives and associates documentation with targets.
-- **`internal/model/`**: `HelpModel` contains categories, targets, aliases, and variables. Builder constructs it from parsed files; validator enforces categorization rules.
-- **`internal/ordering/`**: Applies sorting strategies (alphabetical vs discovery order) to categories and targets.
-- **`internal/summary/`**: Extracts first sentence from documentation, stripping markdown. Ported from `extract-topic` JS library.
-- **`internal/format/`**: Renders help output with optional ANSI colors. Supports both summary and detailed target views.
-- **`internal/target/`**: Handles help target generation and removal with atomic file operations.
+| Package | Purpose | Key Type/Function |
+|---------|---------|-------------------|
+| `internal/cli/` | Cobra CLI, flag validation, routing | `root.go`, `help.go` |
+| `internal/discovery/` | Find Makefiles & targets via `make` commands | `Service.DiscoverTargets()` |
+| `internal/parser/` | Extract `@file`, `@category`, `@var`, `@alias` | `Scanner.ScanFile()` |
+| `internal/model/` | Build & validate help model | `Builder.Build()`, `HelpModel` |
+| `internal/ordering/` | Sort categories/targets | `Service.ApplyOrdering()` |
+| `internal/summary/` | Extract first sentence (strip markdown) | `Extractor.Extract()` |
+| `internal/format/` | Render with optional ANSI colors | `Renderer.Render()` |
+| `internal/target/` | Generate/remove help targets | `AddService`, `RemoveService` |
 
-### CLI Flags
+### Important Design Patterns
 
-The CLI uses flags instead of subcommands:
+1. **CLI uses flags, not subcommands**: Mode detection via flag combinations (`--create-help-target`, `--remove-help-target`, `--target <name>`)
+2. **Testability via interfaces**: `CommandExecutor` interface for mocking `make` commands
+3. **Security-first**: No shell injection; atomic file writes; 30s command timeouts
+4. **Stateful parser**: `parser.Scanner` maintains state across lines to associate docs with targets
+5. **Immutable model**: `HelpModel` is built once, not mutated
 
-- `--create-help-target` - generates help target file with local binary installation
-- `--remove-help-target` - removes generated help targets and files
-- `--target <name>` - shows detailed help for a single target
-- `--include-target` - includes undocumented targets in help output (repeatable, comma-separated)
-- `--include-all-phony` - includes all .PHONY targets in help output
+## Documentation Syntax (for parser)
 
-### Mode Flags (mutually exclusive)
+```makefile
+## @file                     # File-level docs (appears before targets)
+## @category Build           # Groups subsequent targets under "Build"
+## @var CC [description]     # Documents environment variable
+## @alias b, build-all       # Alternative target names
+## Build the project         # Target documentation (first sentence = summary)
+build:
+	go build ./...
+```
 
-1. **Default (no special flags)**: Display help output
-2. **`--target <name>`**: Display detailed help for single target
-3. **`--create-help-target`**: Generate help target file
-4. **`--remove-help-target`**: Remove help targets
+## Test Fixtures
 
-### Documentation Syntax
+- **Input Makefiles**: `test/fixtures/makefiles/*.mk`
+- **Expected outputs**: `test/fixtures/expected/*.txt`
+- **Integration tests**: `test/integration/cli_test.go` (builds binary, runs against fixtures)
 
-The parser recognizes these directives in `## ` comments:
-- `@file` - File-level documentation (appears before targets list)
-- `@category <name>` - Groups subsequent targets under a category
-- `@var <NAME> [description]` - Documents an environment variable
-- `@alias <name1>, <name2>` - Alternative target names
+## Common Development Tasks
 
-### Generated Help File Format
+### Adding a new directive type
+1. Update `internal/parser/directive.go` (add constant, update `parseDirective()`)
+2. Handle in `internal/model/builder.go` (add case in `Build()`)
+3. Update formatter if needed (`internal/format/renderer.go`)
+4. Add tests (parser unit test + integration fixture)
+5. Update `README.md` and `docs/architecture.md`
 
-When `--create-help-target` is used, it generates a Makefile include with:
+### Changing output format
+1. Modify templates in `internal/format/renderer.go`
+2. Update integration test fixtures in `test/fixtures/expected/`
+3. Regenerate example outputs in `examples/*/help.mk`
 
-- `GOBIN ?= .bin` - configurable binary directory
-- Binary installation target using `go install`
-- `.PHONY: help` target for summary view
-- `.PHONY: help-<target>` for each documented target (detailed view)
+### Adding a CLI flag
+1. Add to `Config` struct in `internal/cli/config.go`
+2. Register in `internal/cli/root.go` `NewRootCmd()`
+3. Use in appropriate service
+4. Add integration test coverage
+5. Update `README.md` flags table
 
-### Test Fixtures
+## Critical Context for AI Agents
 
-Test Makefiles are in `test/fixtures/makefiles/` and expected outputs in `test/fixtures/expected/`. Integration tests in `test/integration/cli_test.go` build the binary and run it against fixtures.
+- **All code is in `internal/`**: Not a library, prevents API commitment
+- **Only Cobra is an external dependency**: Everything else uses stdlib
+- **Single-pass parsing**: Parser reads each file once; no backtracking
+- **Security-conscious**: Validate paths, sanitize inputs, atomic writes, timeouts
+- **Mixed categorization is an error**: Either all targets categorized or none (use `--default-category` to resolve)
+- **Generated help files are self-referential**: Use `$(dir $(lastword $(MAKEFILE_LIST)))` pattern to work from any directory
 
-## Design Reference
+## Comprehensive Documentation
 
-`docs/design.md` contains the detailed design specification including data structures, algorithms, and component responsibilities.
+| Document | Purpose |
+|----------|---------|
+| [README.md](../README.md) | End-user documentation |
+| [docs/architecture.md](../docs/architecture.md) | Architecture overview with system diagram |
+| [docs/architecture/components.md](../docs/architecture/components.md) | Detailed component specs |
+| [docs/architecture/data-models.md](../docs/architecture/data-models.md) | Go type definitions |
+| [docs/architecture/algorithms.md](../docs/architecture/algorithms.md) | Key algorithms (discovery, summary extraction) |
+| [docs/architecture/program-flow.md](../docs/architecture/program-flow.md) | Processing pipelines |
+| [docs/architecture/error-handling.md](../docs/architecture/error-handling.md) | Error strategies |
+| [docs/architecture/testing-strategy.md](../docs/architecture/testing-strategy.md) | Testing approach |
+| [docs/developer-brief.md](../docs/developer-brief.md) | Contributor guide with common tasks |
+
+## Quick Troubleshooting
+
+**Mixed categorization error**: Use `--default-category Misc`
+**Tests failing after changes**: Regenerate fixtures by running binary manually and saving output
+**Need to debug discovery**: Use `--verbose` flag to see Makefile resolution and target discovery
