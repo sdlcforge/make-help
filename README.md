@@ -589,59 +589,10 @@ If your Makefile is very complex or has expensive operations during parsing, you
 
 **Solution**: Simplify variable expansions or move expensive operations out of variable assignments.
 
-## Contributing
+## Documentation
 
-Contributions are welcome! Please follow these guidelines:
-
-1. **Fork the repository** and create a feature branch
-2. **Write tests** for new functionality (aim for >90% coverage)
-3. **Follow Go conventions**:
-   - Use `gofmt` for formatting
-   - Write godoc comments for exported symbols
-   - Use meaningful variable names
-4. **Update documentation** if adding features
-5. **Submit a pull request** with a clear description
-
-### Running Tests
-
-```bash
-# Run all tests
-go test ./...
-
-# Run with coverage
-go test -cover ./...
-
-# Run integration tests
-go test ./test/integration/...
-```
-
-### Project Structure
-
-```
-make-help/
-├── cmd/make-help/        # CLI entry point
-├── internal/
-│   ├── cli/             # Command-line interface
-│   ├── discovery/       # Makefile and target discovery
-│   ├── parser/          # Documentation parsing
-│   ├── model/           # Data structures
-│   ├── ordering/        # Sorting strategies
-│   ├── summary/         # Summary extraction
-│   ├── format/          # Output rendering
-│   ├── target/          # Help file generation
-│   └── errors/          # Custom error types
-├── examples/            # Working example projects
-│   ├── uncategorized-targets/
-│   ├── categorized-project/
-│   ├── full-featured/
-│   └── filtering-demo/
-├── scripts/             # Helper scripts
-│   └── run-example.sh   # Run examples with shared GOBIN
-├── test/
-│   ├── fixtures/        # Test Makefiles and expected outputs
-│   └── integration/     # End-to-end tests
-└── docs/                # Design documentation
-```
+- **[Developer Brief](docs/developer-brief.md)** - Contributing guide, development setup, and common tasks
+- **[Architecture Document](docs/architecture.md)** - Comprehensive architecture and implementation details
 
 ## License
 
@@ -655,4 +606,3 @@ The summary extraction algorithm is a Go port of the [extract-topic](https://www
 
 - **Issues**: Report bugs and request features via GitHub Issues
 - **Discussions**: Ask questions in GitHub Discussions
-- **Documentation**: See `docs/design.md` for detailed design documentation
