@@ -7,10 +7,10 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                          CLI Layer                               │
-│  (Cobra-based command parser, flag validation, color detection) │
+│    (Cobra-based, flag validation, mode detection, routing)      │
 └───────────────┬─────────────────────────────────────────────────┘
                 │
-                ├──> help (default command)
+                ├──> Default Mode (no mode flags)
                 │    ┌────────────────────────────────────────────┐
                 │    │  Discovery Service                         │
                 │    │  - Makefile resolution                     │
@@ -31,6 +31,7 @@
                 │    │  - Group targets by category               │
                 │    │  - Validate mixed categorization           │
                 │    │  - Associate aliases and vars              │
+                │    │  - Apply target filtering                  │
                 │    └──────┬─────────────────────────────────────┘
                 │           │
                 │    ┌──────▼─────────────────────────────────────┐
@@ -49,7 +50,7 @@
                 │           │
                 │    ┌──────▼─────────────────────────────────────┐
                 │    │  Formatter Service                         │
-                │    │  - Template rendering                      │
+                │    │  - Template rendering (summary view)       │
                 │    │  - Color application                       │
                 │    │  - Layout formatting                       │
                 │    └──────┬─────────────────────────────────────┘
@@ -57,17 +58,27 @@
                 │           ▼
                 │       [STDOUT]
                 │
-                ├──> add-target
+                ├──> --target <name> Mode
                 │    ┌────────────────────────────────────────────┐
-                │    │  Add-Target Service                        │
+                │    │  Discovery → Parser → Model Builder        │
+                │    │  Extract single target's full docs         │
+                │    │  Format detailed view (full documentation) │
+                │    └──────┬─────────────────────────────────────┘
+                │           ▼
+                │       [STDOUT]
+                │
+                ├──> --create-help-target Mode
+                │    ┌────────────────────────────────────────────┐
+                │    │  Help Target Generator                     │
                 │    │  - Detect include pattern                  │
                 │    │  - Generate help target file               │
+                │    │  - Create help-<target> targets            │
                 │    │  - Inject include directive                │
                 │    └────────────────────────────────────────────┘
                 │
-                └──> remove-target
+                └──> --remove-help-target Mode
                      ┌────────────────────────────────────────────┐
-                     │  Remove-Target Service                     │
+                     │  Help Target Remover                       │
                      │  - Identify help target artifacts          │
                      │  - Remove include directives               │
                      │  - Clean up generated files                │
@@ -153,7 +164,7 @@ make-help/
 - **`internal/ordering/`**: Strategy pattern for flexible ordering algorithms
 - **`internal/summary/`**: Port of extract-topic; isolated for unit testing
 - **`internal/format/`**: Template-based rendering for flexibility and testability
-- **`internal/target/`**: File manipulation logic; isolated for safety
+- **`internal/target/`**: Help target generation and removal; file manipulation with atomic writes
 - **`internal/errors/`**: Centralized error definitions for consistent handling
 
 ### 2.2 Package-Level Godoc Comments
@@ -444,18 +455,45 @@ func NewColorScheme(useColor bool) *ColorScheme {
 
 **Package:** `internal/cli`
 
-**Design:** Use spf13/cobra for standard Go CLI patterns
+**Design:** Use spf13/cobra with flag-based commands (no subcommands)
 
 ```go
 // Root command setup
 func NewRootCmd() *cobra.Command {
-    var config Config
+    config := NewConfig()
 
     rootCmd := &cobra.Command{
         Use:   "make-help",
         Short: "Dynamic help generation for Makefiles",
+        Long: `make-help generates formatted help output from Makefile documentation.
+
+Default behavior displays help. Use flags for other operations:
+  --target <name>       Show detailed help for a target
+  --create-help-target  Generate help target file
+  --remove-help-target  Remove help targets
+
+Documentation directives (in ## comments):
+  @file         File-level documentation
+  @category     Group targets into categories
+  @var          Document environment variables
+  @alias        Define target aliases`,
         RunE: func(cmd *cobra.Command, args []string) error {
-            return runHelp(&config)
+            // Normalize IncludeTargets from comma-separated + repeatable flags
+            config.IncludeTargets = parseIncludeTargets(config.IncludeTargets)
+
+            // Resolve color mode
+            config.UseColor = ResolveColorMode(config)
+
+            // Dispatch to appropriate handler
+            if config.RemoveHelpTarget {
+                return runRemoveHelpTarget(config)
+            } else if config.CreateHelpTarget {
+                return runCreateHelpTarget(config)
+            } else if config.Target != "" {
+                return runDetailedHelp(config)
+            } else {
+                return runHelp(config)
+            }
         },
     }
 
@@ -466,17 +504,38 @@ func NewRootCmd() *cobra.Command {
         "no-color", false, "Disable colored output")
     rootCmd.PersistentFlags().BoolVar(&forceColor,
         "color", false, "Force colored output")
-    rootCmd.PersistentFlags().BoolVar(&config.Verbose,
-        "verbose", false, "Enable verbose output for debugging file discovery and parsing")
+    rootCmd.PersistentFlags().BoolVarP(&config.Verbose,
+        "verbose", "v", false, "Enable verbose output for debugging")
 
-    // Help command flags (on root)
+    // Mode flags
+    rootCmd.Flags().BoolVar(&config.CreateHelpTarget,
+        "create-help-target", false, "Generate help target file with local binary installation")
+    rootCmd.Flags().BoolVar(&config.RemoveHelpTarget,
+        "remove-help-target", false, "Remove help target from Makefile")
+    rootCmd.Flags().StringVar(&config.Target,
+        "target", "", "Show detailed help for a specific target")
+
+    // Target filtering flags
+    rootCmd.Flags().StringSliceVar(&config.IncludeTargets,
+        "include-target", []string{}, "Include undocumented target (repeatable, comma-separated)")
+    rootCmd.Flags().BoolVar(&config.IncludeAllPhony,
+        "include-all-phony", false, "Include all .PHONY targets in help output")
+
+    // Ordering flags
     rootCmd.Flags().BoolVar(&config.KeepOrderCategories,
         "keep-order-categories", false, "Preserve category discovery order")
-    // ... other flags
+    rootCmd.Flags().BoolVar(&config.KeepOrderTargets,
+        "keep-order-targets", false, "Preserve target discovery order")
+    rootCmd.Flags().StringSliceVar(&config.CategoryOrder,
+        "category-order", []string{}, "Explicit category order (comma-separated)")
+    rootCmd.Flags().StringVar(&config.DefaultCategory,
+        "default-category", "", "Default category for uncategorized targets")
 
-    // Subcommands
-    rootCmd.AddCommand(newAddTargetCmd(&config))
-    rootCmd.AddCommand(newRemoveTargetCmd(&config))
+    // Help target generation flags
+    rootCmd.Flags().StringVar(&config.Version,
+        "version", "", "Version to pin in generated go install")
+    rootCmd.Flags().StringVar(&config.HelpFilePath,
+        "help-file-path", "", "Explicit path for generated help target file")
 
     return rootCmd
 }
@@ -484,15 +543,34 @@ func NewRootCmd() *cobra.Command {
 
 **Responsibilities:**
 - Parse command-line arguments
-- Validate flag combinations
+- Validate flag combinations (mutually exclusive mode flags)
 - Detect terminal capabilities (isatty)
 - Resolve color mode
-- Delegate to appropriate service
+- Delegate to appropriate service based on mode flags
+
+**Mode Flags (mutually exclusive):**
+1. **Default (no mode flags)**: Display help output via `runHelp()`
+2. **`--target <name>`**: Display detailed help for single target via `runDetailedHelp()`
+3. **`--create-help-target`**: Generate help target file via `runCreateHelpTarget()`
+4. **`--remove-help-target`**: Remove help targets via `runRemoveHelpTarget()`
+
+**Target Filtering:**
+- **`--include-target`**: Include specific undocumented targets (repeatable, comma-separated)
+- **`--include-all-phony`**: Include all .PHONY targets
+- By default, only documented targets (with `## ` comments) are shown
+
+**Generated Help File:**
+When `--create-help-target` is used, generates a Makefile include with:
+- `GOBIN ?= .bin` - configurable binary directory
+- Binary installation target using `go install`
+- `.PHONY: help` target for summary view
+- `.PHONY: help-<target>` for each documented target (detailed view)
 
 **Error Handling:**
-- Invalid flag combinations (e.g., `--keep-order-all` + `--category-order`)
+- Invalid flag combinations (e.g., `--create-help-target` + `--remove-help-target`)
 - File path validation
-- Conflicting color flags
+- Conflicting color flags (`--color` + `--no-color`)
+- Mode flag restrictions (e.g., `--remove-help-target` only accepts `--verbose` and `--makefile-path`)
 
 ### 4.2 Discovery Service
 

@@ -22,15 +22,18 @@ func NewRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "make-help",
 		Short: "Dynamic help generation for Makefiles",
-		Long: `make-help scans Makefile documentation and generates formatted help output.
+		Long: `make-help generates formatted help output from Makefile documentation.
 
-It supports special directives:
-  @file         - File-level documentation
-  @category     - Group targets into categories
-  @var          - Document environment variables
-  @alias        - Define target aliases
+Default behavior displays help. Use flags for other operations:
+  --target <name>       Show detailed help for a target
+  --create-help-target  Generate help target file
+  --remove-help-target  Remove help targets
 
-Documentation lines start with ## and are associated with the next target.`,
+Documentation directives (in ## comments):
+  @file         File-level documentation
+  @category     Group targets into categories
+  @var          Document environment variables
+  @alias        Define target aliases`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
