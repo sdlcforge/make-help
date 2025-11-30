@@ -149,7 +149,7 @@ func TestDiscoverTargets_Basic(t *testing.T) {
 
 	mock := NewMockCommandExecutor()
 	mock.SetPrefixMatch(true)
-	mock.SetOutput("make -f", `# make database
+	mock.SetOutput("make -s --no-print-directory -f", `# make database
 all: build
 build:
 	go build
@@ -173,7 +173,7 @@ func TestDiscoverTargets_Verbose(t *testing.T) {
 
 	mock := NewMockCommandExecutor()
 	mock.SetPrefixMatch(true)
-	mock.SetOutput("make -f", `all:
+	mock.SetOutput("make -s --no-print-directory -f", `all:
 build:
 `)
 
@@ -194,8 +194,8 @@ func TestDiscoverTargets_Timeout(t *testing.T) {
 	mock := NewMockCommandExecutor()
 	mock.SetPrefixMatch(true)
 	// Set a delay longer than any reasonable timeout for testing
-	mock.SetDelay("make -f", 35*time.Second)
-	mock.SetOutput("make -f", "all:")
+	mock.SetDelay("make -s --no-print-directory -f", 35*time.Second)
+	mock.SetOutput("make -s --no-print-directory -f", "all:")
 
 	// This test would take too long with real timeout,
 	// but we can verify the timeout code path exists
@@ -206,7 +206,7 @@ func TestDiscoverTargets_Timeout(t *testing.T) {
 	defer cancel()
 
 	// Directly call ExecuteContext to verify timeout handling
-	_, _, err = mock.ExecuteContext(ctx, "make", "-f", makefilePath, "-p", "-r")
+	_, _, err = mock.ExecuteContext(ctx, "make", "-s", "--no-print-directory", "-f", makefilePath, "-p", "-r")
 	assert.Error(t, err)
 	assert.Equal(t, context.DeadlineExceeded, err)
 }
@@ -735,7 +735,7 @@ func TestDiscoverMakefileList_EmptyResult(t *testing.T) {
 
 	mock := NewMockCommandExecutor()
 	mock.SetPrefixMatch(true)
-	mock.SetOutput("make -f", "") // Empty output
+	mock.SetOutput("make -s --no-print-directory -f", "") // Empty output
 
 	service := NewService(mock, false)
 	_, err = service.discoverMakefileList(makefilePath)

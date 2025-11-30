@@ -92,6 +92,8 @@ func (s *RemoveService) validateMakefile(makefilePath string) error {
 }
 
 // removeIncludeDirectives removes include lines for help targets using atomic write.
+// Matches both simple includes (include help.mk) and self-referential includes
+// (include $(dir $(lastword $(MAKEFILE_LIST)))help.mk).
 func (s *RemoveService) removeIncludeDirectives(makefilePath string) error {
 	content, err := os.ReadFile(makefilePath)
 	if err != nil {
@@ -101,7 +103,10 @@ func (s *RemoveService) removeIncludeDirectives(makefilePath string) error {
 	lines := strings.Split(string(content), "\n")
 	filtered := []string{}
 
-	includeRegex := regexp.MustCompile(`^include\s+.*help.*\.mk`)
+	// Match both patterns (with optional - prefix for silent include):
+	// - include help.mk / -include help.mk
+	// - include $(dir $(lastword $(MAKEFILE_LIST)))help.mk / -include ...
+	includeRegex := regexp.MustCompile(`^-?include\s+(\$\(dir \$\(lastword \$\(MAKEFILE_LIST\)\)\))?.*help.*\.mk`)
 	removed := false
 
 	for _, line := range lines {

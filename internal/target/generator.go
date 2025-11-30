@@ -31,13 +31,15 @@ func GenerateHelpFile(config *GeneratorConfig, targets []string) string {
 	buf.WriteString("\n")
 
 	// Variables
-	buf.WriteString("GOBIN ?= .bin\n")
+	// Use self-referential path to find Makefile regardless of working directory
+	buf.WriteString("MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))\n")
+	buf.WriteString("GOBIN ?= $(MAKE_HELP_DIR).bin\n")
 	buf.WriteString("MAKE_HELP_BIN := $(GOBIN)/make-help\n")
 	makeHelpOpts := buildMakeHelpOpts(config)
 	if makeHelpOpts != "" {
-		buf.WriteString(fmt.Sprintf("MAKE_HELP_OPTS := %s\n", makeHelpOpts))
+		buf.WriteString(fmt.Sprintf("MAKE_HELP_OPTS := --makefile-path $(MAKE_HELP_DIR)Makefile %s\n", makeHelpOpts))
 	} else {
-		buf.WriteString("MAKE_HELP_OPTS :=\n")
+		buf.WriteString("MAKE_HELP_OPTS := --makefile-path $(MAKE_HELP_DIR)Makefile\n")
 	}
 	buf.WriteString("MAKE_HELP_CMD := $(MAKE_HELP_BIN) $(MAKE_HELP_OPTS)\n")
 	buf.WriteString("\n")
@@ -52,8 +54,9 @@ func GenerateHelpFile(config *GeneratorConfig, targets []string) string {
 	buf.WriteString("\n")
 
 	// Main help target
+	// Note: Using single # to avoid this being parsed as a documented target
 	buf.WriteString(".PHONY: help\n")
-	buf.WriteString("## Displays help summary.\n")
+	buf.WriteString("# Displays help summary.\n")
 	buf.WriteString("help: $(MAKE_HELP_BIN)\n")
 	buf.WriteString("\t@$(MAKE_HELP_CMD)\n")
 

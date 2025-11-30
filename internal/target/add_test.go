@@ -79,7 +79,8 @@ test:
 	contentStr := string(content)
 	assert.Contains(t, contentStr, ".PHONY: help")
 	assert.Contains(t, contentStr, "help:")
-	assert.Contains(t, contentStr, "GOBIN ?= .bin")
+	assert.Contains(t, contentStr, "MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))")
+	assert.Contains(t, contentStr, "GOBIN ?= $(MAKE_HELP_DIR).bin")
 	assert.Contains(t, contentStr, "MAKE_HELP_BIN := $(GOBIN)/make-help")
 	assert.Contains(t, contentStr, "@$(MAKE_HELP_CMD)")
 	assert.Contains(t, contentStr, "--keep-order-categories")
@@ -130,7 +131,7 @@ all:
 	contentStr := string(content)
 	assert.Contains(t, contentStr, ".PHONY: help")
 	assert.Contains(t, contentStr, "help:")
-	assert.Contains(t, contentStr, "GOBIN ?= .bin")
+	assert.Contains(t, contentStr, "GOBIN ?= $(MAKE_HELP_DIR).bin")
 	assert.Contains(t, contentStr, "@$(MAKE_HELP_CMD)")
 
 	// Verify Makefile was NOT modified (no include directive added)
@@ -143,7 +144,7 @@ func TestAddService_AddTarget_ExplicitTargetFile(t *testing.T) {
 	// Setup
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
-	targetFile := filepath.Join(tmpDir, "custom-help.mk")
+	targetFileRelPath := "custom-help.mk" // Relative path
 
 	// Create simple Makefile
 	makefileContent := `all:
@@ -152,10 +153,10 @@ func TestAddService_AddTarget_ExplicitTargetFile(t *testing.T) {
 	err := os.WriteFile(makefilePath, []byte(makefileContent), 0644)
 	require.NoError(t, err)
 
-	// Create config with explicit target file
+	// Create config with explicit relative target file path
 	config := &Config{
-		MakefilePath: makefilePath,
-		TargetFile:   targetFile,
+		MakefilePath:      makefilePath,
+		TargetFileRelPath: targetFileRelPath,
 	}
 
 	// Create mock executor
@@ -169,15 +170,16 @@ func TestAddService_AddTarget_ExplicitTargetFile(t *testing.T) {
 	err = service.AddTarget()
 	require.NoError(t, err)
 
-	// Verify target file was created
-	content, err := os.ReadFile(targetFile)
+	// Verify target file was created (absolute path computed from relative)
+	absTargetFile := filepath.Join(tmpDir, targetFileRelPath)
+	content, err := os.ReadFile(absTargetFile)
 	require.NoError(t, err)
 	assert.Contains(t, string(content), ".PHONY: help")
 
-	// Verify include directive was added to Makefile
+	// Verify include directive was added to Makefile with self-referential pattern
 	makefileContentAfter, err := os.ReadFile(makefilePath)
 	require.NoError(t, err)
-	assert.Contains(t, string(makefileContentAfter), "include custom-help.mk")
+	assert.Contains(t, string(makefileContentAfter), "include $(dir $(lastword $(MAKEFILE_LIST)))custom-help.mk")
 }
 
 func TestAddService_AddTarget_FlagPassThrough(t *testing.T) {
@@ -275,14 +277,14 @@ func TestAddService_ValidateMakefile_SyntaxError(t *testing.T) {
 func TestAddService_VerboseOutput(t *testing.T) {
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
-	targetFile := filepath.Join(tmpDir, "custom.mk")
+	targetFileRelPath := "custom.mk" // Relative path
 
 	err := os.WriteFile(makefilePath, []byte("all:\n\t@echo test\n"), 0644)
 	require.NoError(t, err)
 
 	config := &Config{
-		MakefilePath: makefilePath,
-		TargetFile:   targetFile,
+		MakefilePath:      makefilePath,
+		TargetFileRelPath: targetFileRelPath,
 	}
 
 	executor := NewMockExecutor()
@@ -317,39 +319,46 @@ func TestAddService_DetermineTargetFileReadError(t *testing.T) {
 
 func TestDetermineTargetFile(t *testing.T) {
 	tests := []struct {
-		name          string
-		makefileContent string
-		targetFile    string
-		wantFile      string
-		wantInclude   bool
+		name             string
+		makefileContent  string
+		targetFileRelPath string
+		wantFile         string // relative to tmpDir or "Makefile" for append
+		wantInclude      bool
 	}{
 		{
-			name:            "explicit target file",
-			makefileContent: "all:\n\t@echo test\n",
-			targetFile:      "custom.mk",
-			wantFile:        "custom.mk",
-			wantInclude:     true,
+			name:              "explicit relative target file",
+			makefileContent:   "all:\n\t@echo test\n",
+			targetFileRelPath: "custom.mk",
+			wantFile:          "custom.mk",
+			wantInclude:       true,
 		},
 		{
-			name:            "include make/*.mk pattern",
-			makefileContent: "include make/*.mk\n\nall:\n\t@echo test\n",
-			targetFile:      "",
-			wantFile:        "make/01-help.mk",
-			wantInclude:     false,
+			name:              "explicit relative target file in subdir",
+			makefileContent:   "all:\n\t@echo test\n",
+			targetFileRelPath: "make/help.mk",
+			wantFile:          "make/help.mk",
+			wantInclude:       true,
 		},
 		{
-			name:            "-include make/*.mk pattern (optional include)",
-			makefileContent: "-include make/*.mk\n\nall:\n\t@echo test\n",
-			targetFile:      "",
-			wantFile:        "make/01-help.mk",
-			wantInclude:     false,
+			name:              "include make/*.mk pattern",
+			makefileContent:   "include make/*.mk\n\nall:\n\t@echo test\n",
+			targetFileRelPath: "",
+			wantFile:          "make/01-help.mk",
+			wantInclude:       false,
 		},
 		{
-			name:            "no pattern - append to makefile",
-			makefileContent: "all:\n\t@echo test\n",
-			targetFile:      "",
-			wantFile:        "Makefile",
-			wantInclude:     false,
+			name:              "-include make/*.mk pattern (optional include)",
+			makefileContent:   "-include make/*.mk\n\nall:\n\t@echo test\n",
+			targetFileRelPath: "",
+			wantFile:          "make/01-help.mk",
+			wantInclude:       false,
+		},
+		{
+			name:              "no pattern - append to makefile",
+			makefileContent:   "all:\n\t@echo test\n",
+			targetFileRelPath: "",
+			wantFile:          "Makefile",
+			wantInclude:       false,
 		},
 	}
 
@@ -362,8 +371,8 @@ func TestDetermineTargetFile(t *testing.T) {
 			require.NoError(t, err)
 
 			config := &Config{
-				MakefilePath: makefilePath,
-				TargetFile:   tt.targetFile,
+				MakefilePath:      makefilePath,
+				TargetFileRelPath: tt.targetFileRelPath,
 			}
 
 			service := &AddService{
@@ -373,16 +382,9 @@ func TestDetermineTargetFile(t *testing.T) {
 			gotFile, gotInclude, err := service.determineTargetFile(makefilePath)
 			require.NoError(t, err)
 
-			// Normalize paths for comparison
-			if tt.wantFile == "Makefile" {
-				assert.Equal(t, makefilePath, gotFile)
-			} else if strings.HasPrefix(tt.wantFile, "make/") {
-				expected := filepath.Join(tmpDir, tt.wantFile)
-				assert.Equal(t, expected, gotFile)
-			} else {
-				assert.Equal(t, tt.wantFile, gotFile)
-			}
-
+			// Normalize paths for comparison - all returned paths are absolute
+			expectedFile := filepath.Join(tmpDir, tt.wantFile)
+			assert.Equal(t, expectedFile, gotFile)
 			assert.Equal(t, tt.wantInclude, gotInclude)
 		})
 	}

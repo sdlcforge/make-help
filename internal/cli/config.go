@@ -60,9 +60,9 @@ type Config struct {
 
 	// Add-target options
 
-	// HelpFilePath specifies explicit path for the generated help target file.
-	// If empty, location is determined automatically.
-	HelpFilePath string
+	// HelpFileRelPath specifies a relative path for the generated help target file.
+	// Must be a relative path (no leading '/'). If empty, location is determined automatically.
+	HelpFileRelPath string
 
 	// CreateHelpTarget indicates whether to generate help target file.
 	CreateHelpTarget bool

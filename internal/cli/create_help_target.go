@@ -106,7 +106,7 @@ func runCreateHelpTarget(config *Config) error {
 	}
 
 	// 7. Determine target file location
-	targetFile, needsInclude, err := target.DetermineTargetFile(makefilePath, config.HelpFilePath)
+	targetFile, needsInclude, err := target.DetermineTargetFile(makefilePath, config.HelpFileRelPath)
 	if err != nil {
 		return err
 	}

@@ -14,7 +14,7 @@ import (
 // Config holds configuration for target manipulation operations.
 type Config struct {
 	MakefilePath        string
-	TargetFile          string
+	TargetFileRelPath   string // Relative path for help target file (e.g., "help.mk" or "make/help.mk")
 	KeepOrderCategories bool
 	KeepOrderTargets    bool
 	CategoryOrder       []string
@@ -106,15 +106,25 @@ func ValidateMakefile(executor discovery.CommandExecutor, makefilePath string) e
 // determineTargetFile decides where to create the help target.
 // Returns: (targetFile path, needsInclude directive, error)
 func (s *AddService) determineTargetFile(makefilePath string) (string, bool, error) {
-	return DetermineTargetFile(makefilePath, s.config.TargetFile)
+	return DetermineTargetFile(makefilePath, s.config.TargetFileRelPath)
 }
 
 // DetermineTargetFile decides where to create the help target.
-// Returns: (targetFile path, needsInclude directive, error)
-func DetermineTargetFile(makefilePath, explicitPath string) (string, bool, error) {
-	// 1. Explicit --help-file-path
-	if explicitPath != "" {
-		return explicitPath, true, nil
+// explicitRelPath must be a relative path (validated by CLI).
+// Returns: (targetFile absolute path, needsInclude directive, relPath for include, error)
+func DetermineTargetFile(makefilePath, explicitRelPath string) (string, bool, error) {
+	makefileDir := filepath.Dir(makefilePath)
+
+	// 1. Explicit --help-file-rel-path (always relative)
+	if explicitRelPath != "" {
+		// Compute absolute path for file writing
+		absPath := filepath.Join(makefileDir, explicitRelPath)
+		// Create parent directory if needed
+		parentDir := filepath.Dir(absPath)
+		if err := os.MkdirAll(parentDir, 0755); err != nil {
+			return "", false, fmt.Errorf("failed to create directory %s: %w", parentDir, err)
+		}
+		return absPath, true, nil
 	}
 
 	// 2. Check for include make/*.mk pattern
@@ -126,7 +136,7 @@ func DetermineTargetFile(makefilePath, explicitPath string) (string, bool, error
 	includeRegex := regexp.MustCompile(`(?m)^-?include\s+make/\*\.mk`)
 	if includeRegex.Match(content) {
 		// Create make/01-help.mk
-		makeDir := filepath.Join(filepath.Dir(makefilePath), "make")
+		makeDir := filepath.Join(makefileDir, "make")
 		if err := os.MkdirAll(makeDir, 0755); err != nil {
 			return "", false, fmt.Errorf("failed to create make/ directory: %w", err)
 		}
@@ -143,21 +153,26 @@ func (s *AddService) addIncludeDirective(makefilePath, targetFile string) error 
 }
 
 // AddIncludeDirective injects an include statement into the Makefile using atomic write.
+// Uses the self-referential pattern $(dir $(lastword $(MAKEFILE_LIST))) to ensure
+// the include works regardless of the working directory when make is invoked.
+// targetFile should be an absolute path; this function computes the relative path
+// from the Makefile directory.
 func AddIncludeDirective(makefilePath, targetFile string) error {
 	content, err := os.ReadFile(makefilePath)
 	if err != nil {
 		return err
 	}
 
-	// Make path relative to Makefile directory
+	// Compute relative path from Makefile directory to target file
 	makefileDir := filepath.Dir(makefilePath)
 	relPath, err := filepath.Rel(makefileDir, targetFile)
 	if err != nil {
-		// If we can't make it relative, use the absolute path
-		relPath = targetFile
+		// Fallback to just the filename if we can't compute relative path
+		relPath = filepath.Base(targetFile)
 	}
 
-	includeDirective := fmt.Sprintf("\ninclude %s\n", relPath)
+	// Use self-referential include pattern that works from any directory
+	includeDirective := fmt.Sprintf("\ninclude $(dir $(lastword $(MAKEFILE_LIST)))%s\n", relPath)
 
 	// Append to end of file
 	newContent := append(content, []byte(includeDirective)...)

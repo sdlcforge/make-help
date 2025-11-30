@@ -97,8 +97,13 @@ func (s *Scanner) ScanContent(content string, path string) (*ParsedFile, error) 
 // It identifies the directive type (@file, @category, @var, @alias, or regular doc)
 // and extracts the directive value.
 func (s *Scanner) parseDirective(line string, lineNum int) Directive {
-	// Remove the "## " prefix
-	content := strings.TrimPrefix(line, "## ")
+	// Remove the "## " prefix, or handle bare "##" for empty doc lines
+	var content string
+	if line == "##" {
+		content = ""
+	} else {
+		content = strings.TrimPrefix(line, "## ")
+	}
 
 	directive := Directive{
 		SourceFile: s.currentFile,

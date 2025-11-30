@@ -23,8 +23,11 @@ func TestGenerateHelpFile_Basic(t *testing.T) {
 	}
 
 	// Check variables
-	if !strings.Contains(result, "GOBIN ?= .bin") {
-		t.Error("Missing GOBIN conditional assignment")
+	if !strings.Contains(result, "MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))") {
+		t.Error("Missing MAKE_HELP_DIR self-referential variable")
+	}
+	if !strings.Contains(result, "GOBIN ?= $(MAKE_HELP_DIR).bin") {
+		t.Error("Missing GOBIN conditional assignment with MAKE_HELP_DIR")
 	}
 	if !strings.Contains(result, "MAKE_HELP_BIN := $(GOBIN)/make-help") {
 		t.Error("Missing MAKE_HELP_BIN variable")
@@ -58,7 +61,7 @@ func TestGenerateHelpFile_Basic(t *testing.T) {
 	if !strings.Contains(result, ".PHONY: help") {
 		t.Error("help target should be .PHONY")
 	}
-	if !strings.Contains(result, "## Displays help summary.") {
+	if !strings.Contains(result, "# Displays help summary.") {
 		t.Error("Missing help documentation comment")
 	}
 	if !strings.Contains(result, "help: $(MAKE_HELP_BIN)") {
@@ -191,8 +194,8 @@ func TestGenerateHelpFile_NoTargets(t *testing.T) {
 	result := GenerateHelpFile(config, targets)
 
 	// Should still have base structure
-	if !strings.Contains(result, "GOBIN ?= .bin") {
-		t.Error("Should have GOBIN variable")
+	if !strings.Contains(result, "GOBIN ?= $(MAKE_HELP_DIR).bin") {
+		t.Error("Should have GOBIN variable with MAKE_HELP_DIR")
 	}
 	if !strings.Contains(result, ".PHONY: help") {
 		t.Error("Should have help target")

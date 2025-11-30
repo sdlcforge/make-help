@@ -247,6 +247,25 @@ all:
 			shouldChange: true,
 		},
 		{
+			name: "self-referential include directive",
+			input: `all:
+	@echo test
+
+include $(dir $(lastword $(MAKEFILE_LIST)))help.mk
+
+test:
+	@echo test
+`,
+			expectedOutput: `all:
+	@echo test
+
+
+test:
+	@echo test
+`,
+			shouldChange: true,
+		},
+		{
 			name: "no help includes",
 			input: `include common.mk
 

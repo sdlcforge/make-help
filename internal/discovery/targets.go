@@ -24,7 +24,9 @@ func (s *Service) discoverTargets(makefilePath string) (*DiscoverTargetsResult, 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	stdout, stderr, err := s.executor.ExecuteContext(ctx, "make", "-f", makefilePath, "-p", "-r")
+	// Use -s and --no-print-directory to prevent make from adding
+	// extra output when running from within another make
+	stdout, stderr, err := s.executor.ExecuteContext(ctx, "make", "-s", "--no-print-directory", "-f", makefilePath, "-p", "-r")
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
 			return nil, fmt.Errorf("make command timed out after 30s")

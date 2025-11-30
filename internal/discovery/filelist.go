@@ -54,7 +54,10 @@ func (s *Service) discoverMakefileList(mainPath string) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	stdout, stderr, err := s.executor.ExecuteContext(ctx, "make", "-f", tmpName, "_list_makefiles")
+	// Use -s (silent) and --no-print-directory to prevent make from adding
+	// extra output like job server info or directory messages that could
+	// corrupt the MAKEFILE_LIST output when running from within another make
+	stdout, stderr, err := s.executor.ExecuteContext(ctx, "make", "-s", "--no-print-directory", "-f", tmpName, "_list_makefiles")
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
 			return nil, fmt.Errorf("make command timed out after 30s")

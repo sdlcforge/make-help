@@ -4,9 +4,10 @@ import (
 	"strings"
 )
 
-// IsDocumentationLine checks if a line is a documentation line (starts with "## ").
+// IsDocumentationLine checks if a line is a documentation line.
+// Matches lines starting with "## " or exactly "##" (empty doc line for blank paragraphs).
 func IsDocumentationLine(line string) bool {
-	return strings.HasPrefix(line, "## ")
+	return strings.HasPrefix(line, "## ") || line == "##"
 }
 
 // IsTargetLine checks if a line is a target definition.

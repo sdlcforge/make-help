@@ -71,7 +71,7 @@ Documentation directives (in ## comments):
 				if config.Version != "" {
 					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
 				}
-				if config.HelpFilePath != "" {
+				if config.HelpFileRelPath != "" {
 					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
 				}
 				if config.KeepOrderCategories {
@@ -86,6 +86,11 @@ Documentation directives (in ## comments):
 				if config.DefaultCategory != "" {
 					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
 				}
+			}
+
+			// Validate --help-file-rel-path is a relative path (no leading /)
+			if config.HelpFileRelPath != "" && strings.HasPrefix(config.HelpFileRelPath, "/") {
+				return fmt.Errorf("--help-file-rel-path must be a relative path (no leading '/')")
 			}
 
 			return nil
@@ -149,8 +154,8 @@ Documentation directives (in ## comments):
 		"include-all-phony", false, "Include all .PHONY targets in help output")
 	rootCmd.Flags().StringVar(&config.Target,
 		"target", "", "Show detailed help for a specific target")
-	rootCmd.Flags().StringVar(&config.HelpFilePath,
-		"help-file-path", "", "Explicit path for generated help target file")
+	rootCmd.Flags().StringVar(&config.HelpFileRelPath,
+		"help-file-rel-path", "", "Relative path for generated help target file (e.g., help.mk or make/help.mk)")
 
 	return rootCmd
 }

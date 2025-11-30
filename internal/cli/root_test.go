@@ -706,8 +706,8 @@ func TestRemoveHelpTargetFlagRestrictions(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:        "remove-help-target with help-file-path",
-			args:        []string{"--remove-help-target", "--help-file-path", "/tmp/help.mk"},
+			name:        "remove-help-target with help-file-rel-path",
+			args:        []string{"--remove-help-target", "--help-file-rel-path", "help.mk"},
 			expectError: true,
 		},
 		{
@@ -767,7 +767,7 @@ func TestNewFlags(t *testing.T) {
 	assert.NotNil(t, flags.Lookup("include-target"))
 	assert.NotNil(t, flags.Lookup("include-all-phony"))
 	assert.NotNil(t, flags.Lookup("target"))
-	assert.NotNil(t, flags.Lookup("help-file-path"))
+	assert.NotNil(t, flags.Lookup("help-file-rel-path"))
 }
 
 func TestIncludeTargetFlag(t *testing.T) {

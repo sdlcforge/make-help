@@ -332,6 +332,65 @@ make-help --create-help-target --help-file-path custom-help.mk
 make-help --remove-help-target
 ```
 
+## Example Projects
+
+The `examples/` directory contains complete working examples demonstrating different features:
+
+### uncategorized-targets
+
+Simple flat target list without categories. Demonstrates basic documentation with `@var` and `@alias` directives.
+
+```bash
+make-help --makefile-path examples/uncategorized-targets/Makefile
+```
+
+### categorized-project
+
+Uses `@category` to organize targets into logical groups (Build, Test, Development, Maintenance).
+
+```bash
+make-help --makefile-path examples/categorized-project/Makefile
+```
+
+### full-featured
+
+Comprehensive example using all directives:
+- `@file` for project-level documentation
+- `@category` for target organization
+- `@var` for environment variable documentation
+- `@alias` for target shortcuts
+- Multi-line documentation with paragraph breaks
+
+```bash
+# Show help summary
+make-help --makefile-path examples/full-featured/Makefile
+
+# Show detailed help for a target
+make-help --makefile-path examples/full-featured/Makefile --target build
+```
+
+### filtering-demo
+
+Demonstrates target filtering with `--include-target` and `--include-all-phony` flags. Contains both documented and undocumented targets.
+
+```bash
+# Default: only documented targets
+make-help --makefile-path examples/filtering-demo/Makefile
+
+# Include specific undocumented targets
+make-help --makefile-path examples/filtering-demo/Makefile --include-target setup,check --default-category Misc
+
+# Include all .PHONY targets
+make-help --makefile-path examples/filtering-demo/Makefile --include-all-phony --default-category Misc
+```
+
+Each example includes a generated `help.mk` file, so you can also test via Make:
+
+```bash
+make -f examples/full-featured/Makefile help
+make -f examples/full-featured/Makefile help-build
+```
+
 ## Integration with Make
 
 After running `make-help --create-help-target`, you can invoke help directly from Make:
@@ -519,8 +578,13 @@ make-help/
 │   ├── ordering/        # Sorting strategies
 │   ├── summary/         # Summary extraction
 │   ├── format/          # Output rendering
-│   ├── target/          # Add/remove target logic
+│   ├── target/          # Help file generation
 │   └── errors/          # Custom error types
+├── examples/            # Working example projects
+│   ├── uncategorized-targets/
+│   ├── categorized-project/
+│   ├── full-featured/
+│   └── filtering-demo/
 ├── test/
 │   ├── fixtures/        # Test Makefiles and expected outputs
 │   └── integration/     # End-to-end tests
