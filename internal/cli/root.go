@@ -96,9 +96,9 @@ Documentation lines start with ## and are associated with the next target.`,
 
 			// Dispatch to appropriate handler
 			if config.RemoveHelpTarget {
-				return fmt.Errorf("--remove-help-target not yet implemented")
+				return runRemoveHelpTarget(config)
 			} else if config.CreateHelpTarget {
-				return fmt.Errorf("--create-help-target not yet implemented")
+				return runCreateHelpTarget(config)
 			} else if config.Target != "" {
 				return runDetailedHelp(config)
 			} else {

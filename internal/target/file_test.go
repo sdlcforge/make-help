@@ -43,7 +43,7 @@ func TestAtomicWriteFile(t *testing.T) {
 			targetFile := filepath.Join(tmpDir, "test.txt")
 
 			// Write file atomically
-			err := atomicWriteFile(targetFile, tt.data, tt.perm)
+			err := AtomicWriteFile(targetFile, tt.data, tt.perm)
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -72,11 +72,11 @@ func TestAtomicWriteFileOverwrite(t *testing.T) {
 	targetFile := filepath.Join(tmpDir, "test.txt")
 
 	// Write initial content
-	err := atomicWriteFile(targetFile, []byte("Initial content\n"), 0644)
+	err := AtomicWriteFile(targetFile, []byte("Initial content\n"), 0644)
 	require.NoError(t, err)
 
 	// Overwrite with new content
-	err = atomicWriteFile(targetFile, []byte("New content\n"), 0644)
+	err = AtomicWriteFile(targetFile, []byte("New content\n"), 0644)
 	require.NoError(t, err)
 
 	// Verify new content
@@ -87,7 +87,7 @@ func TestAtomicWriteFileOverwrite(t *testing.T) {
 
 func TestAtomicWriteFileInvalidDirectory(t *testing.T) {
 	// Attempt to write to non-existent directory
-	err := atomicWriteFile("/nonexistent/directory/test.txt", []byte("test"), 0644)
+	err := AtomicWriteFile("/nonexistent/directory/test.txt", []byte("test"), 0644)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to create temp file")
 }
@@ -97,7 +97,7 @@ func TestAtomicWriteFileNoTempFilesLeft(t *testing.T) {
 	targetFile := filepath.Join(tmpDir, "test.txt")
 
 	// Write file
-	err := atomicWriteFile(targetFile, []byte("test content\n"), 0644)
+	err := AtomicWriteFile(targetFile, []byte("test content\n"), 0644)
 	require.NoError(t, err)
 
 	// List directory contents
@@ -115,7 +115,7 @@ func TestAtomicWriteFileErrorCases(t *testing.T) {
 		targetFile := filepath.Join(tmpDir, "test.txt")
 
 		// First write a file successfully
-		err := atomicWriteFile(targetFile, []byte("initial"), 0644)
+		err := AtomicWriteFile(targetFile, []byte("initial"), 0644)
 		require.NoError(t, err)
 
 		// Make directory read-only to cause permission error on temp file creation
@@ -124,7 +124,7 @@ func TestAtomicWriteFileErrorCases(t *testing.T) {
 		defer os.Chmod(tmpDir, 0755) // Restore for cleanup
 
 		// Attempt to write should fail
-		err = atomicWriteFile(targetFile, []byte("new content"), 0644)
+		err = AtomicWriteFile(targetFile, []byte("new content"), 0644)
 		assert.Error(t, err)
 	})
 
@@ -137,7 +137,7 @@ func TestAtomicWriteFileErrorCases(t *testing.T) {
 		targetFile := filepath.Join(subDir, "test.txt")
 
 		// Write to subdirectory should work
-		err = atomicWriteFile(targetFile, []byte("content"), 0600)
+		err = AtomicWriteFile(targetFile, []byte("content"), 0600)
 		require.NoError(t, err)
 
 		// Verify file exists and has correct permissions

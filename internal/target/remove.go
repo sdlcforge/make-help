@@ -120,7 +120,7 @@ func (s *RemoveService) removeIncludeDirectives(makefilePath string) error {
 	}
 
 	newContent := strings.Join(filtered, "\n")
-	return atomicWriteFile(makefilePath, []byte(newContent), 0644)
+	return AtomicWriteFile(makefilePath, []byte(newContent), 0644)
 }
 
 // removeInlineHelpTarget removes help target from Makefile using atomic write.
@@ -164,7 +164,7 @@ func (s *RemoveService) removeInlineHelpTarget(makefilePath string) (bool, error
 	}
 
 	newContent := strings.Join(filtered, "\n")
-	return true, atomicWriteFile(makefilePath, []byte(newContent), 0644)
+	return true, AtomicWriteFile(makefilePath, []byte(newContent), 0644)
 }
 
 // removeHelpTargetFiles deletes help target files.

@@ -283,128 +283,36 @@ func TestHelpFlag(t *testing.T) {
 	assert.Contains(t, stdout, "--verbose")
 }
 
+// TestAddTargetCommand tests the old add-target subcommand.
+// DEPRECATED: This test is for the old subcommand interface that was replaced
+// with --create-help-target flag in Stage 1. This test is disabled.
+// See TestCreateHelpTarget for the new flag-based test.
 func TestAddTargetCommand(t *testing.T) {
-	binary := buildBinary(t)
-
-	// Create a temp Makefile
-	tmpDir := t.TempDir()
-	makefilePath := filepath.Join(tmpDir, "Makefile")
-	err := os.WriteFile(makefilePath, []byte(`
-## Build the project
-build:
-	@echo building
-`), 0644)
-	require.NoError(t, err)
-
-	// Run add-target
-	stdout, stderr, err := runMakeHelp(t, binary,
-		"add-target",
-		"--makefile-path", makefilePath)
-	require.NoError(t, err, "stdout: %s, stderr: %s", stdout, stderr)
-
-	// Verify help target was added
-	content, err := os.ReadFile(makefilePath)
-	require.NoError(t, err)
-	assert.Contains(t, string(content), "help:")
-	assert.Contains(t, string(content), ".PHONY: help")
+	t.Skip("DEPRECATED: add-target subcommand removed in favor of --create-help-target flag")
 }
 
+// TestRemoveTargetCommand tests the old remove-target subcommand.
+// DEPRECATED: This test is for the old subcommand interface that was replaced
+// with --remove-help-target flag in Stage 1. This test is disabled.
+// See TestRemoveHelpTarget for the new flag-based test.
 func TestRemoveTargetCommand(t *testing.T) {
-	binary := buildBinary(t)
-
-	// Create a temp Makefile with help target
-	tmpDir := t.TempDir()
-	makefilePath := filepath.Join(tmpDir, "Makefile")
-	err := os.WriteFile(makefilePath, []byte(`
-## Build the project
-build:
-	@echo building
-
-.PHONY: help
-help:
-	@make-help --makefile-path Makefile
-`), 0644)
-	require.NoError(t, err)
-
-	// Run remove-target
-	stdout, stderr, err := runMakeHelp(t, binary,
-		"remove-target",
-		"--makefile-path", makefilePath)
-	require.NoError(t, err, "stdout: %s, stderr: %s", stdout, stderr)
-
-	// Verify help target was removed
-	content, err := os.ReadFile(makefilePath)
-	require.NoError(t, err)
-	assert.NotContains(t, string(content), "help:")
-	assert.NotContains(t, string(content), ".PHONY: help")
+	t.Skip("DEPRECATED: remove-target subcommand removed in favor of --remove-help-target flag")
 }
 
+// TestAddTargetWithTargetFile tests the old add-target subcommand with --target-file.
+// DEPRECATED: This test is for the old subcommand interface that was replaced
+// with --create-help-target flag in Stage 1. This test is disabled.
+// See TestCreateHelpTargetWithHelpFilePath for the new flag-based test.
 func TestAddTargetWithTargetFile(t *testing.T) {
-	binary := buildBinary(t)
-
-	// Create a temp directory with Makefile
-	tmpDir := t.TempDir()
-	makefilePath := filepath.Join(tmpDir, "Makefile")
-	targetFile := filepath.Join(tmpDir, "help.mk")
-
-	err := os.WriteFile(makefilePath, []byte(`
-## Build the project
-build:
-	@echo building
-`), 0644)
-	require.NoError(t, err)
-
-	// Run add-target with --target-file
-	stdout, stderr, err := runMakeHelp(t, binary,
-		"add-target",
-		"--makefile-path", makefilePath,
-		"--target-file", targetFile)
-	require.NoError(t, err, "stdout: %s, stderr: %s", stdout, stderr)
-
-	// Verify help target was added to target file
-	content, err := os.ReadFile(targetFile)
-	require.NoError(t, err)
-	assert.Contains(t, string(content), "help:")
-	assert.Contains(t, string(content), ".PHONY: help")
-
-	// Verify include was added to Makefile
-	mainContent, err := os.ReadFile(makefilePath)
-	require.NoError(t, err)
-	assert.Contains(t, string(mainContent), "include")
-	assert.Contains(t, string(mainContent), "help.mk")
+	t.Skip("DEPRECATED: add-target subcommand removed in favor of --create-help-target flag")
 }
 
+// TestAddTargetWithMakeDir tests the old add-target subcommand with make/ directory.
+// DEPRECATED: This test is for the old subcommand interface that was replaced
+// with --create-help-target flag in Stage 1. This test is disabled.
+// See TestCreateHelpTargetWithMakeDir for the new flag-based test.
 func TestAddTargetWithMakeDir(t *testing.T) {
-	binary := buildBinary(t)
-
-	// Create a temp directory with Makefile that has include make/*.mk pattern
-	tmpDir := t.TempDir()
-	makeDir := filepath.Join(tmpDir, "make")
-	err := os.MkdirAll(makeDir, 0755)
-	require.NoError(t, err)
-
-	makefilePath := filepath.Join(tmpDir, "Makefile")
-	// Use -include (optional include) to avoid errors when no .mk files exist yet
-	err = os.WriteFile(makefilePath, []byte(`
--include make/*.mk
-
-## Build the project
-build:
-	@echo building
-`), 0644)
-	require.NoError(t, err)
-
-	// Run add-target
-	stdout, stderr, err := runMakeHelp(t, binary,
-		"add-target",
-		"--makefile-path", makefilePath)
-	require.NoError(t, err, "stdout: %s, stderr: %s", stdout, stderr)
-
-	// Verify help target was added to make/01-help.mk
-	helpMkPath := filepath.Join(makeDir, "01-help.mk")
-	content, err := os.ReadFile(helpMkPath)
-	require.NoError(t, err, "01-help.mk should be created")
-	assert.Contains(t, string(content), "help:")
+	t.Skip("DEPRECATED: add-target subcommand removed in favor of --create-help-target flag")
 }
 
 func TestOutputFormat(t *testing.T) {

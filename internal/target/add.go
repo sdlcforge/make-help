@@ -60,7 +60,7 @@ func (s *AddService) AddTarget() error {
 	content := generateHelpTarget(s.config)
 
 	// Write target file using atomic write
-	if err := atomicWriteFile(targetFile, []byte(content), 0644); err != nil {
+	if err := AtomicWriteFile(targetFile, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write target file %s: %w", targetFile, err)
 	}
 
@@ -84,11 +84,16 @@ func (s *AddService) AddTarget() error {
 
 // validateMakefile runs `make -n` to check for syntax errors.
 func (s *AddService) validateMakefile(makefilePath string) error {
+	return ValidateMakefile(s.executor, makefilePath)
+}
+
+// ValidateMakefile runs `make -n` to check for syntax errors.
+func ValidateMakefile(executor discovery.CommandExecutor, makefilePath string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// Run make -n (dry-run) to check syntax without executing recipes
-	_, stderr, err := s.executor.ExecuteContext(ctx, "make", "-n", "-f", makefilePath)
+	_, stderr, err := executor.ExecuteContext(ctx, "make", "-n", "-f", makefilePath)
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
 			return fmt.Errorf("validation timed out")
@@ -101,9 +106,15 @@ func (s *AddService) validateMakefile(makefilePath string) error {
 // determineTargetFile decides where to create the help target.
 // Returns: (targetFile path, needsInclude directive, error)
 func (s *AddService) determineTargetFile(makefilePath string) (string, bool, error) {
-	// 1. Explicit --target-file
-	if s.config.TargetFile != "" {
-		return s.config.TargetFile, true, nil
+	return DetermineTargetFile(makefilePath, s.config.TargetFile)
+}
+
+// DetermineTargetFile decides where to create the help target.
+// Returns: (targetFile path, needsInclude directive, error)
+func DetermineTargetFile(makefilePath, explicitPath string) (string, bool, error) {
+	// 1. Explicit --help-file-path
+	if explicitPath != "" {
+		return explicitPath, true, nil
 	}
 
 	// 2. Check for include make/*.mk pattern
@@ -128,15 +139,22 @@ func (s *AddService) determineTargetFile(makefilePath string) (string, bool, err
 
 // addIncludeDirective injects an include statement into the Makefile using atomic write.
 func (s *AddService) addIncludeDirective(makefilePath, targetFile string) error {
+	return AddIncludeDirective(makefilePath, targetFile)
+}
+
+// AddIncludeDirective injects an include statement into the Makefile using atomic write.
+func AddIncludeDirective(makefilePath, targetFile string) error {
 	content, err := os.ReadFile(makefilePath)
 	if err != nil {
 		return err
 	}
 
-	// Make path relative to Makefile
-	relPath, err := filepath.Rel(filepath.Dir(makefilePath), targetFile)
+	// Make path relative to Makefile directory
+	makefileDir := filepath.Dir(makefilePath)
+	relPath, err := filepath.Rel(makefileDir, targetFile)
 	if err != nil {
-		return err
+		// If we can't make it relative, use the absolute path
+		relPath = targetFile
 	}
 
 	includeDirective := fmt.Sprintf("\ninclude %s\n", relPath)
@@ -145,5 +163,5 @@ func (s *AddService) addIncludeDirective(makefilePath, targetFile string) error 
 	newContent := append(content, []byte(includeDirective)...)
 
 	// Use atomic write to prevent corruption
-	return atomicWriteFile(makefilePath, newContent, 0644)
+	return AtomicWriteFile(makefilePath, newContent, 0644)
 }

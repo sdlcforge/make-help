@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 )
 
-// atomicWriteFile writes data to a file atomically by writing to a temp file
+// AtomicWriteFile writes data to a file atomically by writing to a temp file
 // first, then renaming. This prevents file corruption if the process crashes.
 //
 // The temp file is created in the same directory as the target file to ensure
 // the rename operation is atomic (same filesystem).
-func atomicWriteFile(filename string, data []byte, perm os.FileMode) error {
+func AtomicWriteFile(filename string, data []byte, perm os.FileMode) error {
 	// Create temp file in same directory (required for atomic rename)
 	dir := filepath.Dir(filename)
 	tmpFile, err := os.CreateTemp(dir, ".tmp-*")

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -640,13 +641,13 @@ func TestMutualExclusivityFlags(t *testing.T) {
 			name:        "only create-help-target",
 			args:        []string{"--create-help-target"},
 			expectError: true,
-			errorText:   "not yet implemented",
+			errorText:   "Makefile not found",
 		},
 		{
 			name:        "only remove-help-target",
 			args:        []string{"--remove-help-target"},
 			expectError: true,
-			errorText:   "not yet implemented",
+			errorText:   "Makefile not found",
 		},
 	}
 
@@ -741,9 +742,14 @@ func TestRemoveHelpTargetFlagRestrictions(t *testing.T) {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "--remove-help-target only accepts --verbose and --makefile-path flags")
 			} else {
-				// Should get "not yet implemented" error, not validation error
+				// Should get an error related to Makefile issues (not flag validation)
 				assert.Error(t, err)
-				assert.Contains(t, err.Error(), "not yet implemented")
+				// The error could be "Makefile not found" or "Makefile validation failed"
+				// depending on whether the file exists
+				assert.True(t,
+					strings.Contains(err.Error(), "Makefile not found") ||
+						strings.Contains(err.Error(), "Makefile validation failed"),
+					"Expected Makefile-related error, got: %v", err)
 			}
 		})
 	}
