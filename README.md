@@ -26,10 +26,14 @@ Run once to set up help targets in your project:
 make-help --create-help-target
 ```
 
-This creates `make/01-help.mk` with:
+This automatically creates a help file with:
 - Automatic binary installation via `go install`
 - `make help` - displays help summary
 - `make help-<target>` - detailed help for each documented target
+
+The file location is auto-detected:
+- If your Makefile has `include make/*.mk`, creates `make/01-help.mk`
+- Otherwise, creates `help.mk` in the same directory as the Makefile
 
 ### Global
 
@@ -127,8 +131,16 @@ make-help --include-all-phony          # Include all .PHONY targets
 ### Generate Help Targets
 
 ```bash
-make-help --create-help-target         # Create make/01-help.mk
-make-help --create-help-target --version v1.2.3   # Pin version
+# Auto-detects location: creates help.mk or make/01-help.mk
+make-help --create-help-target
+
+# Pin specific version for go install
+make-help --create-help-target --version v1.2.3
+
+# Specify custom relative path for the help file
+make-help --create-help-target --help-file-rel-path custom/help.mk
+
+# Use default category for uncategorized targets
 make-help --create-help-target --default-category Misc
 ```
 
@@ -148,7 +160,7 @@ make-help --remove-help-target         # Remove generated help files
 | `--include-all-phony` | Include all .PHONY targets |
 | `--create-help-target` | Generate help target file |
 | `--remove-help-target` | Remove help target from Makefile |
-| `--help-file-path` | Override path for generated file |
+| `--help-file-rel-path` | Override relative path for generated help file (e.g., `help.mk` or `make/help.mk`). Must be a relative path. |
 | `--version` | Pin version in generated go install |
 | `--default-category` | Default category for uncategorized targets |
 | `--keep-order-categories` | Preserve category discovery order |
@@ -325,8 +337,8 @@ make-help --create-help-target
 # Pin specific version
 make-help --create-help-target --version v1.2.3
 
-# Specify explicit path
-make-help --create-help-target --help-file-path custom-help.mk
+# Specify explicit relative path
+make-help --create-help-target --help-file-rel-path custom-help.mk
 
 # Remove help targets and all artifacts
 make-help --remove-help-target
@@ -334,7 +346,25 @@ make-help --remove-help-target
 
 ## Example Projects
 
-The `examples/` directory contains complete working examples demonstrating different features:
+The `examples/` directory contains complete working examples demonstrating different features.
+
+### Running Examples
+
+Each example includes a generated `help.mk` file, so you can run them via Make:
+
+```bash
+make -f examples/categorized-project/Makefile help
+make -f examples/full-featured/Makefile help-build
+```
+
+Or use the helper script which sets up a shared binary location:
+
+```bash
+./scripts/run-example.sh examples/categorized-project
+./scripts/run-example.sh examples/full-featured help-build
+```
+
+The helper script installs the make-help binary to the project root's `.bin/` directory, avoiding multiple installations across examples.
 
 ### uncategorized-targets
 
@@ -384,13 +414,6 @@ make-help --makefile-path examples/filtering-demo/Makefile --include-target setu
 make-help --makefile-path examples/filtering-demo/Makefile --include-all-phony --default-category Misc
 ```
 
-Each example includes a generated `help.mk` file, so you can also test via Make:
-
-```bash
-make -f examples/full-featured/Makefile help
-make -f examples/full-featured/Makefile help-build
-```
-
 ## Integration with Make
 
 After running `make-help --create-help-target`, you can invoke help directly from Make:
@@ -409,6 +432,33 @@ make test
 ```
 
 The generated help targets automatically install the `make-help` binary locally to `.bin/` and use it to generate help output.
+
+### How Generated Help Files Work
+
+The generated `help.mk` file uses a self-referential pattern to locate files correctly regardless of where Make is invoked from:
+
+```makefile
+MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+GOBIN ?= $(MAKE_HELP_DIR).bin
+MAKE_HELP_BIN := $(GOBIN)/make-help
+MAKE_HELP_OPTS := --makefile-path $(MAKE_HELP_DIR)Makefile
+```
+
+This pattern ensures:
+- `MAKE_HELP_DIR` always points to the directory containing the help.mk file
+- The binary is installed relative to that directory (in `.bin/`)
+- The help command always references the correct Makefile
+
+This allows the help.mk file to work correctly whether:
+- It's in the project root (`help.mk`)
+- It's in a subdirectory (`make/01-help.mk`)
+- Make is invoked with `-f path/to/Makefile` from any directory
+
+You can override `GOBIN` to install the binary elsewhere:
+
+```bash
+GOBIN=/usr/local/bin make help
+```
 
 ## Output Format
 
@@ -585,6 +635,8 @@ make-help/
 │   ├── categorized-project/
 │   ├── full-featured/
 │   └── filtering-demo/
+├── scripts/             # Helper scripts
+│   └── run-example.sh   # Run examples with shared GOBIN
 ├── test/
 │   ├── fixtures/        # Test Makefiles and expected outputs
 │   └── integration/     # End-to-end tests
