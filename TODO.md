@@ -103,23 +103,17 @@ This document consolidates findings from three parallel reviews:
 
 ### CLAUDE.md Fixes
 
-- [ ] **Fix "Adding a new directive type" instructions**
-  - Location: `.claude/CLAUDE.md` Common Development Tasks section
+- [x] **Fix "Adding a new directive type" instructions** ✓ DONE
+  - Location: `.claude/CLAUDE.md:81-87`
   - Issue: Step 2 says "add case in `Build()`" but should say `processFile()`
-  - Correct steps:
-    1. Update `internal/parser/directive.go` (add constant to DirectiveType)
-    2. Add parsing logic in `internal/parser/scanner.go` `parseDirective()` method
-    3. Handle in `internal/model/builder.go` `processFile()` method (around line 197)
-    4. Update formatter if needed
-    5. Add tests
-    6. Update README.md and docs/architecture.md
+  - Action: Updated with correct 6-step process including specific file locations and line numbers
 
-- [ ] **Expand Quick Troubleshooting section**
-  - Location: `.claude/CLAUDE.md`
-  - Add:
-    - Target not appearing in help: Check if it's .PHONY (use --include-all-phony or --include-target)
-    - Color codes appearing in output: Use --no-color when piping to files
-    - "make command timed out": Check for infinite recursion in Makefile includes
+- [x] **Expand Quick Troubleshooting section** ✓ DONE
+  - Location: `.claude/CLAUDE.md:123-130`
+  - Action: Added 3 new troubleshooting items:
+    - Target not appearing in help
+    - Color codes appearing in output
+    - "make command timed out"
 
 ---
 

@@ -79,11 +79,12 @@ build:
 ## Common Development Tasks
 
 ### Adding a new directive type
-1. Update `internal/parser/directive.go` (add constant, update `parseDirective()`)
-2. Handle in `internal/model/builder.go` (add case in `Build()`)
-3. Update formatter if needed (`internal/format/renderer.go`)
-4. Add tests (parser unit test + integration fixture)
-5. Update `README.md` and `docs/architecture.md`
+1. Update `internal/parser/directive.go` (add constant to DirectiveType)
+2. Add parsing logic in `internal/parser/scanner.go` `parseDirective()` method
+3. Handle in `internal/model/builder.go` `processFile()` method (around line 197)
+4. Update formatter if needed (`internal/format/renderer.go`)
+5. Add tests (parser unit test + integration fixture)
+6. Update `README.md` and `docs/architecture.md`
 
 ### Changing output format
 1. Modify templates in `internal/format/renderer.go`
@@ -125,3 +126,6 @@ build:
 **Mixed categorization error**: Use `--default-category Misc`
 **Tests failing after changes**: Regenerate fixtures by running binary manually and saving output
 **Need to debug discovery**: Use `--verbose` flag to see Makefile resolution and target discovery
+**Target not appearing in help**: Check if it's .PHONY (use --include-all-phony or --include-target)
+**Color codes appearing in output**: Use --no-color when piping to files
+**"make command timed out"**: Check for infinite recursion in Makefile includes
