@@ -24,4 +24,58 @@
 // Documentation lines immediately preceding a target definition are
 // associated with that target. A non-documentation, non-target line
 // breaks this association and clears pending documentation.
+//
+// # Scanner State Machine
+//
+// The Scanner maintains internal state to associate documentation with targets.
+// It operates as a simple state machine with the following states and transitions:
+//
+//	┌─────────────────────────────────────────────────────────────────────┐
+//	│                                                                     │
+//	│  State: IDLE (pendingDocs empty)                                   │
+//	│  - No documentation queued                                          │
+//	│  - Waiting for doc comments or target                               │
+//	│                                                                     │
+//	└──────┬────────────────────────────────┬─────────────────────────────┘
+//	       │                                │
+//	       │ Doc line (##)                  │ Target line (foo:)
+//	       │ - Queue to pendingDocs         │ - No docs to attach
+//	       │ - @file goes to output         │ - Continue
+//	       │                                │
+//	       v                                │
+//	┌─────────────────────────────────────┐ │
+//	│                                     │ │
+//	│  State: ACCUMULATING                │ │
+//	│  (pendingDocs not empty)            │ │
+//	│  - Doc lines queued                 │ │
+//	│  - Waiting for target or break      │ │
+//	│                                     │ │
+//	└──┬────────────┬──────────────────┬──┘ │
+//	   │            │                  │    │
+//	   │ More       │ Target line      │    │
+//	   │ doc lines  │ (foo:)           │    │
+//	   │ - Append   │ - Attach all     │    │
+//	   │   to queue │   pendingDocs    │    │
+//	   │            │ - Clear queue    │    │
+//	   │            │ - Return to IDLE │    │
+//	   │            │                  │    │
+//	   │            v                  │    │
+//	   └────────► IDLE ◄───────────────┘    │
+//	                ▲                        │
+//	                │                        │
+//	                └────────────────────────┘
+//	   Other line (non-doc, non-target)
+//	   - Clear pendingDocs (orphaned docs)
+//	   - Return to IDLE
+//
+// State Variables:
+//   - pendingDocs: Queue of directives awaiting target association
+//   - currentCategory: Active category from last @category directive
+//   - currentFile: Source file path for error reporting
+//
+// Key Behaviors:
+//   - @file directives bypass pendingDocs and go directly to output
+//   - @category directives update currentCategory state AND queue to pendingDocs
+//   - Orphaned docs (followed by non-target line) are discarded
+//   - Multiple doc blocks can exist; each associates with the next target
 package parser

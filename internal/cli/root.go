@@ -55,36 +55,8 @@ Documentation directives (in ## comments):
 
 			// --remove-help-target only allows --verbose and --makefile-path
 			if config.RemoveHelpTarget {
-				// Check that no other flags are set
-				if config.Target != "" {
-					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
-				}
-				if len(config.IncludeTargets) > 0 {
-					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
-				}
-				if config.IncludeAllPhony {
-					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
-				}
-				if config.CreateHelpTarget {
-					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
-				}
-				if config.Version != "" {
-					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
-				}
-				if config.HelpFileRelPath != "" {
-					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
-				}
-				if config.KeepOrderCategories {
-					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
-				}
-				if config.KeepOrderTargets {
-					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
-				}
-				if len(config.CategoryOrder) > 0 {
-					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
-				}
-				if config.DefaultCategory != "" {
-					return fmt.Errorf("--remove-help-target only accepts --verbose and --makefile-path flags")
+				if err := validateRemoveHelpTargetFlags(config); err != nil {
+					return err
 				}
 			}
 
@@ -172,6 +144,35 @@ func processColorFlags(mode *ColorMode, noColor, forceColor bool) error {
 		*mode = ColorNever
 	} else {
 		*mode = ColorAuto
+	}
+
+	return nil
+}
+
+// validateRemoveHelpTargetFlags checks for incompatible flags with --remove-help-target.
+// It uses a table-driven approach to provide specific error messages for each incompatible flag.
+func validateRemoveHelpTargetFlags(config *Config) error {
+	// Table of incompatible flags: condition check, flag name
+	incompatibleFlags := []struct {
+		isSet    bool
+		flagName string
+	}{
+		{config.Target != "", "--target"},
+		{len(config.IncludeTargets) > 0, "--include-target"},
+		{config.IncludeAllPhony, "--include-all-phony"},
+		{config.CreateHelpTarget, "--create-help-target"},
+		{config.Version != "", "--version"},
+		{config.HelpFileRelPath != "", "--help-file-rel-path"},
+		{config.KeepOrderCategories, "--keep-order-categories"},
+		{config.KeepOrderTargets, "--keep-order-targets"},
+		{len(config.CategoryOrder) > 0, "--category-order"},
+		{config.DefaultCategory != "", "--default-category"},
+	}
+
+	for _, flag := range incompatibleFlags {
+		if flag.isSet {
+			return fmt.Errorf("--remove-help-target cannot be used with %s", flag.flagName)
+		}
 	}
 
 	return nil

@@ -671,9 +671,10 @@ func TestMutualExclusivityFlags(t *testing.T) {
 
 func TestRemoveHelpTargetFlagRestrictions(t *testing.T) {
 	tests := []struct {
-		name        string
-		args        []string
-		expectError bool
+		name            string
+		args            []string
+		expectError     bool
+		expectedErrMsg  string
 	}{
 		{
 			name:        "remove-help-target with verbose",
@@ -686,49 +687,58 @@ func TestRemoveHelpTargetFlagRestrictions(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "remove-help-target with target",
-			args:        []string{"--remove-help-target", "--target", "build"},
-			expectError: true,
+			name:           "remove-help-target with target",
+			args:           []string{"--remove-help-target", "--target", "build"},
+			expectError:    true,
+			expectedErrMsg: "--remove-help-target cannot be used with --target",
 		},
 		{
-			name:        "remove-help-target with include-target",
-			args:        []string{"--remove-help-target", "--include-target", "foo"},
-			expectError: true,
+			name:           "remove-help-target with include-target",
+			args:           []string{"--remove-help-target", "--include-target", "foo"},
+			expectError:    true,
+			expectedErrMsg: "--remove-help-target cannot be used with --include-target",
 		},
 		{
-			name:        "remove-help-target with include-all-phony",
-			args:        []string{"--remove-help-target", "--include-all-phony"},
-			expectError: true,
+			name:           "remove-help-target with include-all-phony",
+			args:           []string{"--remove-help-target", "--include-all-phony"},
+			expectError:    true,
+			expectedErrMsg: "--remove-help-target cannot be used with --include-all-phony",
 		},
 		{
-			name:        "remove-help-target with version",
-			args:        []string{"--remove-help-target", "--version", "v1.0.0"},
-			expectError: true,
+			name:           "remove-help-target with version",
+			args:           []string{"--remove-help-target", "--version", "v1.0.0"},
+			expectError:    true,
+			expectedErrMsg: "--remove-help-target cannot be used with --version",
 		},
 		{
-			name:        "remove-help-target with help-file-rel-path",
-			args:        []string{"--remove-help-target", "--help-file-rel-path", "help.mk"},
-			expectError: true,
+			name:           "remove-help-target with help-file-rel-path",
+			args:           []string{"--remove-help-target", "--help-file-rel-path", "help.mk"},
+			expectError:    true,
+			expectedErrMsg: "--remove-help-target cannot be used with --help-file-rel-path",
 		},
 		{
-			name:        "remove-help-target with keep-order-categories",
-			args:        []string{"--remove-help-target", "--keep-order-categories"},
-			expectError: true,
+			name:           "remove-help-target with keep-order-categories",
+			args:           []string{"--remove-help-target", "--keep-order-categories"},
+			expectError:    true,
+			expectedErrMsg: "--remove-help-target cannot be used with --keep-order-categories",
 		},
 		{
-			name:        "remove-help-target with keep-order-targets",
-			args:        []string{"--remove-help-target", "--keep-order-targets"},
-			expectError: true,
+			name:           "remove-help-target with keep-order-targets",
+			args:           []string{"--remove-help-target", "--keep-order-targets"},
+			expectError:    true,
+			expectedErrMsg: "--remove-help-target cannot be used with --keep-order-targets",
 		},
 		{
-			name:        "remove-help-target with category-order",
-			args:        []string{"--remove-help-target", "--category-order", "Build"},
-			expectError: true,
+			name:           "remove-help-target with category-order",
+			args:           []string{"--remove-help-target", "--category-order", "Build"},
+			expectError:    true,
+			expectedErrMsg: "--remove-help-target cannot be used with --category-order",
 		},
 		{
-			name:        "remove-help-target with default-category",
-			args:        []string{"--remove-help-target", "--default-category", "Other"},
-			expectError: true,
+			name:           "remove-help-target with default-category",
+			args:           []string{"--remove-help-target", "--default-category", "Other"},
+			expectError:    true,
+			expectedErrMsg: "--remove-help-target cannot be used with --default-category",
 		},
 	}
 
@@ -740,7 +750,7 @@ func TestRemoveHelpTargetFlagRestrictions(t *testing.T) {
 			err := cmd.Execute()
 			if tt.expectError {
 				assert.Error(t, err)
-				assert.Contains(t, err.Error(), "--remove-help-target only accepts --verbose and --makefile-path flags")
+				assert.Contains(t, err.Error(), tt.expectedErrMsg)
 			} else {
 				// Should get an error related to Makefile issues (not flag validation)
 				assert.Error(t, err)

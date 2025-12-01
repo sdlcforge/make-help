@@ -78,28 +78,28 @@ This document consolidates findings from three parallel reviews:
 
 ### Error Handling
 
-- [ ] **Improve `--remove-help-target` error specificity**
-  - Location: `internal/cli/root.go:57-89`
+- [x] **Improve `--remove-help-target` error specificity** ✓ DONE
+  - Location: `internal/cli/root.go`
   - Issue: All 8 checks return same generic error message
-  - Action: Each check should specify which flag was problematic
+  - Action: Refactored to table-driven validation with specific error messages like "--remove-help-target cannot be used with --target"
 
 ### Examples
 
-- [ ] **Add examples/README.md**
+- [x] **Add examples/README.md** ✓ DONE
   - Location: `examples/README.md` (new file)
-  - Action: Brief description of each example and when to use it
+  - Action: Created comprehensive README with quick start, example descriptions, comparison table, and usage patterns
 
 ### Code Quality
 
-- [ ] **Refactor repetitive flag validation**
-  - Location: `internal/cli/root.go:57-88`
+- [x] **Refactor repetitive flag validation** ✓ DONE
+  - Location: `internal/cli/root.go`
   - Issue: 8 repetitive if statements checking same condition
-  - Action: Extract to helper function or use table-driven validation
+  - Action: Created `validateRemoveHelpTargetFlags()` helper with table-driven validation (reduced 33 lines to cleaner structure)
 
-- [ ] **Add parser state machine documentation**
+- [x] **Add parser state machine documentation** ✓ DONE
   - Location: `internal/parser/doc.go`
   - Issue: Scanner state management is subtle and could confuse new developers
-  - Action: Add ASCII art state machine diagram
+  - Action: Added ASCII art state machine diagram showing IDLE/ACCUMULATING states and transitions
 
 ### CLAUDE.md Fixes
 

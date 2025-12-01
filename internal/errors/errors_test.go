@@ -52,7 +52,7 @@ func TestDuplicateHelpTargetError(t *testing.T) {
 	err := NewDuplicateHelpTargetError("Makefile:15")
 	assert.Contains(t, err.Error(), "help target already exists")
 	assert.Contains(t, err.Error(), "Makefile:15")
-	assert.Contains(t, err.Error(), "remove-target")
+	assert.Contains(t, err.Error(), "--remove-help-target")
 }
 
 func TestValidationError(t *testing.T) {
