@@ -143,12 +143,13 @@ This document consolidates findings from three parallel reviews:
 - [ ] **Add comparison to alternatives**
   - Compare to: AWK-based `make help` solutions, `just`, other Makefile documentation tools
 
-- [ ] **Add ADRs (Architecture Decision Records)**
-  - Location: `docs/adr/` (new directory)
-  - Topics:
+- [x] **Add design decisions document** ✓ DONE
+  - Location: `docs/architecture/design-decisions.md`
+  - Topics documented:
     - Why flags instead of subcommands?
     - Why maintain parser state instead of multi-pass parsing?
     - Why use discovery order instead of file position?
+    - Plus additional decisions identified during review
 
 - [ ] **Add visual diagrams**
   - Location: `docs/architecture/diagrams/`
