@@ -49,15 +49,15 @@ This document consolidates findings from three parallel reviews:
 
 ### README Improvements
 
-- [ ] **Reorder installation section**
+- [x] **Reorder installation section** ✓ DONE
   - Location: `README.md` Installation section
   - Issue: "Project-Local (Recommended)" comes first but assumes tool is already installed
-  - Action: Put global `go install` first, then project-local setup
+  - Action: Reordered to "Install the Binary" first (with Go version requirement), then "Add Help to Your Project (Recommended)"
 
-- [ ] **Add motivation/problem statement**
-  - Location: `README.md` (top)
+- [x] **Add motivation/problem statement** ✓ DONE
+  - Location: `README.md:5-9`
   - Issue: Jumps straight to features without explaining the problem
-  - Suggestion: Add brief paragraph about Makefiles lacking built-in help
+  - Action: Added "Why make-help?" section explaining the problem (Makefiles lack built-in help, `make --help` shows Make's options not project targets)
 
 ### Documentation Consistency
 

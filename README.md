@@ -2,7 +2,11 @@
 
 Dynamic help generation for Makefiles with rich documentation support.
 
-`make-help` is a command-line tool that generates beautiful, organized help output from specially-formatted comments in your Makefiles. It supports categories, aliases, environment variables, target filtering, and can generate project-local help targets.
+## Why make-help?
+
+Makefiles are powerful but lack a built-in help system. As projects grow, developers accumulate dozens of targets with no easy way to discover or document them. Running `make` without arguments often fails, and `make --help` only shows Make's own options—not your project's targets.
+
+`make-help` solves this by extracting documentation from specially-formatted comments, creating self-documenting Makefiles with organized, categorized help output. It supports categories, aliases, environment variables, target filtering, and can generate project-local help targets that work with `make help`.
 
 ## Features
 
@@ -18,9 +22,17 @@ Dynamic help generation for Makefiles with rich documentation support.
 
 ## Installation
 
-### Project-Local (Recommended)
+### Install the Binary
 
-Run once to set up help targets in your project:
+Requires Go 1.21 or later:
+
+```bash
+go install github.com/sdlcforge/make-help/cmd/make-help@latest
+```
+
+### Add Help to Your Project (Recommended)
+
+Once installed, run once to set up help targets in your project:
 
 ```bash
 make-help --create-help-target
@@ -34,12 +46,6 @@ This automatically creates a help file with:
 The file location is auto-detected:
 - If your Makefile has `include make/*.mk`, creates `make/01-help.mk`
 - Otherwise, creates `help.mk` in the same directory as the Makefile
-
-### Global
-
-```bash
-go install github.com/sdlcforge/make-help/cmd/make-help@latest
-```
 
 ## Quick Start
 
