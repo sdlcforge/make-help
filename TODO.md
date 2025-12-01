@@ -19,10 +19,11 @@ This document consolidates findings from three parallel reviews:
   - Action: Add actual license
   - Resolution: Updated to Apache 2.0 with link to LICENSE.txt
 
-- [ ] **Fix flag name inconsistency: `--help-file-path` → `--help-file-rel-path`**
-  - Location: `.claude/CLAUDE.md:105`
-  - Location: `docs/architecture/components.md:104`
+- [x] **Fix flag name inconsistency: `--help-file-path` → `--help-file-rel-path`** ✓ DONE
+  - Location: `.claude/CLAUDE.md:105` - not present (already correct)
+  - Location: `docs/architecture/components.md:104` - fixed
   - Action: Update all references to use `--help-file-rel-path` and `HelpFileRelPath`
+  - Note: References in `.claude/plans/` are historical planning docs, not updated
 
 - [ ] **Fix or remove `--force` flag references**
   - Location: `internal/errors/errors.go:99` - `DuplicateHelpTargetError` references non-existent `--force` flag

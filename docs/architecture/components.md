@@ -101,8 +101,8 @@ Documentation directives (in ## comments):
     // Help target generation flags
     rootCmd.Flags().StringVar(&config.Version,
         "version", "", "Version to pin in generated go install")
-    rootCmd.Flags().StringVar(&config.HelpFilePath,
-        "help-file-path", "", "Explicit path for generated help target file")
+    rootCmd.Flags().StringVar(&config.HelpFileRelPath,
+        "help-file-rel-path", "", "Explicit relative path for generated help target file")
 
     return rootCmd
 }
