@@ -14,7 +14,7 @@
   },
   "keywords": [],
   "author": "Zane Rockenbaugh <zane@liquid-labs.com>",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "commonjs",
   "repository": "git+ssh://git@github.com/sdlcforge/make-help.git",
   "bugs": {

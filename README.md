@@ -596,7 +596,7 @@ If your Makefile is very complex or has expensive operations during parsing, you
 
 ## License
 
-[Add your license here]
+This project is licensed under the Apache 2.0 License - see the [LICENSE.txt](LICENSE.txt) file for details.
 
 ## Credits
 

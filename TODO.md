@@ -13,10 +13,11 @@ This document consolidates findings from three parallel reviews:
 
 ### Documentation Fixes
 
-- [ ] **Fix license placeholder in README.md**
+- [x] **Fix license placeholder in README.md** ✓ DONE
   - Location: `README.md:599`
   - Issue: `[Add your license here]` is unprofessional
   - Action: Add actual license
+  - Resolution: Updated to Apache 2.0 with link to LICENSE.txt
 
 - [ ] **Fix flag name inconsistency: `--help-file-path` → `--help-file-rel-path`**
   - Location: `.claude/CLAUDE.md:105`
