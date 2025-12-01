@@ -33,10 +33,15 @@ This document consolidates findings from three parallel reviews:
 
 ### Code Documentation
 
-- [ ] **Add algorithm documentation to builder's `processFile()`**
-  - Location: `internal/model/builder.go:180-259`
+- [x] **Add algorithm documentation to builder's `processFile()`** ✓ DONE
+  - Location: `internal/model/builder.go:143-191`
   - Issue: Most complex function in codebase; interleaving logic is non-obvious
-  - Action: Add header comment explaining the two-pointer merge algorithm with example
+  - Action: Added comprehensive godoc comment explaining:
+    - Two-pointer line-order merge algorithm
+    - Step-by-step example with 6 lines of Makefile
+    - Special cases (@file, @category, duplicate targets)
+    - Rationale for the approach
+  - Also: Added `maxInt` constant with explanatory comment
 
 ---
 

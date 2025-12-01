@@ -141,8 +141,54 @@ func (b *Builder) shouldIncludeTarget(target *Target) bool {
 }
 
 // processFile handles directives and targets from a single parsed file.
-// The scanner outputs directives that belong to targets - directives immediately
-// before a target (without intervening non-doc lines) are associated with that target.
+//
+// # Algorithm: Two-Pointer Line-Order Merge
+//
+// This function uses a two-pointer algorithm to merge directives and targets
+// in line-number order. This ensures that directives (documentation, categories,
+// variables, aliases) are correctly associated with the target that follows them.
+//
+// The algorithm maintains two indices:
+//   - directiveIdx: points to the next unprocessed directive
+//   - targetIdx: points to the next unprocessed target
+//
+// On each iteration, we compare line numbers and process whichever comes first.
+// Directives accumulate in "pending" state until a target is encountered, at which
+// point all pending directives are associated with that target.
+//
+// # Example
+//
+// Given this Makefile content:
+//
+//	Line 1:  ## @category Build      <- directive (category)
+//	Line 2:  ## @var CC Compiler     <- directive (var)
+//	Line 3:  ## Build the project    <- directive (doc)
+//	Line 4:  build:                  <- target
+//	Line 5:  ## Run tests            <- directive (doc)
+//	Line 6:  test:                   <- target
+//
+// Processing order:
+//  1. Line 1: Set currentCategory = "Build"
+//  2. Line 2: Add CC to pendingVars
+//  3. Line 3: Add "Build the project" to pendingDocs
+//  4. Line 4: Create target "build" with pendingDocs=["Build the project"],
+//     pendingVars=[CC], category="Build". Clear pending state.
+//  5. Line 5: Add "Run tests" to pendingDocs
+//  6. Line 6: Create target "test" with pendingDocs=["Run tests"],
+//     category="Build" (inherited). Clear pending state.
+//
+// # Special Cases
+//
+//   - @file directives: Added to model.FileDocs (not associated with targets)
+//   - @category directives: Update currentCategory for subsequent targets
+//   - Duplicate targets: If a target was already processed from another file,
+//     skip it and clear pending state (first definition wins)
+//
+// # Why This Approach
+//
+// The parser extracts directives and targets separately for simplicity. This
+// function reunites them based on line order, which matches how developers
+// write Makefiles: documentation immediately precedes the target it documents.
 func (b *Builder) processFile(
 	file *parser.ParsedFile,
 	model *HelpModel,
@@ -178,9 +224,11 @@ func (b *Builder) processFile(
 	targetIdx := 0
 
 	for directiveIdx < len(file.Directives) || targetIdx < len(targetLines) {
-		// Determine what comes next: directive or target
-		var nextDirectiveLine int = int(^uint(0) >> 1) // Max int
-		var nextTargetLine int = int(^uint(0) >> 1)
+		// Determine what comes next by comparing line numbers.
+		// Initialize to max int so exhausted lists sort to the end.
+		const maxInt = int(^uint(0) >> 1)
+		var nextDirectiveLine int = maxInt
+		var nextTargetLine int = maxInt
 
 		if directiveIdx < len(file.Directives) {
 			nextDirectiveLine = file.Directives[directiveIdx].LineNumber
