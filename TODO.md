@@ -61,20 +61,20 @@ This document consolidates findings from three parallel reviews:
 
 ### Documentation Consistency
 
-- [ ] **Update Config struct in data-models.md**
-  - Location: `docs/architecture/data-models.md:72-100`
+- [x] **Update Config struct in data-models.md** ✓ DONE
+  - Location: `docs/architecture/data-models.md:73-107`
   - Issue: References `TargetFile` instead of actual field `HelpFileRelPath`
-  - Action: Sync with actual `internal/cli/config.go` Config struct
+  - Action: Synced with actual `internal/cli/config.go` Config struct, added all missing fields (CreateHelpTarget, RemoveHelpTarget, Version, IncludeTargets, IncludeAllPhony, Target)
 
-- [ ] **Update algorithms.md discovery implementation**
-  - Location: `docs/architecture/algorithms.md:19-44`
+- [x] **Update algorithms.md discovery implementation** ✓ DONE
+  - Location: `docs/architecture/algorithms.md:16-69`
   - Issue: Shows shell process substitution but code uses temp files (more secure)
-  - Action: Update to show temp file approach
+  - Action: Rewrote File Discovery algorithm to reflect temp file approach with security note
 
-- [ ] **Clarify "template-based rendering" claim**
-  - Location: `docs/architecture/components.md:858, 1000`
+- [x] **Clarify "template-based rendering" claim** ✓ DONE
+  - Location: `docs/architecture/components.md:855, 1004`
   - Issue: Code uses `strings.Builder`, not templates
-  - Action: Change to "string builder-based rendering"
+  - Action: Changed to "String builder-based rendering" and "Structured rendering methods"
 
 ### Error Handling
 

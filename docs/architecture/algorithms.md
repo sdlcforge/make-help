@@ -20,35 +20,53 @@ Core algorithms and their implementations in make-help.
 Input: makefilePath (path to main Makefile)
 Output: []string (ordered list of Makefile paths)
 
-1. Create temporary Makefile content:
-   - Cat main Makefile content
-   - Append blank line
-   - Append target:
+1. Read main Makefile content into memory
+
+2. Create temporary physical file in same directory as main Makefile:
+   - Use os.CreateTemp() to create temp file with pattern ".makefile-discovery-*.mk"
+   - Write main Makefile content to temp file
+   - Append discovery target:
      .PHONY: _list_makefiles
      _list_makefiles:
          @echo $(MAKEFILE_LIST)
+   - Close temp file
+   - Ensure cleanup with defer os.Remove()
 
-2. Execute shell command:
-   make -f <(cat Makefile && echo && echo -e '<target>') _list_makefiles
+3. Execute make command with 30-second timeout:
+   make -s --no-print-directory -f <temp-file-path> _list_makefiles
 
-3. Parse stdout:
+   Flags explained:
+   - "-s" (silent): Suppress make's own output
+   - "--no-print-directory": Prevent directory change messages
+   - These prevent output corruption when running within another make
+
+4. Parse stdout:
    - Split on whitespace
    - Each token is a Makefile path
+   - First file will be temp file - replace with original Makefile path
 
-4. Resolve to absolute paths:
+5. Resolve to absolute paths:
    - For each path:
      - If relative, resolve from Makefile directory
+     - Validate file exists with os.Stat()
      - Return absolute path
 
-5. Return ordered list
+6. Return ordered list
 ```
+
+**Security Note:** This implementation uses temporary physical files instead of bash process
+substitution (e.g., `<(...)`) to prevent command injection vulnerabilities. The temp file
+is created in the same directory as the Makefile to ensure relative includes work correctly.
 
 **Important:** Included files appear in MAKEFILE_LIST after their parent file completes, not at the include point. This matches Make's processing order.
 
 **Error Handling:**
-- Shell command failure -> wrap error with context
-- Empty output -> error "no Makefiles found"
-- Invalid paths -> error "Makefile not found: <path>"
+- File read failure -> "failed to read Makefile: <error>"
+- Temp file creation failure -> "failed to create temp file: <error>"
+- Make command timeout (30s) -> "make command timed out after 30s"
+- Make command failure -> "failed to discover makefiles: <error>"
+- Empty output -> "no Makefiles found in MAKEFILE_LIST"
+- Invalid paths -> "Makefile not found: <path>"
 
 ### 2 Documentation Parsing and Directive Handling
 

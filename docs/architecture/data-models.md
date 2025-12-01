@@ -85,7 +85,13 @@ type Config struct {
     DefaultCategory     string        // Default category name
 
     // Add-target options
-    TargetFile    string              // Explicit path for help target file
+    HelpFileRelPath string            // Relative path for generated help target file
+    CreateHelpTarget bool             // Whether to generate help target file
+    RemoveHelpTarget bool             // Whether to remove help target from Makefile
+    Version         string            // Version for go install (e.g., "v1.2.3")
+    IncludeTargets  []string          // Undocumented targets to include in help
+    IncludeAllPhony bool              // Include all .PHONY targets in help output
+    Target          string            // Target name for detailed help view
 
     // Derived state
     UseColor      bool                // Computed based on ColorMode + terminal detection

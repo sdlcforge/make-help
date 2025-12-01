@@ -852,7 +852,7 @@ func (e *Extractor) extractFirstSentence(text string) string {
 
 **Package:** `internal/format`
 
-**Design:** Template-based rendering with color support
+**Design:** String builder-based rendering with color support
 
 ```go
 type Renderer struct {
@@ -1001,7 +1001,7 @@ func (r *Renderer) RenderDetailedTarget(target *Target) string {
 - String builder for efficient concatenation
 - Color codes injected conditionally
 - Separate methods for main help vs detailed target help
-- Template-like rendering for consistency
+- Structured rendering methods for consistency
 
 ### 8 Create-Help-Target Service
 
