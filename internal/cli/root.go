@@ -53,6 +53,11 @@ Documentation directives (in ## comments):
 				return fmt.Errorf("cannot use both --create-help-target and --remove-help-target")
 			}
 
+			// --dry-run only valid with --create-help-target
+			if config.DryRun && !config.CreateHelpTarget {
+				return fmt.Errorf("--dry-run can only be used with --create-help-target")
+			}
+
 			// --remove-help-target only allows --verbose and --makefile-path
 			if config.RemoveHelpTarget {
 				if err := validateRemoveHelpTargetFlags(config); err != nil {
@@ -128,6 +133,8 @@ Documentation directives (in ## comments):
 		"target", "", "Show detailed help for a specific target")
 	rootCmd.Flags().StringVar(&config.HelpFileRelPath,
 		"help-file-rel-path", "", "Relative path for generated help target file (e.g., help.mk or make/help.mk)")
+	rootCmd.Flags().BoolVar(&config.DryRun,
+		"dry-run", false, "Show what files would be created/modified without making changes (only with --create-help-target)")
 
 	return rootCmd
 }

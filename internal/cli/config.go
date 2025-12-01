@@ -83,6 +83,10 @@ type Config struct {
 	// Target specifies a target name for detailed help view.
 	Target string
 
+	// DryRun shows what would be created/modified without actually making changes.
+	// Only valid with CreateHelpTarget.
+	DryRun bool
+
 	// Derived state (computed at runtime)
 
 	// UseColor is the resolved color setting based on ColorMode and terminal detection.

@@ -196,7 +196,10 @@ test/
 2. **Register flag** in `internal/cli/root.go` `NewRootCmd()`
 3. **Use in appropriate service** (discovery, ordering, etc.)
 4. **Add test coverage** in integration tests
-5. **Update README.md** flags table and usage examples
+5. **Update documentation**:
+   - `README.md` flags table and usage examples
+   - `docs/architecture/components.md` CLI Parser section
+   - `.claude/CLAUDE.md` if it affects common development tasks
 
 ### Modifying Ordering Behavior
 

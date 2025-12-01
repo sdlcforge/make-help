@@ -113,16 +113,31 @@ func (s *AddService) determineTargetFile(makefilePath string) (string, bool, err
 // explicitRelPath must be a relative path (validated by CLI).
 // Returns: (targetFile absolute path, needsInclude directive, relPath for include, error)
 func DetermineTargetFile(makefilePath, explicitRelPath string) (string, bool, error) {
+	return determineTargetFileImpl(makefilePath, explicitRelPath, true)
+}
+
+// DetermineTargetFileNoDirs decides where to create the help target without creating directories.
+// Used for dry-run mode. Same as DetermineTargetFile but doesn't create directories.
+// Returns: (targetFile absolute path, needsInclude directive, error)
+func DetermineTargetFileNoDirs(makefilePath, explicitRelPath string) (string, bool, error) {
+	return determineTargetFileImpl(makefilePath, explicitRelPath, false)
+}
+
+// determineTargetFileImpl is the shared implementation.
+// If createDirs is true, creates parent directories as needed.
+func determineTargetFileImpl(makefilePath, explicitRelPath string, createDirs bool) (string, bool, error) {
 	makefileDir := filepath.Dir(makefilePath)
 
 	// 1. Explicit --help-file-rel-path (always relative)
 	if explicitRelPath != "" {
 		// Compute absolute path for file writing
 		absPath := filepath.Join(makefileDir, explicitRelPath)
-		// Create parent directory if needed
-		parentDir := filepath.Dir(absPath)
-		if err := os.MkdirAll(parentDir, 0755); err != nil {
-			return "", false, fmt.Errorf("failed to create directory %s: %w", parentDir, err)
+		if createDirs {
+			// Create parent directory if needed
+			parentDir := filepath.Dir(absPath)
+			if err := os.MkdirAll(parentDir, 0755); err != nil {
+				return "", false, fmt.Errorf("failed to create directory %s: %w", parentDir, err)
+			}
 		}
 		return absPath, true, nil
 	}
@@ -137,8 +152,10 @@ func DetermineTargetFile(makefilePath, explicitRelPath string) (string, bool, er
 	if includeRegex.Match(content) {
 		// Create make/01-help.mk
 		makeDir := filepath.Join(makefileDir, "make")
-		if err := os.MkdirAll(makeDir, 0755); err != nil {
-			return "", false, fmt.Errorf("failed to create make/ directory: %w", err)
+		if createDirs {
+			if err := os.MkdirAll(makeDir, 0755); err != nil {
+				return "", false, fmt.Errorf("failed to create make/ directory: %w", err)
+			}
 		}
 		return filepath.Join(makeDir, "01-help.mk"), false, nil
 	}

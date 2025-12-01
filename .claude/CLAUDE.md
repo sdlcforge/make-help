@@ -96,7 +96,7 @@ build:
 2. Register in `internal/cli/root.go` `NewRootCmd()`
 3. Use in appropriate service
 4. Add integration test coverage
-5. Update `README.md` flags table
+5. Update `README.md` flags table and `docs/architecture/components.md`
 
 ## Critical Context for AI Agents
 

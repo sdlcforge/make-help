@@ -20,8 +20,11 @@ This document consolidates outstanding findings from three parallel reviews:
   - Use case: CI pipelines to validate documentation without generating output
   - Would validate: all targets documented, categories consistent, no orphaned directives
 
-- [ ] **Add dry-run mode for `--create-help-target`**
+- [x] **Add dry-run mode for `--create-help-target`** ✓ DONE
   - Issue: Cannot preview what will be generated without actually creating files
+  - Implementation: Added `--dry-run` flag that shows what files would be created/modified
+  - Tests: Comprehensive coverage in `create_help_target_test.go`
+  - Docs: Updated README.md, components.md, developer-brief.md
 
 ### Documentation
 

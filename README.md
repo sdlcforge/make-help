@@ -166,6 +166,7 @@ make-help --remove-help-target         # Remove generated help files
 | `--include-all-phony` | Include all .PHONY targets |
 | `--create-help-target` | Generate help target file |
 | `--remove-help-target` | Remove help target from Makefile |
+| `--dry-run` | Preview what files would be created/modified without making changes (only valid with `--create-help-target`) |
 | `--help-file-rel-path` | Override relative path for generated help file (e.g., `help.mk` or `make/help.mk`). Must be a relative path. |
 | `--version` | Pin version in generated go install |
 | `--default-category` | Default category for uncategorized targets |
@@ -339,6 +340,12 @@ make-help --default-category Uncategorized
 ```bash
 # Generate help targets (auto-detects best location)
 make-help --create-help-target
+
+# Preview what would be created without making changes
+make-help --create-help-target --dry-run
+
+# Preview with custom options
+make-help --create-help-target --dry-run --version v1.2.3
 
 # Pin specific version
 make-help --create-help-target --version v1.2.3

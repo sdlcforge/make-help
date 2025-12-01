@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/sdlcforge/make-help/internal/discovery"
 	"github.com/sdlcforge/make-help/internal/model"
@@ -106,7 +107,14 @@ func runCreateHelpTarget(config *Config) error {
 	}
 
 	// 7. Determine target file location
-	targetFile, needsInclude, err := target.DetermineTargetFile(makefilePath, config.HelpFileRelPath)
+	var targetFile string
+	var needsInclude bool
+	if config.DryRun {
+		// Use no-dirs version in dry-run mode to avoid creating directories
+		targetFile, needsInclude, err = target.DetermineTargetFileNoDirs(makefilePath, config.HelpFileRelPath)
+	} else {
+		targetFile, needsInclude, err = target.DetermineTargetFile(makefilePath, config.HelpFileRelPath)
+	}
 	if err != nil {
 		return err
 	}
@@ -127,7 +135,12 @@ func runCreateHelpTarget(config *Config) error {
 	}
 	content := target.GenerateHelpFile(genConfig, documentedTargets)
 
-	// 9. Write file atomically
+	// 9. Handle dry-run mode
+	if config.DryRun {
+		return printDryRunOutput(makefilePath, targetFile, needsInclude, content)
+	}
+
+	// 10. Write file atomically
 	if err := target.AtomicWriteFile(targetFile, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write help target file %s: %w", targetFile, err)
 	}
@@ -136,7 +149,7 @@ func runCreateHelpTarget(config *Config) error {
 		fmt.Fprintf(os.Stderr, "Created help target file: %s\n", targetFile)
 	}
 
-	// 10. Add include directive if needed
+	// 11. Add include directive if needed
 	if needsInclude {
 		if err := target.AddIncludeDirective(makefilePath, targetFile); err != nil {
 			return err
@@ -147,5 +160,38 @@ func runCreateHelpTarget(config *Config) error {
 	}
 
 	fmt.Printf("Successfully created help target: %s\n", targetFile)
+	return nil
+}
+
+// printDryRunOutput displays what would be created/modified in dry-run mode.
+func printDryRunOutput(makefilePath, targetFile string, needsInclude bool, content string) error {
+	fmt.Println("Dry run mode - no files will be modified")
+	fmt.Println()
+	fmt.Printf("Would create: %s\n", targetFile)
+	if needsInclude {
+		fmt.Printf("Would append to: %s\n", makefilePath)
+	}
+	fmt.Println()
+	fmt.Printf("--- %s ---\n", targetFile)
+	fmt.Print(content)
+	fmt.Println("--- end ---")
+
+	if needsInclude {
+		// Compute relative path for include directive
+		makefileDir := filepath.Dir(makefilePath)
+		relPath, err := filepath.Rel(makefileDir, targetFile)
+		if err != nil {
+			// Fallback to just the filename if we can't compute relative path
+			relPath = filepath.Base(targetFile)
+		}
+
+		includeDirective := fmt.Sprintf("\ninclude $(dir $(lastword $(MAKEFILE_LIST)))%s\n", relPath)
+
+		fmt.Println()
+		fmt.Printf("--- Append to %s ---\n", makefilePath)
+		fmt.Print(includeDirective)
+		fmt.Println("--- end ---")
+	}
+
 	return nil
 }

@@ -862,3 +862,59 @@ all:
 	// Should succeed (filtering not yet implemented, but flag should work)
 	assert.NoError(t, err)
 }
+
+func TestDryRunFlagValidation(t *testing.T) {
+	tests := []struct {
+		name           string
+		args           []string
+		expectError    bool
+		expectedErrMsg string
+	}{
+		{
+			name:           "dry-run without create-help-target",
+			args:           []string{"--dry-run"},
+			expectError:    true,
+			expectedErrMsg: "--dry-run can only be used with --create-help-target",
+		},
+		{
+			name:           "dry-run with target flag",
+			args:           []string{"--dry-run", "--target", "build"},
+			expectError:    true,
+			expectedErrMsg: "--dry-run can only be used with --create-help-target",
+		},
+		{
+			name:           "dry-run with remove-help-target",
+			args:           []string{"--dry-run", "--remove-help-target"},
+			expectError:    true,
+			expectedErrMsg: "--dry-run can only be used with --create-help-target",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := NewRootCmd()
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErrMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDryRunFlag(t *testing.T) {
+	cmd := NewRootCmd()
+
+	// Check that dry-run flag is registered
+	flags := cmd.Flags()
+	assert.NotNil(t, flags.Lookup("dry-run"))
+
+	// Check default value
+	dryRun, err := flags.GetBool("dry-run")
+	assert.NoError(t, err)
+	assert.False(t, dryRun)
+}

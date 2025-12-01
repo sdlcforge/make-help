@@ -81,6 +81,8 @@ Documentation directives (in ## comments):
         "remove-help-target", false, "Remove help target from Makefile")
     rootCmd.Flags().StringVar(&config.Target,
         "target", "", "Show detailed help for a specific target")
+    rootCmd.Flags().BoolVar(&config.DryRun,
+        "dry-run", false, "Preview what files would be created/modified without making changes (only valid with --create-help-target)")
 
     // Target filtering flags
     rootCmd.Flags().StringSliceVar(&config.IncludeTargets,
@@ -1007,7 +1009,7 @@ func (r *Renderer) RenderDetailedTarget(target *Target) string {
 
 **Package:** `internal/target`
 
-**Design:** File generation and injection
+**Design:** File generation and injection with dry-run preview capability
 
 ```go
 type AddService struct {
@@ -1017,6 +1019,7 @@ type AddService struct {
 }
 
 // AddTarget generates and injects help target into Makefile
+// If DryRun is true, only previews the changes without writing files
 func (s *AddService) AddTarget() error {
     makefilePath := s.config.MakefilePath
 
@@ -1033,6 +1036,12 @@ func (s *AddService) AddTarget() error {
 
     // Generate help target content
     content := s.generateHelpTarget()
+
+    // Dry-run mode: preview what would be created
+    if s.config.DryRun {
+        s.previewDryRun(targetFile, content, needsInclude, makefilePath)
+        return nil
+    }
 
     // Write target file using atomic write (write to temp, then rename)
     if err := atomicWriteFile(targetFile, []byte(content), 0644); err != nil {
@@ -1054,6 +1063,26 @@ func (s *AddService) AddTarget() error {
     }
 
     return nil
+}
+
+// previewDryRun shows what files would be created without making changes
+func (s *AddService) previewDryRun(targetFile, content string, needsInclude bool, makefilePath string) {
+    fmt.Printf("DRY RUN: Preview of files that would be created/modified\n\n")
+
+    // Show target file that would be created
+    fmt.Printf("Would create file: %s\n", targetFile)
+    fmt.Printf("Content preview:\n%s\n", strings.Repeat("-", 70))
+    fmt.Printf("%s\n", content)
+    fmt.Printf("%s\n\n", strings.Repeat("-", 70))
+
+    // Show include directive if needed
+    if needsInclude {
+        relPath, _ := filepath.Rel(filepath.Dir(makefilePath), targetFile)
+        fmt.Printf("Would append to file: %s\n", makefilePath)
+        fmt.Printf("Content to append:\n%s\n", strings.Repeat("-", 70))
+        fmt.Printf("\ninclude %s\n", relPath)
+        fmt.Printf("%s\n", strings.Repeat("-", 70))
+    }
 }
 
 // validateMakefile runs `make -n` to check for syntax errors
