@@ -215,7 +215,7 @@ test/
 This shows:
 - Discovered Makefiles and their order
 - Discovered targets from `make -p`
-- File operations during add/remove-target
+- File operations during --create-help-target/--remove-help-target
 
 ### Common Issues
 

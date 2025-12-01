@@ -87,7 +87,7 @@ func NewMakeExecutionError(command, stderr string) *MakeExecutionError {
 	}
 }
 
-// DuplicateHelpTargetError is returned when add-target is run
+// DuplicateHelpTargetError is returned when --create-help-target is run
 // but a help target already exists.
 type DuplicateHelpTargetError struct {
 	// Location describes where the existing help target was found.
@@ -96,7 +96,7 @@ type DuplicateHelpTargetError struct {
 
 // Error implements the error interface.
 func (e *DuplicateHelpTargetError) Error() string {
-	return fmt.Sprintf("help target already exists in %s\nUse 'make-help remove-target' first or use --force to overwrite", e.Location)
+	return fmt.Sprintf("help target already exists in %s\nUse 'make-help --remove-help-target' first to remove it", e.Location)
 }
 
 // NewDuplicateHelpTargetError creates a new DuplicateHelpTargetError.

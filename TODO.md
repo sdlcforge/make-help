@@ -25,10 +25,11 @@ This document consolidates findings from three parallel reviews:
   - Action: Update all references to use `--help-file-rel-path` and `HelpFileRelPath`
   - Note: References in `.claude/plans/` are historical planning docs, not updated
 
-- [ ] **Fix or remove `--force` flag references**
-  - Location: `internal/errors/errors.go:99` - `DuplicateHelpTargetError` references non-existent `--force` flag
-  - Location: `docs/architecture/error-handling.md:110-116`
-  - Action: Either implement `--force` flag or remove references
+- [x] **Fix or remove `--force` flag references** ✓ DONE
+  - Location: `internal/errors/errors.go:99` - fixed
+  - Location: `docs/architecture/error-handling.md:110-116` - fixed
+  - Action: Removed `--force` references, fixed `remove-target` → `--remove-help-target`
+  - Also updated: `add-target` → `--create-help-target` throughout docs
 
 ### Code Documentation
 

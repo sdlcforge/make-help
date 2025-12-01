@@ -6,8 +6,8 @@ Step-by-step flows for each operation mode in make-help.
 
 - [Help Generation Flow](#help-generation-flow)
 - [Detailed Target View Flow](#detailed-target-view-flow)
-- [Add-Target Flow](#add-target-flow)
-- [Remove-Target Flow](#remove-target-flow)
+- [Create-Help-Target Flow](#create-help-target-flow)
+- [Remove-Help-Target Flow](#remove-help-target-flow)
 
 ---
 
@@ -83,7 +83,7 @@ Step-by-step flows for each operation mode in make-help.
    └─> Write to STDOUT
 ```
 
-### 2 Add-Target Flow
+### 2 Create-Help-Target Flow
 
 ```
 1. CLI Parsing
@@ -121,7 +121,7 @@ Step-by-step flows for each operation mode in make-help.
    └─> Print confirmation message
 ```
 
-### 3 Remove-Target Flow
+### 3 Remove-Help-Target Flow
 
 ```
 1. CLI Parsing

@@ -22,7 +22,7 @@ Error classification, types, and handling strategies in make-help.
 | Make command execution failure | CRITICAL | Exit with stderr output |
 | Invalid directive syntax | WARNING | Log warning, skip directive, continue |
 | Malformed @var or @alias | WARNING | Log warning, best-effort parse |
-| Duplicate help target | WARNING | Ask user to remove manually or use --force |
+| Duplicate help target | WARNING | Ask user to remove with --remove-help-target first |
 | File write failure | CRITICAL | Exit with error message |
 
 ### 2 Error Types and Messages
@@ -108,10 +108,9 @@ Action: Return MakeExecutionError with stderr
 
 **Scenario 6: Duplicate Help Target**
 ```
-Problem: help target already exists when running add-target
+Problem: help target already exists when running --create-help-target
 Detection: Check for existing help: in Makefile
 Action:
-  - Return error asking user to remove manually
-  - Or add --force flag to overwrite
+  - Return error asking user to run --remove-help-target first
 ```
 

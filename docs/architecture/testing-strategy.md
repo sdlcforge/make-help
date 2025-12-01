@@ -282,8 +282,8 @@ func TestAddTarget(t *testing.T) {
             tmpMakefile := filepath.Join(tmpDir, "Makefile")
             copyFile(tt.fixture, tmpMakefile)
 
-            // Execute add-target
-            cmd := exec.Command("make-help", append([]string{"add-target", "--makefile-path", tmpMakefile}, tt.args...)...)
+            // Execute --create-help-target
+            cmd := exec.Command("make-help", append([]string{"--create-help-target", "--makefile-path", tmpMakefile}, tt.args...)...)
             err := cmd.Run()
             require.NoError(t, err)
 

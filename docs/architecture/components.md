@@ -11,8 +11,8 @@ Detailed specifications for each major component in the make-help system.
 - [Ordering Service](#ordering-service)
 - [Summary Extractor](#summary-extractor)
 - [Formatter Service](#formatter-service)
-- [Add-Target Service](#add-target-service)
-- [Remove-Target Service](#remove-target-service)
+- [Create-Help-Target Service](#create-help-target-service)
+- [Remove-Help-Target Service](#remove-help-target-service)
 
 ---
 
@@ -1003,7 +1003,7 @@ func (r *Renderer) RenderDetailedTarget(target *Target) string {
 - Separate methods for main help vs detailed target help
 - Template-like rendering for consistency
 
-### 8 Add-Target Service
+### 8 Create-Help-Target Service
 
 **Package:** `internal/target`
 
@@ -1202,7 +1202,7 @@ func (s *AddService) addIncludeDirective(makefilePath, targetFile string) error 
 
 **Key Design Decisions:**
 - Three-tier target file resolution strategy
-- Flag pass-through from add-target to generated help command
+- Flag pass-through from --create-help-target to generated help command
 - Include directive injection at end of Makefile
 - Directory creation for make/ pattern
 
@@ -1211,7 +1211,7 @@ func (s *AddService) addIncludeDirective(makefilePath, targetFile string) error 
 - Directory creation failures
 - Duplicate help target detection (check before adding)
 
-### 9 Remove-Target Service
+### 9 Remove-Help-Target Service
 
 **Package:** `internal/target`
 

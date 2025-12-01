@@ -165,7 +165,7 @@ make-help/
 
 2. **Robustness - Command Timeouts:** All `make` command executions use `context.WithTimeout` (30 seconds) to prevent indefinite hangs on malformed Makefiles.
 
-3. **Robustness - Atomic File Writes:** All file modifications (add-target, remove-target) write to a temporary file first, then rename. This prevents file corruption if the process crashes mid-write.
+3. **Robustness - Atomic File Writes:** All file modifications (--create-help-target, --remove-help-target) write to a temporary file first, then rename. This prevents file corruption if the process crashes mid-write.
 
 4. **Robustness - Makefile Validation:** Before modifying any Makefile, run `make -n` (dry-run) to validate syntax and catch errors early.
 
