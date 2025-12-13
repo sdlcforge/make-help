@@ -31,13 +31,13 @@ func NewRootCmd() *cobra.Command {
 
     rootCmd := &cobra.Command{
         Use:   "make-help",
-        Short: "Dynamic help generation for Makefiles",
-        Long: `make-help generates formatted help output from Makefile documentation.
+        Short: "Static help generation for Makefiles",
+        Long: `make-help generates static help files from Makefile documentation.
 
-Default behavior displays help. Use flags for other operations:
-  --target <name>       Show detailed help for a target
-  --create-help-target  Generate help target file
-  --remove-help-target  Remove help targets
+Default behavior generates help.mk with embedded help text. Use flags for other operations:
+  --show-help           Display help dynamically (don't generate file)
+  --show-help --target <name>  Show detailed help for a target
+  --remove-help         Remove generated help files
 
 Documentation directives (in ## comments):
   @file         File-level documentation
@@ -52,14 +52,16 @@ Documentation directives (in ## comments):
             config.UseColor = ResolveColorMode(config)
 
             // Dispatch to appropriate handler
-            if config.RemoveHelpTarget {
-                return runRemoveHelpTarget(config)
-            } else if config.CreateHelpTarget {
-                return runCreateHelpTarget(config)
-            } else if config.Target != "" {
-                return runDetailedHelp(config)
+            if config.RemoveHelp {
+                return runRemoveHelp(config)
+            } else if config.ShowHelp {
+                if config.Target != "" {
+                    return runDetailedHelp(config)
+                } else {
+                    return runShowHelp(config)
+                }
             } else {
-                return runHelp(config)
+                return runGenerateHelpFile(config)
             }
         },
     }
@@ -75,14 +77,14 @@ Documentation directives (in ## comments):
         "verbose", "v", false, "Enable verbose output for debugging")
 
     // Mode flags
-    rootCmd.Flags().BoolVar(&config.CreateHelpTarget,
-        "create-help-target", false, "Generate help target file with local binary installation")
-    rootCmd.Flags().BoolVar(&config.RemoveHelpTarget,
-        "remove-help-target", false, "Remove help target from Makefile")
+    rootCmd.Flags().BoolVar(&config.ShowHelp,
+        "show-help", false, "Display help dynamically instead of generating file")
+    rootCmd.Flags().BoolVar(&config.RemoveHelp,
+        "remove-help", false, "Remove generated help files")
     rootCmd.Flags().StringVar(&config.Target,
-        "target", "", "Show detailed help for a specific target")
+        "target", "", "Show detailed help for a specific target (requires --show-help)")
     rootCmd.Flags().BoolVar(&config.DryRun,
-        "dry-run", false, "Preview what files would be created/modified without making changes (only valid with --create-help-target)")
+        "dry-run", false, "Preview what files would be created/modified without making changes")
 
     // Target filtering flags
     rootCmd.Flags().StringSliceVar(&config.IncludeTargets,
@@ -100,11 +102,9 @@ Documentation directives (in ## comments):
     rootCmd.Flags().StringVar(&config.DefaultCategory,
         "default-category", "", "Default category for uncategorized targets")
 
-    // Help target generation flags
-    rootCmd.Flags().StringVar(&config.Version,
-        "version", "", "Version to pin in generated go install")
+    // Help file generation flags
     rootCmd.Flags().StringVar(&config.HelpFileRelPath,
-        "help-file-rel-path", "", "Explicit relative path for generated help target file")
+        "help-file-rel-path", "", "Explicit relative path for generated help file")
 
     return rootCmd
 }
@@ -112,16 +112,16 @@ Documentation directives (in ## comments):
 
 **Responsibilities:**
 - Parse command-line arguments
-- Validate flag combinations (mutually exclusive mode flags)
+- Validate flag combinations
 - Detect terminal capabilities (isatty)
 - Resolve color mode
 - Delegate to appropriate service based on mode flags
 
-**Mode Flags (mutually exclusive):**
-1. **Default (no mode flags)**: Display help output via `runHelp()`
-2. **`--target <name>`**: Display detailed help for single target via `runDetailedHelp()`
-3. **`--create-help-target`**: Generate help target file via `runCreateHelpTarget()`
-4. **`--remove-help-target`**: Remove help targets via `runRemoveHelpTarget()`
+**Mode Flags:**
+1. **Default (no flags)**: Generate static help file via `runGenerateHelpFile()`
+2. **`--show-help`**: Display help dynamically via `runShowHelp()`
+3. **`--show-help --target <name>`**: Display detailed help for single target via `runDetailedHelp()`
+4. **`--remove-help`**: Remove generated help files via `runRemoveHelp()`
 
 **Target Filtering:**
 - **`--include-target`**: Include specific undocumented targets (repeatable, comma-separated)
@@ -129,17 +129,18 @@ Documentation directives (in ## comments):
 - By default, only documented targets (with `## ` comments) are shown
 
 **Generated Help File:**
-When `--create-help-target` is used, generates a Makefile include with:
-- `GOBIN ?= .bin` - configurable binary directory
-- Binary installation target using `go install`
+When generating a help file (default mode), creates a Makefile include with:
+- Static `@echo` statements containing formatted help text
 - `.PHONY: help` target for summary view
 - `.PHONY: help-<target>` for each documented target (detailed view)
+- Auto-regeneration target that regenerates help.mk when source Makefiles change
+- Fallback chain: tries `make-help`, then `npx make-help`, then shows error
 
 **Error Handling:**
-- Invalid flag combinations (e.g., `--create-help-target` + `--remove-help-target`)
+- Invalid flag combinations (e.g., `--target` without `--show-help`)
 - File path validation
 - Conflicting color flags (`--color` + `--no-color`)
-- Mode flag restrictions (e.g., `--remove-help-target` only accepts `--verbose` and `--makefile-path`)
+- Mode flag restrictions
 
 ### 2 Discovery Service
 
@@ -1005,41 +1006,36 @@ func (r *Renderer) RenderDetailedTarget(target *Target) string {
 - Separate methods for main help vs detailed target help
 - Structured rendering methods for consistency
 
-### 8 Create-Help-Target Service
+### 8 Static Help File Generator
 
 **Package:** `internal/target`
 
-**Design:** File generation and injection with dry-run preview capability
+**Design:** Generates static help files with embedded help text and auto-regeneration logic
 
 ```go
-type AddService struct {
+type Generator struct {
     config   *cli.Config
-    executor CommandExecutor // For Makefile validation
-    verbose  bool            // Enable verbose output
+    model    *model.HelpModel
+    verbose  bool
 }
 
-// AddTarget generates and injects help target into Makefile
+// Generate creates static help file with embedded help text
 // If DryRun is true, only previews the changes without writing files
-func (s *AddService) AddTarget() error {
-    makefilePath := s.config.MakefilePath
-
-    // Validate Makefile syntax before modifying
-    if err := s.validateMakefile(makefilePath); err != nil {
-        return fmt.Errorf("Makefile validation failed: %w", err)
-    }
+func (g *Generator) Generate() error {
+    makefilePath := g.config.MakefilePath
 
     // Determine target file location
-    targetFile, needsInclude, err := s.determineTargetFile(makefilePath)
+    targetFile, needsInclude, err := g.determineTargetFile(makefilePath)
     if err != nil {
         return err
     }
 
-    // Generate help target content
-    content := s.generateHelpTarget()
+    // Generate static help file content with @echo statements
+    content := g.generateStaticHelpFile()
 
     // Dry-run mode: preview what would be created
-    if s.config.DryRun {
-        s.previewDryRun(targetFile, content, needsInclude, makefilePath)
+    if g.config.DryRun {
+        g.previewDryRun(targetFile, content, needsInclude, makefilePath)
         return nil
     }
 
@@ -1048,16 +1044,16 @@ func (s *AddService) AddTarget() error {
         return fmt.Errorf("failed to write target file %s: %w", targetFile, err)
     }
 
-    if s.verbose {
-        fmt.Printf("Created help target file: %s\n", targetFile)
+    if g.verbose {
+        fmt.Printf("Created help file: %s\n", targetFile)
     }
 
     // Add include directive if needed
     if needsInclude {
-        if err := s.addIncludeDirective(makefilePath, targetFile); err != nil {
+        if err := g.addIncludeDirective(makefilePath, targetFile); err != nil {
             return err
         }
-        if s.verbose {
+        if g.verbose {
             fmt.Printf("Added include directive to: %s\n", makefilePath)
         }
     }
@@ -1177,31 +1173,47 @@ func (s *AddService) determineTargetFile(makefilePath string) (targetFile string
     return makefilePath, false, nil
 }
 
-// generateHelpTarget creates help target content
-func (s *AddService) generateHelpTarget() string {
+// generateStaticHelpFile creates static help file with embedded help text
+func (g *Generator) generateStaticHelpFile() string {
     var buf strings.Builder
 
+    // Header comment
+    buf.WriteString("# Generated by make-help. DO NOT EDIT.\n")
+    buf.WriteString("# Regenerate with: make-help\n\n")
+
+    // Generate help target with @echo statements
     buf.WriteString(".PHONY: help\n")
     buf.WriteString("help:\n")
-    buf.WriteString("\t@make-help")
 
-    // Add flags from config
-    if s.config.KeepOrderCategories {
-        buf.WriteString(" --keep-order-categories")
-    }
-    if s.config.KeepOrderTargets {
-        buf.WriteString(" --keep-order-targets")
-    }
-    if len(s.config.CategoryOrder) > 0 {
-        buf.WriteString(" --category-order ")
-        buf.WriteString(strings.Join(s.config.CategoryOrder, ","))
-    }
-    if s.config.DefaultCategory != "" {
-        buf.WriteString(" --default-category ")
-        buf.WriteString(s.config.DefaultCategory)
+    // Render help model as @echo statements
+    for _, line := range g.renderHelpAsEcho() {
+        buf.WriteString("\t@echo ")
+        buf.WriteString(escapeForEcho(line))
+        buf.WriteString("\n")
     }
 
     buf.WriteString("\n")
+
+    // Generate help-<target> targets for each documented target
+    for _, category := range g.model.Categories {
+        for _, target := range category.Targets {
+            buf.WriteString(fmt.Sprintf(".PHONY: help-%s\n", target.Name))
+            buf.WriteString(fmt.Sprintf("help-%s:\n", target.Name))
+            for _, line := range g.renderTargetHelpAsEcho(target) {
+                buf.WriteString("\t@echo ")
+                buf.WriteString(escapeForEcho(line))
+                buf.WriteString("\n")
+            }
+            buf.WriteString("\n")
+        }
+    }
+
+    // Auto-regeneration target
+    buf.WriteString("# Auto-regenerate help when Makefiles change\n")
+    buf.WriteString("help.mk: Makefile\n")
+    buf.WriteString("\t@command -v make-help >/dev/null 2>&1 || \\\n")
+    buf.WriteString("\tcommand -v npx >/dev/null 2>&1 && npx -y @sdlcforge/make-help || \\\n")
+    buf.WriteString("\t{ echo \"Error: make-help not found. Install via: npm install -g @sdlcforge/make-help\"; exit 1; }\n")
 
     return buf.String()
 }
@@ -1230,17 +1242,19 @@ func (s *AddService) addIncludeDirective(makefilePath, targetFile string) error 
 ```
 
 **Key Design Decisions:**
-- Three-tier target file resolution strategy
-- Flag pass-through from --create-help-target to generated help command
-- Include directive injection at end of Makefile
-- Directory creation for make/ pattern
+- **Static generation**: Help text is embedded as `@echo` statements, not generated dynamically
+- **Auto-regeneration**: Generated file includes target that regenerates when source Makefiles change
+- **Fallback chain**: Tries `make-help`, then `npx make-help`, then shows error message
+- **Three-tier target file resolution**: Explicit path → make/help.mk pattern → help.mk in same directory
+- **Include directive injection**: Adds include statement at end of Makefile if needed
+- **Atomic writes**: Prevents file corruption on crashes
 
 **Error Handling:**
 - File write failures
 - Directory creation failures
-- Duplicate help target detection (check before adding)
+- Makefile syntax validation before modification
 
-### 9 Remove-Help-Target Service
+### 9 Remove-Help Service
 
 **Package:** `internal/target`
 
@@ -1370,14 +1384,30 @@ func (s *RemoveService) removeInlineHelpTarget(makefilePath string) error {
     return atomicWriteFile(makefilePath, []byte(newContent), 0644)
 }
 
-// removeHelpTargetFiles deletes help target files
+// removeHelpTargetFiles deletes help files (help.mk or make/help.mk)
 func (s *RemoveService) removeHelpTargetFiles(makefilePath string) error {
-    makeDir := filepath.Join(filepath.Dir(makefilePath), "make")
-    helpFile := filepath.Join(makeDir, "01-help.mk")
+    baseDir := filepath.Dir(makefilePath)
 
+    // Check for help.mk in project root
+    helpFile := filepath.Join(baseDir, "help.mk")
     if _, err := os.Stat(helpFile); err == nil {
         if err := os.Remove(helpFile); err != nil {
             return fmt.Errorf("failed to remove %s: %w", helpFile, err)
+        }
+        if s.verbose {
+            fmt.Printf("Removed: %s\n", helpFile)
+        }
+    }
+
+    // Check for make/help.mk
+    makeDir := filepath.Join(baseDir, "make")
+    makeHelpFile := filepath.Join(makeDir, "help.mk")
+    if _, err := os.Stat(makeHelpFile); err == nil {
+        if err := os.Remove(makeHelpFile); err != nil {
+            return fmt.Errorf("failed to remove %s: %w", makeHelpFile, err)
+        }
+        if s.verbose {
+            fmt.Printf("Removed: %s\n", makeHelpFile)
         }
     }
 

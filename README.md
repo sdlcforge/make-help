@@ -1,28 +1,38 @@
 # make-help
 
-Dynamic help generation for Makefiles with rich documentation support.
+Static help generation for Makefiles with rich documentation support.
 
 ## Why make-help?
 
 Makefiles are powerful but lack a built-in help system. As projects grow, developers accumulate dozens of targets with no easy way to discover or document them. Running `make` without arguments often fails, and `make --help` only shows Make's own options—not your project's targets.
 
-`make-help` solves this by extracting documentation from specially-formatted comments, creating self-documenting Makefiles with organized, categorized help output. It supports categories, aliases, environment variables, target filtering, and can generate project-local help targets that work with `make help`.
+`make-help` solves this by extracting documentation from specially-formatted comments and generating static help files that work with `make help`. The generated help files contain embedded help text and automatically regenerate when source Makefiles change. It supports categories, aliases, environment variables, and target filtering.
 
 ## Features
 
+- **Static Help Generation**: Creates help files with embedded help text (no runtime dependencies)
+- **Auto-Regeneration**: Generated files automatically regenerate when source Makefiles change
 - **Automatic Target Discovery**: Scans your Makefiles (including included files) to find documented targets
 - **Rich Documentation Syntax**: Support for file-level docs, categories, aliases, and environment variables
 - **Target Filtering**: Control which targets appear in help output
-- **Detailed Target Help**: Show full documentation for individual targets
-- **Generated Help Targets**: Create `make help` and `make help-<target>` targets with local binary installation
+- **Detailed Target Help**: Show full documentation for individual targets via `make help-<target>`
 - **Flexible Ordering**: Alphabetical or discovery order for both categories and targets
 - **Colored Output**: Terminal-aware colored output with override flags
 - **Summary Extraction**: Automatically extracts first sentence from multi-line documentation
 - **Include Support**: Discovers and processes Makefiles via `include` directives
+- **Fallback Chain**: Generated files use `make-help` → `npx make-help` → error message
 
 ## Installation
 
-### Install the Binary
+### Via npm (Recommended)
+
+```bash
+npm install -g @sdlcforge/make-help
+```
+
+This installs the `make-help` CLI globally and makes it available to generated help files via `npx`.
+
+### Via Go
 
 Requires Go 1.21 or later:
 
@@ -30,21 +40,22 @@ Requires Go 1.21 or later:
 go install github.com/sdlcforge/make-help/cmd/make-help@latest
 ```
 
-### Add Help to Your Project (Recommended)
+### Add Help to Your Project
 
-Once installed, run once to set up help targets in your project:
+Generate a static help file for your project:
 
 ```bash
-make-help --create-help-target
+make-help
 ```
 
-This automatically creates a help file with:
-- Automatic binary installation via `go install`
+This creates a help file with:
+- Static `@echo` statements containing formatted help text
 - `make help` - displays help summary
 - `make help-<target>` - detailed help for each documented target
+- Auto-regeneration when source Makefiles change
 
 The file location is auto-detected:
-- If your Makefile has `include make/*.mk`, creates `make/01-help.mk`
+- If your Makefile has `include make/*.mk`, creates `make/help.mk`
 - Otherwise, creates `help.mk` in the same directory as the Makefile
 
 ## Quick Start
@@ -75,13 +86,21 @@ deploy:
 	./scripts/deploy.sh $(ENV)
 ```
 
-### 2. Generate Help
+### 2. Generate Static Help File
 
 ```bash
 make-help
 ```
 
-Output:
+This generates a help file (e.g., `help.mk`) that you can include in your Makefile.
+
+### 3. Use the Help System
+
+Now you can run:
+- `make help` - displays help summary
+- `make help-build` - detailed documentation for the build target
+
+Output from `make help`:
 
 ```
 Usage: make [<target>...] [<ENV_VAR>=<value>...]
@@ -99,29 +118,28 @@ Test:
   - test: Run all tests
 ```
 
-### 3. Add Help Targets to Makefile
-
-```bash
-make-help --create-help-target
-```
-
-Now you can run:
-- `make help` - displays help summary
-- `make help-build` - detailed documentation for the build target
-
 ## Usage
 
-### Display Help (default)
+### Generate Static Help File (default)
 
 ```bash
-make-help                              # Show help for ./Makefile
+make-help                              # Generate help.mk for ./Makefile
 make-help --makefile-path path/to/Makefile
+```
+
+### Display Help Dynamically
+
+To see help output without generating a file:
+
+```bash
+make-help --show-help                  # Show help for ./Makefile
+make-help --show-help --makefile-path path/to/Makefile
 ```
 
 ### Detailed Target Help
 
 ```bash
-make-help --target build               # Full docs for 'build' target
+make-help --show-help --target build   # Full docs for 'build' target
 ```
 
 ### Target Filtering
@@ -134,26 +152,10 @@ make-help --include-target foo,bar     # Include multiple (comma-separated)
 make-help --include-all-phony          # Include all .PHONY targets
 ```
 
-### Generate Help Targets
+### Remove Help Files
 
 ```bash
-# Auto-detects location: creates help.mk or make/01-help.mk
-make-help --create-help-target
-
-# Pin specific version for go install
-make-help --create-help-target --version v1.2.3
-
-# Specify custom relative path for the help file
-make-help --create-help-target --help-file-rel-path custom/help.mk
-
-# Use default category for uncategorized targets
-make-help --create-help-target --default-category Misc
-```
-
-### Remove Help Targets
-
-```bash
-make-help --remove-help-target         # Remove generated help files
+make-help --remove-help                # Remove generated help files
 ```
 
 ## Flags Reference
@@ -161,14 +163,13 @@ make-help --remove-help-target         # Remove generated help files
 | Flag | Description |
 |------|-------------|
 | `--makefile-path` | Path to Makefile (default: ./Makefile) |
-| `--target` | Show detailed help for specific target |
+| `--show-help` | Display help dynamically instead of generating file |
+| `--target` | Show detailed help for specific target (requires `--show-help`) |
 | `--include-target` | Include undocumented target (repeatable) |
 | `--include-all-phony` | Include all .PHONY targets |
-| `--create-help-target` | Generate help target file |
-| `--remove-help-target` | Remove help target from Makefile |
-| `--dry-run` | Preview what files would be created/modified without making changes (only valid with `--create-help-target`) |
+| `--remove-help` | Remove generated help files |
+| `--dry-run` | Preview what files would be created/modified without making changes |
 | `--help-file-rel-path` | Override relative path for generated help file (e.g., `help.mk` or `make/help.mk`). Must be a relative path. |
-| `--version` | Pin version in generated go install |
 | `--default-category` | Default category for uncategorized targets |
 | `--keep-order-categories` | Preserve category discovery order |
 | `--keep-order-targets` | Preserve target discovery order |
@@ -293,17 +294,36 @@ deploy:
 ### Basic Usage
 
 ```bash
-# Generate help for current directory's Makefile
+# Generate static help file for current directory's Makefile
 make-help
 
-# Generate help for specific Makefile
+# Generate help file for specific Makefile
 make-help --makefile-path path/to/Makefile
 
-# Disable colored output
-make-help --no-color
+# Preview what would be created without making changes
+make-help --dry-run
+
+# Specify explicit relative path for help file
+make-help --help-file-rel-path custom-help.mk
 
 # Enable verbose debugging
 make-help --verbose
+```
+
+### Dynamic Help Display
+
+```bash
+# Show help dynamically (no file generation)
+make-help --show-help
+
+# Show help for specific Makefile
+make-help --show-help --makefile-path path/to/Makefile
+
+# Show detailed help for a target
+make-help --show-help --target build
+
+# Disable colored output
+make-help --show-help --no-color
 ```
 
 ### Target Filtering
@@ -314,9 +334,6 @@ make-help --include-target clean,install
 
 # Include all .PHONY targets
 make-help --include-all-phony
-
-# Show detailed help for a target
-make-help --target build
 ```
 
 ### Ordering Examples
@@ -335,26 +352,11 @@ make-help --category-order Build,Test
 make-help --default-category Uncategorized
 ```
 
-### Generate and Remove Help Targets
+### Remove Help Files
 
 ```bash
-# Generate help targets (auto-detects best location)
-make-help --create-help-target
-
-# Preview what would be created without making changes
-make-help --create-help-target --dry-run
-
-# Preview with custom options
-make-help --create-help-target --dry-run --version v1.2.3
-
-# Pin specific version
-make-help --create-help-target --version v1.2.3
-
-# Specify explicit relative path
-make-help --create-help-target --help-file-rel-path custom-help.mk
-
-# Remove help targets and all artifacts
-make-help --remove-help-target
+# Remove help files and all artifacts
+make-help --remove-help
 ```
 
 ## Example Projects
@@ -384,7 +386,12 @@ The helper script installs the make-help binary to the project root's `.bin/` di
 Simple flat target list without categories. Demonstrates basic documentation with `@var` and `@alias` directives.
 
 ```bash
-make-help --makefile-path examples/uncategorized-targets/Makefile
+# Generate help file
+cd examples/uncategorized-targets
+make-help
+
+# Or show dynamically
+make-help --show-help --makefile-path examples/uncategorized-targets/Makefile
 ```
 
 ### categorized-project
@@ -392,7 +399,12 @@ make-help --makefile-path examples/uncategorized-targets/Makefile
 Uses `@category` to organize targets into logical groups (Build, Test, Development, Maintenance).
 
 ```bash
-make-help --makefile-path examples/categorized-project/Makefile
+# Generate help file
+cd examples/categorized-project
+make-help
+
+# Or show dynamically
+make-help --show-help --makefile-path examples/categorized-project/Makefile
 ```
 
 ### full-featured
@@ -405,11 +417,15 @@ Comprehensive example using all directives:
 - Multi-line documentation with paragraph breaks
 
 ```bash
-# Show help summary
-make-help --makefile-path examples/full-featured/Makefile
+# Generate help file
+cd examples/full-featured
+make-help
+
+# Show help summary dynamically
+make-help --show-help --makefile-path examples/full-featured/Makefile
 
 # Show detailed help for a target
-make-help --makefile-path examples/full-featured/Makefile --target build
+make-help --show-help --target build --makefile-path examples/full-featured/Makefile
 ```
 
 ### filtering-demo
@@ -418,18 +434,18 @@ Demonstrates target filtering with `--include-target` and `--include-all-phony` 
 
 ```bash
 # Default: only documented targets
-make-help --makefile-path examples/filtering-demo/Makefile
+make-help --show-help --makefile-path examples/filtering-demo/Makefile
 
 # Include specific undocumented targets
-make-help --makefile-path examples/filtering-demo/Makefile --include-target setup,check --default-category Misc
+make-help --show-help --makefile-path examples/filtering-demo/Makefile --include-target setup,check --default-category Misc
 
 # Include all .PHONY targets
-make-help --makefile-path examples/filtering-demo/Makefile --include-all-phony --default-category Misc
+make-help --show-help --makefile-path examples/filtering-demo/Makefile --include-all-phony --default-category Misc
 ```
 
 ## Integration with Make
 
-After running `make-help --create-help-target`, you can invoke help directly from Make:
+After running `make-help`, you can invoke help directly from Make:
 
 ```bash
 # Show help summary
@@ -444,34 +460,34 @@ make build
 make test
 ```
 
-The generated help targets automatically install the `make-help` binary locally to `.bin/` and use it to generate help output.
+The generated help file contains static `@echo` statements with formatted help text embedded directly.
 
 ### How Generated Help Files Work
 
-The generated `help.mk` file uses a self-referential pattern to locate files correctly regardless of where Make is invoked from:
+The generated `help.mk` file contains static help text and auto-regeneration logic:
 
 ```makefile
-MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-GOBIN ?= $(MAKE_HELP_DIR).bin
-MAKE_HELP_BIN := $(GOBIN)/make-help
-MAKE_HELP_OPTS := --makefile-path $(MAKE_HELP_DIR)Makefile
+# Help text embedded as @echo statements
+.PHONY: help
+help:
+	@echo "Usage: make [<target>...] [<ENV_VAR>=<value>...]"
+	@echo ""
+	@echo "Build:"
+	@echo "  - build: Build the application"
+	# ... more help text ...
+
+# Auto-regeneration when Makefiles change
+help.mk: Makefile
+	@command -v make-help >/dev/null 2>&1 || \
+	command -v npx >/dev/null 2>&1 && npx -y @sdlcforge/make-help || \
+	{ echo "Error: make-help not found. Install via: npm install -g @sdlcforge/make-help"; exit 1; }
 ```
 
 This pattern ensures:
-- `MAKE_HELP_DIR` always points to the directory containing the help.mk file
-- The binary is installed relative to that directory (in `.bin/`)
-- The help command always references the correct Makefile
-
-This allows the help.mk file to work correctly whether:
-- It's in the project root (`help.mk`)
-- It's in a subdirectory (`make/01-help.mk`)
-- Make is invoked with `-f path/to/Makefile` from any directory
-
-You can override `GOBIN` to install the binary elsewhere:
-
-```bash
-GOBIN=/usr/local/bin make help
-```
+- **No runtime dependencies**: Help works without installing binaries
+- **Auto-regeneration**: Help file updates when source Makefiles change
+- **Fallback chain**: Uses `make-help` if available, falls back to `npx`, then shows error
+- **Self-contained**: All help text is embedded in the generated file
 
 ## Output Format
 

@@ -21,6 +21,8 @@ This document records the key architectural and design decisions made in the mak
   - [Interface-Based Command Execution](#interface-based-command-execution)
 - [User Experience](#user-experience)
   - [All-or-Nothing Categorization](#all-or-nothing-categorization)
+- [Output and Generation](#output-and-generation)
+  - [Static vs Dynamic Help Generation](#static-vs-dynamic-help-generation)
 
 ---
 
@@ -377,14 +379,54 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
+## Output and Generation
+
+### Static vs Dynamic Help Generation
+
+**Decision**: Default behavior generates static help files with embedded help text instead of displaying help dynamically.
+
+**Context**: The tool can either:
+1. Display help directly to stdout when invoked (dynamic)
+2. Generate a help.mk file with `@echo` statements containing help text (static)
+
+**Rationale**:
+1. **No runtime dependencies**: Generated help files work without requiring `make-help` binary to be installed
+2. **Performance**: Help display is instant (no parsing/processing needed)
+3. **Offline capability**: Help works even without network access or go toolchain
+4. **Simplicity**: Users run `make help` just like any other target
+5. **Distribution**: Projects can be distributed with help files included
+6. **Auto-regeneration**: Generated files can update themselves when Makefiles change
+7. **Fallback chain**: Can use `make-help`, `npx make-help`, or show error - flexible deployment
+
+**Alternatives Considered**:
+- **Dynamic only**: Requires binary installation, slower, but always up-to-date
+- **Hybrid with go install**: Old approach installed binary locally (`.bin/make-help`), complex and still required go toolchain
+- **Documentation only**: README-based help, but disconnected from actual targets
+
+**Consequences**:
+- ✅ Help works without any dependencies installed
+- ✅ Fast help display (pure shell echo)
+- ✅ Projects self-contained (help.mk can be committed)
+- ✅ Auto-regeneration keeps help in sync
+- ✅ Flexible deployment (make-help, npx, or manual)
+- ⚠️ Help file can become stale if not regenerated
+- ⚠️ Larger file size (help text duplicated for each target detail view)
+- ⚠️ Colors must be stripped for static output (cannot detect terminal at runtime)
+- ✅ `--show-help` flag available for dynamic display when needed
+
+**Implementation**: See `internal/target/generator.go` for static file generation and `internal/cli/help.go` for mode routing.
+
+---
+
 ## Summary
 
 These design decisions prioritize:
 
 1. **Security**: Command injection prevention, timeouts, atomic writes, validation before modification
 2. **Simplicity**: Minimal dependencies, single-pass processing, clear separation of concerns
-3. **Usability**: Natural CLI design, clear error messages, sensible defaults
+3. **Usability**: Natural CLI design, clear error messages, sensible defaults, no runtime dependencies
 4. **Maintainability**: Testable design via interfaces, freedom to refactor via internal packages
 5. **Correctness**: Line-order merging, discovery order tracking, all-or-nothing categorization
+6. **Distribution**: Static help files enable easy project distribution with self-contained documentation
 
 Each decision involves trade-offs, but the consequences align with the project's goals of being a secure, simple, and reliable tool for Makefile documentation.

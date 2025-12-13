@@ -1,20 +1,26 @@
 # make-help Examples
 
-This directory contains working examples demonstrating different features and use cases of `make-help`. Each example is a self-contained project with its own Makefile and generated help target.
+This directory contains working examples demonstrating different features and use cases of `make-help`. Each example is a self-contained project with its own Makefile and generated static help file.
 
 ## Quick Start
 
-Each example directory includes a generated `help.mk` file. To see the help output:
+Each example directory includes a generated `help.mk` file with embedded help text. To see the help output:
 
 ```bash
 cd examples/<example-name>
 make help
 ```
 
-Or run `make-help` directly against any example:
+To regenerate the help file:
 
 ```bash
-make-help --makefile-path examples/<example-name>/Makefile
+make-help
+```
+
+Or display help dynamically without generating a file:
+
+```bash
+make-help --show-help --makefile-path examples/<example-name>/Makefile
 ```
 
 ## Examples
@@ -87,13 +93,15 @@ make help-<target-name>
 make help-build
 ```
 
-### Generate Fresh Help Output
+### Generate Fresh Help File
 
-If you modify a Makefile, regenerate the help target:
+If you modify a Makefile, regenerate the help file:
 
 ```bash
-make-help --create-help-target --makefile-path Makefile
+make-help
 ```
+
+The help file will also auto-regenerate when you run `make help` if the source Makefile is newer than the help file.
 
 ## Example Comparison
 
@@ -115,9 +123,10 @@ To use an example as a starting point for your project:
 1. Copy the Makefile structure you need
 2. Update the `@file` documentation with your project description
 3. Modify targets and categories to match your workflow
-4. Generate your help target:
+4. Generate your help file:
    ```bash
-   make-help --create-help-target --makefile-path path/to/your/Makefile
+   cd path/to/your/project
+   make-help
    ```
 
 ## Common Patterns
@@ -146,3 +155,5 @@ Use multi-line documentation when targets need detailed explanations, prerequisi
 - **Document variables**: Always use `@var` for environment variables users might need to set
 - **Use aliases**: Add `@alias` for common shortcuts (e.g., `b` for `build`, `t` for `test`)
 - **Test filtering**: Use the filtering-demo patterns to keep internal/utility targets hidden from regular users
+- **Commit help files**: The generated help.mk files are self-contained and should be committed to your repository
+- **Auto-regeneration**: Help files will automatically regenerate when source Makefiles change (when running `make help`)

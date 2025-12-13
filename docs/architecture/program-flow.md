@@ -4,16 +4,16 @@ Step-by-step flows for each operation mode in make-help.
 
 ## Table of Contents
 
-- [Help Generation Flow](#help-generation-flow)
+- [Static Help File Generation Flow (Default)](#static-help-file-generation-flow-default)
+- [Dynamic Help Display Flow](#dynamic-help-display-flow)
 - [Detailed Target View Flow](#detailed-target-view-flow)
-- [Create-Help-Target Flow](#create-help-target-flow)
-- [Remove-Help-Target Flow](#remove-help-target-flow)
+- [Remove Help Files Flow](#remove-help-files-flow)
 
 ---
 
 ## Overview
 
-### 1 Help Generation Flow
+### 1 Static Help File Generation Flow (Default)
 
 ```
 1. CLI Parsing
@@ -67,6 +67,45 @@ Step-by-step flows for each operation mode in make-help.
    └─> Update target.Summary
 
 7. Formatting Phase
+   ├─> Initialize ColorScheme (no colors for static output)
+   ├─> Render help text as lines
+   ├─> For each line, create @echo statement
+   └─> Result: array of formatted lines
+
+8. Static File Generation
+   ├─> Generate file header comment
+   ├─> Create help target with @echo statements
+   ├─> For each documented target:
+   │   └─> Create help-<target> target with @echo statements
+   ├─> Add auto-regeneration target (help.mk: Makefile)
+   │   ├─> Try: command -v make-help
+   │   ├─> Fallback: npx -y @sdlcforge/make-help
+   │   └─> Error: Show installation instructions
+   └─> Result: complete help.mk content
+
+9. File Writing
+   ├─> Determine target file location
+   │   ├─> If --help-file-rel-path specified: use it
+   │   ├─> Else if Makefile has "include make/*.mk": create make/help.mk
+   │   └─> Else: create help.mk in same directory
+   ├─> If --dry-run: preview content and exit
+   ├─> Write file atomically (temp file + rename)
+   ├─> Add include directive to Makefile if needed
+   └─> Success message
+```
+
+### 2 Dynamic Help Display Flow
+
+```
+1. CLI Parsing
+   ├─> Parse --show-help flag
+   ├─> Validate flag combinations
+   └─> Build Config object
+
+2-6. [Same as Static Help File Generation Flow steps 2-6]
+   Discovery → Parser → Model → Ordering → Summary
+
+7. Formatting Phase
    ├─> Initialize ColorScheme based on config.UseColor
    ├─> Render usage line
    ├─> Render file docs
@@ -83,66 +122,57 @@ Step-by-step flows for each operation mode in make-help.
    └─> Write to STDOUT
 ```
 
-### 2 Create-Help-Target Flow
+### 3 Detailed Target View Flow
 
 ```
 1. CLI Parsing
-   ├─> Parse flags (including help generation flags)
-   ├─> Validate --target-file if specified
+   ├─> Parse --show-help and --target flags
+   ├─> Validate that --target requires --show-help
    └─> Build Config object
 
-2. Determine Target File Location
-   ├─> If --target-file specified:
-   │   └─> Use specified path, mark needsInclude=true
-   ├─> Else if Makefile contains "include make/*.mk":
-   │   ├─> Create make/ directory if needed
-   │   └─> Set targetFile=make/01-help.mk, needsInclude=false
-   └─> Else:
-       └─> Set targetFile=<Makefile>, needsInclude=false (append)
+2-6. [Same as Dynamic Help Display Flow steps 2-6]
 
-3. Generate Help Target Content
-   ├─> Build .PHONY: help line
-   └─> Build help: target with make-help + flags
+7. Find Target in Model
+   ├─> Search all categories for target by name
+   ├─> If not found: error
+   └─> Extract target details
 
-4. Write Target File
-   ├─> If appending to Makefile:
-   │   ├─> Read existing content
-   │   ├─> Append help target
-   │   └─> Write back
-   └─> Else:
-       └─> Write new file with help target
+8. Render Detailed View
+   ├─> Render target name
+   ├─> Render full documentation (all lines)
+   ├─> Render aliases section (if any)
+   └─> Render variables section (if any)
 
-5. Add Include Directive (if needed)
-   ├─> Compute relative path from Makefile to target file
-   ├─> Generate include directive
-   └─> Append to Makefile
-
-6. Success
-   └─> Print confirmation message
+9. Output
+   └─> Write to STDOUT
 ```
 
-### 3 Remove-Help-Target Flow
+### 4 Remove Help Files Flow
 
 ```
 1. CLI Parsing
-   ├─> Parse flags
+   ├─> Parse --remove-help flag
    └─> Resolve Makefile path
 
 2. Remove Include Directives
    ├─> Read Makefile
    ├─> Filter out lines matching: ^include\s+.*help.*\.mk
-   └─> Write back
+   ├─> Write back atomically
+   └─> Report if any directives removed
 
-3. Remove Inline Help Target
+3. Remove Inline Help Targets
    ├─> Read Makefile
    ├─> Detect help: target and .PHONY: help
    ├─> Skip target and its recipe lines (tab/space-prefixed)
-   └─> Write back
+   ├─> Write back atomically
+   └─> Report if any targets removed
 
-4. Remove Help Target Files
-   ├─> Check for make/01-help.mk
-   ├─> Delete if exists
-   └─> Check for other help-related .mk files in make/
+4. Remove Help Files
+   ├─> Check for help.mk in project root
+   │   └─> Delete if exists
+   ├─> Check for make/help.mk
+   │   └─> Delete if exists
+   └─> Report files removed
 
 5. Success
    └─> Print confirmation message
