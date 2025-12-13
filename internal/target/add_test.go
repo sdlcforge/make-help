@@ -39,7 +39,7 @@ func (m *MockExecutor) ExecuteContext(ctx context.Context, cmd string, args ...s
 	return "", "", nil
 }
 
-func TestAddService_AddTarget_AppendToMakefile(t *testing.T) {
+func TestAddService_AddTarget_CreateHelpMk(t *testing.T) {
 	// Setup
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -72,17 +72,23 @@ test:
 	err = service.AddTarget()
 	require.NoError(t, err)
 
-	// Verify Makefile was updated
-	content, err := os.ReadFile(makefilePath)
+	// Verify help.mk was created
+	helpMkPath := filepath.Join(tmpDir, "help.mk")
+	content, err := os.ReadFile(helpMkPath)
 	require.NoError(t, err)
 
 	contentStr := string(content)
-	// NOTE: AddService currently uses generateHelpTarget which produces a placeholder.
-	// This will be updated in Phase 5 to use the new static format.
+	// NOTE: AddService uses the deprecated generateHelpTarget placeholder.
+	// The full static generator is used via CLI orchestration (runCreateHelpTarget).
 	assert.Contains(t, contentStr, ".PHONY: help")
 	assert.Contains(t, contentStr, "help:")
 	assert.Contains(t, contentStr, "MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))")
 	assert.Contains(t, contentStr, "This is a placeholder")
+
+	// Verify include directive was added to Makefile
+	makefileContentAfter, err := os.ReadFile(makefilePath)
+	require.NoError(t, err)
+	assert.Contains(t, string(makefileContentAfter), "include $(dir $(lastword $(MAKEFILE_LIST)))help.mk")
 }
 
 func TestAddService_AddTarget_CreateMakeDirectory(t *testing.T) {
@@ -127,8 +133,8 @@ all:
 	require.NoError(t, err)
 
 	contentStr := string(content)
-	// NOTE: AddService currently uses generateHelpTarget which produces a placeholder.
-	// This will be updated in Phase 5 to use the new static format.
+	// NOTE: AddService uses the deprecated generateHelpTarget placeholder.
+	// The full static generator is used via CLI orchestration (runCreateHelpTarget).
 	assert.Contains(t, contentStr, ".PHONY: help")
 	assert.Contains(t, contentStr, "help:")
 	assert.Contains(t, contentStr, "MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))")
@@ -183,10 +189,10 @@ func TestAddService_AddTarget_ExplicitTargetFile(t *testing.T) {
 }
 
 func TestAddService_AddTarget_FlagPassThrough(t *testing.T) {
-	// NOTE: This test is currently disabled because AddService uses generateHelpTarget
-	// which produces a placeholder. Phase 5 will update AddService to use the proper
-	// generator, at which point these flag pass-through tests will be re-enabled.
-	t.Skip("Skipped until Phase 5: AddService will be updated to use proper generator")
+	// NOTE: This test is skipped because AddService uses the deprecated generateHelpTarget
+	// placeholder. Flag pass-through is tested via CLI integration tests in
+	// create_help_target_test.go which exercises the full generator pipeline.
+	t.Skip("Flag pass-through tested via CLI integration tests")
 
 	// Setup
 	tmpDir := t.TempDir()
@@ -359,11 +365,11 @@ func TestDetermineTargetFile(t *testing.T) {
 			wantInclude:       false,
 		},
 		{
-			name:              "no pattern - append to makefile",
+			name:              "no pattern - create help.mk",
 			makefileContent:   "all:\n\t@echo test\n",
 			targetFileRelPath: "",
-			wantFile:          "Makefile",
-			wantInclude:       false,
+			wantFile:          "help.mk",
+			wantInclude:       true,
 		},
 	}
 

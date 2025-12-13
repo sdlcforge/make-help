@@ -39,9 +39,9 @@ func NewAddService(config *Config, executor discovery.CommandExecutor, verbose b
 
 // AddTarget generates and injects a help target into the Makefile.
 // It follows a three-tier strategy for target file placement:
-//  1. Use explicit --target-file if specified
-//  2. Create make/01-help.mk if include make/*.mk pattern found
-//  3. Append directly to main Makefile
+//  1. Use explicit --help-file-rel-path if specified (needs include directive)
+//  2. Create make/01-help.mk if include make/*.mk pattern found (no include needed)
+//  3. Otherwise create help.mk in same directory as Makefile (needs include directive)
 func (s *AddService) AddTarget() error {
 	makefilePath := s.config.MakefilePath
 
@@ -111,7 +111,7 @@ func (s *AddService) determineTargetFile(makefilePath string) (string, bool, err
 
 // DetermineTargetFile decides where to create the help target.
 // explicitRelPath must be a relative path (validated by CLI).
-// Returns: (targetFile absolute path, needsInclude directive, relPath for include, error)
+// Returns: (targetFile absolute path, needsInclude directive, error)
 func DetermineTargetFile(makefilePath, explicitRelPath string) (string, bool, error) {
 	return determineTargetFileImpl(makefilePath, explicitRelPath, true)
 }
@@ -160,8 +160,8 @@ func determineTargetFileImpl(makefilePath, explicitRelPath string, createDirs bo
 		return filepath.Join(makeDir, "01-help.mk"), false, nil
 	}
 
-	// 3. Append directly to Makefile
-	return makefilePath, false, nil
+	// 3. Create help.mk in same directory as Makefile
+	return filepath.Join(makefileDir, "help.mk"), true, nil
 }
 
 // addIncludeDirective injects an include statement into the Makefile using atomic write.
