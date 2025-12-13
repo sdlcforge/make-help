@@ -124,6 +124,7 @@ func runCreateHelpTarget(config *Config) error {
 	}
 
 	// 8. Generate help file content
+	// TODO: Phase 4 will update this to use the new GenerateHelpFile() with HelpModel
 	genConfig := &target.GeneratorConfig{
 		KeepOrderCategories: config.KeepOrderCategories,
 		KeepOrderTargets:    config.KeepOrderTargets,
@@ -131,9 +132,8 @@ func runCreateHelpTarget(config *Config) error {
 		DefaultCategory:     config.DefaultCategory,
 		IncludeTargets:      parseIncludeTargets(config.IncludeTargets),
 		IncludeAllPhony:     config.IncludeAllPhony,
-		Version:             "", // No version pinning - always use @latest
 	}
-	content := target.GenerateHelpFile(genConfig, documentedTargets)
+	content := target.GenerateHelpFileDeprecated(genConfig, documentedTargets)
 
 	// 9. Handle dry-run mode
 	if config.DryRun {
