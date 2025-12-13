@@ -545,3 +545,403 @@ func TestRenderBasicTarget_WithColors(t *testing.T) {
 	assert.Contains(t, output, "Target: undocumented")
 	assert.Contains(t, output, "No documentation available.")
 }
+
+func TestEscapeForMakefileEcho_DollarSign(t *testing.T) {
+	input := "Use $VAR in your command"
+	expected := "Use $$VAR in your command" // $ becomes $$
+	result := escapeForMakefileEcho(input)
+	assert.Equal(t, expected, result)
+}
+
+func TestEscapeForMakefileEcho_DoubleQuote(t *testing.T) {
+	input := `Say "hello" to the world`
+	expected := `Say \"hello\" to the world` // " becomes \"
+	result := escapeForMakefileEcho(input)
+	assert.Equal(t, expected, result)
+}
+
+func TestEscapeForMakefileEcho_ANSICode(t *testing.T) {
+	// Input contains actual ANSI escape character (\x1b)
+	input := "\x1b[36mCyan text\x1b[0m"
+	expected := "\\033[36mCyan text\\033[0m" // \x1b becomes literal \033
+	result := escapeForMakefileEcho(input)
+	assert.Equal(t, expected, result)
+}
+
+func TestEscapeForMakefileEcho_MixedSpecialChars(t *testing.T) {
+	// Input contains $ and " and actual ANSI escape characters
+	input := "Use $VAR with \"quotes\" and \x1b[32mcolor\x1b[0m"
+	expected := "Use $$VAR with \\\"quotes\\\" and \\033[32mcolor\\033[0m"
+	result := escapeForMakefileEcho(input)
+	assert.Equal(t, expected, result)
+}
+
+func TestEscapeForMakefileEcho_PlainText(t *testing.T) {
+	input := "Plain text with no special characters"
+	expected := "Plain text with no special characters"
+	result := escapeForMakefileEcho(input)
+	assert.Equal(t, expected, result)
+}
+
+func TestEscapeForMakefileEcho_Backslash(t *testing.T) {
+	input := "path\\to\\file"
+	expected := "path\\\\to\\\\file"
+	result := escapeForMakefileEcho(input)
+	assert.Equal(t, expected, result)
+}
+
+func TestEscapeForMakefileEcho_Backtick(t *testing.T) {
+	input := "Use `make build` to compile"
+	expected := "Use \\`make build\\` to compile"
+	result := escapeForMakefileEcho(input)
+	assert.Equal(t, expected, result)
+}
+
+func TestRenderForMakefile_EmptyModel(t *testing.T) {
+	renderer := NewRenderer(false)
+	helpModel := &model.HelpModel{}
+
+	lines, err := renderer.RenderForMakefile(helpModel)
+
+	require.NoError(t, err)
+	require.Len(t, lines, 1)
+	assert.Equal(t, "Usage: make [<target>...] [<ENV_VAR>=<value>...]", lines[0])
+}
+
+func TestRenderForMakefile_WithFileDocumentation(t *testing.T) {
+	renderer := NewRenderer(false)
+	helpModel := &model.HelpModel{
+		FileDocs: []string{
+			"This is the main Makefile for the project.",
+			"It provides common development tasks.",
+		},
+	}
+
+	lines, err := renderer.RenderForMakefile(helpModel)
+
+	require.NoError(t, err)
+	assert.Contains(t, lines, "Usage: make [<target>...] [<ENV_VAR>=<value>...]")
+	assert.Contains(t, lines, "")
+	assert.Contains(t, lines, "This is the main Makefile for the project.")
+	assert.Contains(t, lines, "It provides common development tasks.")
+}
+
+func TestRenderForMakefile_BasicTargets(t *testing.T) {
+	renderer := NewRenderer(false)
+	helpModel := &model.HelpModel{
+		Categories: []model.Category{
+			{
+				Name: "",
+				Targets: []model.Target{
+					{
+						Name:          "build",
+						Documentation: []string{"Build the project."},
+					},
+					{
+						Name:          "test",
+						Documentation: []string{"Run all tests."},
+					},
+				},
+			},
+		},
+	}
+
+	lines, err := renderer.RenderForMakefile(helpModel)
+
+	require.NoError(t, err)
+	assert.Contains(t, lines, "Targets:")
+	assert.Contains(t, lines, "  - build: Build the project.")
+	assert.Contains(t, lines, "  - test: Run all tests.")
+}
+
+func TestRenderForMakefile_WithCategories(t *testing.T) {
+	renderer := NewRenderer(false)
+	helpModel := &model.HelpModel{
+		HasCategories: true,
+		Categories: []model.Category{
+			{
+				Name: "Build",
+				Targets: []model.Target{
+					{
+						Name:          "build",
+						Documentation: []string{"Build the project."},
+					},
+				},
+			},
+			{
+				Name: "Test",
+				Targets: []model.Target{
+					{
+						Name:          "test",
+						Documentation: []string{"Run all tests."},
+					},
+				},
+			},
+		},
+	}
+
+	lines, err := renderer.RenderForMakefile(helpModel)
+
+	require.NoError(t, err)
+	assert.Contains(t, lines, "Build:")
+	assert.Contains(t, lines, "Test:")
+	assert.Contains(t, lines, "  - build: Build the project.")
+	assert.Contains(t, lines, "  - test: Run all tests.")
+}
+
+func TestRenderForMakefile_WithColors(t *testing.T) {
+	renderer := NewRenderer(true)
+	helpModel := &model.HelpModel{
+		Categories: []model.Category{
+			{
+				Name: "Build",
+				Targets: []model.Target{
+					{
+						Name:          "build",
+						Aliases:       []string{"b"},
+						Documentation: []string{"Build the project."},
+					},
+				},
+			},
+		},
+	}
+
+	lines, err := renderer.RenderForMakefile(helpModel)
+
+	require.NoError(t, err)
+
+	// Find the category line
+	var categoryLine string
+	for _, line := range lines {
+		if strings.Contains(line, "Build:") {
+			categoryLine = line
+			break
+		}
+	}
+	assert.NotEmpty(t, categoryLine)
+	assert.Contains(t, categoryLine, "\\033[1;36m", "Should contain escaped cyan for category")
+	assert.Contains(t, categoryLine, "\\033[0m", "Should contain escaped reset")
+
+	// Find the target line
+	var targetLine string
+	for _, line := range lines {
+		if strings.Contains(line, "build") && strings.Contains(line, "  - ") {
+			targetLine = line
+			break
+		}
+	}
+	assert.NotEmpty(t, targetLine)
+	assert.Contains(t, targetLine, "\\033[1;32m", "Should contain escaped green for target")
+	assert.Contains(t, targetLine, "\\033[0;33m", "Should contain escaped yellow for alias")
+}
+
+func TestRenderForMakefile_WithColorsDisabled(t *testing.T) {
+	renderer := NewRenderer(false)
+	helpModel := &model.HelpModel{
+		Categories: []model.Category{
+			{
+				Name: "Build",
+				Targets: []model.Target{
+					{
+						Name:          "build",
+						Documentation: []string{"Build the project."},
+					},
+				},
+			},
+		},
+	}
+
+	lines, err := renderer.RenderForMakefile(helpModel)
+
+	require.NoError(t, err)
+
+	// Should not contain any ANSI escape codes
+	for _, line := range lines {
+		assert.NotContains(t, line, "\\033[", "Line should not contain escaped ANSI codes: %s", line)
+		assert.NotContains(t, line, "\033[", "Line should not contain raw ANSI codes: %s", line)
+	}
+}
+
+func TestRenderForMakefile_WithAliasesAndVariables(t *testing.T) {
+	renderer := NewRenderer(false)
+	helpModel := &model.HelpModel{
+		Categories: []model.Category{
+			{
+				Name: "",
+				Targets: []model.Target{
+					{
+						Name:          "serve",
+						Aliases:       []string{"s", "start"},
+						Documentation: []string{"Start the development server."},
+						Variables: []model.Variable{
+							{Name: "PORT"},
+							{Name: "DEBUG"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	lines, err := renderer.RenderForMakefile(helpModel)
+
+	require.NoError(t, err)
+	assert.Contains(t, lines, "  - serve s, start: Start the development server.")
+	assert.Contains(t, lines, "    Vars: PORT, DEBUG")
+}
+
+func TestRenderForMakefile_SpecialCharactersEscaped(t *testing.T) {
+	renderer := NewRenderer(false)
+	helpModel := &model.HelpModel{
+		Categories: []model.Category{
+			{
+				Name: "",
+				Targets: []model.Target{
+					{
+						Name:          "deploy",
+						Documentation: []string{`Use $VAR and "quotes" in command.`},
+					},
+				},
+			},
+		},
+	}
+
+	lines, err := renderer.RenderForMakefile(helpModel)
+
+	require.NoError(t, err)
+
+	// Find the target line
+	var targetLine string
+	for _, line := range lines {
+		if strings.Contains(line, "deploy") {
+			targetLine = line
+			break
+		}
+	}
+	assert.NotEmpty(t, targetLine)
+	assert.Contains(t, targetLine, "$$VAR", "Should escape $ as $$")
+	assert.Contains(t, targetLine, "\\\"quotes\\\"", "Should escape quotes")
+}
+
+func TestRenderDetailedForMakefile_Complete(t *testing.T) {
+	renderer := NewRenderer(false)
+	target := &model.Target{
+		Name:    "build",
+		Aliases: []string{"b", "compile"},
+		Documentation: []string{
+			"Build the project.",
+			"",
+			"This compiles all source files.",
+		},
+		Variables: []model.Variable{
+			{Name: "GOOS", Description: "Target OS"},
+			{Name: "GOARCH", Description: "Target architecture"},
+		},
+		SourceFile: "/path/to/Makefile",
+		LineNumber: 42,
+	}
+
+	lines := renderer.RenderDetailedForMakefile(target)
+
+	assert.Contains(t, lines, "Target: build")
+	assert.Contains(t, lines, "Aliases: b, compile")
+	assert.Contains(t, lines, "Variables:")
+	assert.Contains(t, lines, "  - GOOS: Target OS")
+	assert.Contains(t, lines, "  - GOARCH: Target architecture")
+	assert.Contains(t, lines, "Documentation:")
+	assert.Contains(t, lines, "  Build the project.")
+	assert.Contains(t, lines, "  This compiles all source files.")
+	assert.Contains(t, lines, "Source: /path/to/Makefile:42")
+}
+
+func TestRenderDetailedForMakefile_MinimalTarget(t *testing.T) {
+	renderer := NewRenderer(false)
+	target := &model.Target{
+		Name: "simple",
+	}
+
+	lines := renderer.RenderDetailedForMakefile(target)
+
+	assert.Equal(t, []string{"Target: simple"}, lines)
+}
+
+func TestRenderDetailedForMakefile_WithColors(t *testing.T) {
+	renderer := NewRenderer(true)
+	target := &model.Target{
+		Name:          "build",
+		Aliases:       []string{"b"},
+		Documentation: []string{"Build the project."},
+		Variables: []model.Variable{
+			{Name: "DEBUG", Description: "Enable debug mode"},
+		},
+	}
+
+	lines := renderer.RenderDetailedForMakefile(target)
+
+	// Check for escaped ANSI codes in output
+	targetLine := lines[0]
+	assert.Contains(t, targetLine, "\\033[1;32m", "Should contain escaped green for target")
+	assert.Contains(t, targetLine, "\\033[0m", "Should contain escaped reset")
+
+	// Find alias line
+	var aliasLine string
+	for _, line := range lines {
+		if strings.Contains(line, "Aliases:") {
+			aliasLine = line
+			break
+		}
+	}
+	assert.Contains(t, aliasLine, "\\033[0;33m", "Should contain escaped yellow for alias")
+}
+
+func TestRenderDetailedForMakefile_VariableWithoutDescription(t *testing.T) {
+	renderer := NewRenderer(false)
+	target := &model.Target{
+		Name: "build",
+		Variables: []model.Variable{
+			{Name: "PORT"},
+			{Name: "DEBUG", Description: "Enable debug mode"},
+		},
+	}
+
+	lines := renderer.RenderDetailedForMakefile(target)
+
+	assert.Contains(t, lines, "  - PORT")
+	assert.Contains(t, lines, "  - DEBUG: Enable debug mode")
+}
+
+func TestRenderDetailedForMakefile_SpecialCharactersEscaped(t *testing.T) {
+	renderer := NewRenderer(false)
+	target := &model.Target{
+		Name:          "deploy",
+		Documentation: []string{`Set $DEPLOY_ENV to "production" before running.`},
+		Variables: []model.Variable{
+			{Name: "DEPLOY_ENV", Description: `Use "production" or "staging"`},
+		},
+	}
+
+	lines := renderer.RenderDetailedForMakefile(target)
+
+	// Check that special characters are escaped
+	docLine := ""
+	for _, line := range lines {
+		if strings.Contains(line, "$$DEPLOY_ENV") {
+			docLine = line
+			break
+		}
+	}
+	assert.NotEmpty(t, docLine)
+	assert.Contains(t, docLine, "$$DEPLOY_ENV", "Should escape $ as $$")
+	assert.Contains(t, docLine, "\\\"production\\\"", "Should escape quotes")
+
+	// Check variable description
+	varLine := ""
+	for _, line := range lines {
+		if strings.Contains(line, "DEPLOY_ENV:") {
+			varLine = line
+			break
+		}
+	}
+	assert.NotEmpty(t, varLine)
+	assert.Contains(t, varLine, "\\\"production\\\"", "Should escape quotes in variable description")
+}

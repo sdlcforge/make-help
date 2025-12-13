@@ -212,3 +212,197 @@ func (r *Renderer) RenderBasicTarget(name string, sourceFile string, lineNumber 
 
 	return buf.String()
 }
+
+// RenderForMakefile generates help output suitable for embedding in Makefile @echo statements.
+// Returns a slice of strings, each representing one line to be echoed.
+// Each line is properly escaped for shell/Makefile context.
+// ANSI color codes are embedded as literal escape sequences (e.g., \033[36m).
+func (r *Renderer) RenderForMakefile(model *model.HelpModel) ([]string, error) {
+	var lines []string
+
+	// Usage line
+	lines = append(lines, escapeForMakefileEcho("Usage: make [<target>...] [<ENV_VAR>=<value>...]"))
+
+	// File documentation
+	if len(model.FileDocs) > 0 {
+		lines = append(lines, escapeForMakefileEcho(""))
+		for _, doc := range model.FileDocs {
+			lines = append(lines, escapeForMakefileEcho(doc))
+		}
+	}
+
+	// Targets section
+	if len(model.Categories) > 0 {
+		lines = append(lines, escapeForMakefileEcho(""))
+		lines = append(lines, escapeForMakefileEcho("Targets:"))
+
+		for _, category := range model.Categories {
+			categoryLines := r.renderCategoryForMakefile(&category)
+			lines = append(lines, categoryLines...)
+		}
+	}
+
+	return lines, nil
+}
+
+// renderCategoryForMakefile renders a single category for Makefile output.
+func (r *Renderer) renderCategoryForMakefile(category *model.Category) []string {
+	var lines []string
+
+	// Category name (if present)
+	if category.Name != "" {
+		lines = append(lines, escapeForMakefileEcho(""))
+		categoryLine := r.colors.CategoryName + category.Name + ":" + r.colors.Reset
+		lines = append(lines, escapeForMakefileEcho(categoryLine))
+	}
+
+	// Each target in the category
+	for _, target := range category.Targets {
+		targetLines := r.renderTargetForMakefile(&target)
+		lines = append(lines, targetLines...)
+	}
+
+	return lines
+}
+
+// renderTargetForMakefile renders a single target for Makefile output.
+func (r *Renderer) renderTargetForMakefile(target *model.Target) []string {
+	var lines []string
+	var buf strings.Builder
+
+	// Indentation for target line
+	buf.WriteString("  - ")
+
+	// Target name (colored)
+	buf.WriteString(r.colors.TargetName)
+	buf.WriteString(target.Name)
+	buf.WriteString(r.colors.Reset)
+
+	// Aliases (if any)
+	if len(target.Aliases) > 0 {
+		buf.WriteString(" ")
+		buf.WriteString(r.colors.Alias)
+		buf.WriteString(strings.Join(target.Aliases, ", "))
+		buf.WriteString(r.colors.Reset)
+	}
+
+	// Summary (extract first sentence from documentation)
+	summary := r.extractor.Extract(target.Documentation)
+	if summary != "" {
+		buf.WriteString(": ")
+		buf.WriteString(r.colors.Documentation)
+		buf.WriteString(summary)
+		buf.WriteString(r.colors.Reset)
+	}
+
+	lines = append(lines, escapeForMakefileEcho(buf.String()))
+
+	// Variables (if any)
+	if len(target.Variables) > 0 {
+		buf.Reset()
+		buf.WriteString("    Vars: ")
+		varNames := make([]string, len(target.Variables))
+		for i, v := range target.Variables {
+			varNames[i] = v.Name
+		}
+		buf.WriteString(r.colors.Variable)
+		buf.WriteString(strings.Join(varNames, ", "))
+		buf.WriteString(r.colors.Reset)
+		lines = append(lines, escapeForMakefileEcho(buf.String()))
+	}
+
+	return lines
+}
+
+// RenderDetailedForMakefile renders detailed help for a single target suitable for Makefile @echo.
+// Returns a slice of strings, each representing one line to be echoed.
+// Each line is properly escaped for shell/Makefile context.
+func (r *Renderer) RenderDetailedForMakefile(target *model.Target) []string {
+	var lines []string
+
+	// Target name
+	targetLine := r.colors.TargetName + "Target: " + target.Name + r.colors.Reset
+	lines = append(lines, escapeForMakefileEcho(targetLine))
+
+	// Aliases
+	if len(target.Aliases) > 0 {
+		aliasLine := r.colors.Alias + "Aliases: " + strings.Join(target.Aliases, ", ") + r.colors.Reset
+		lines = append(lines, escapeForMakefileEcho(aliasLine))
+	}
+
+	// Variables
+	if len(target.Variables) > 0 {
+		varHeader := r.colors.Variable + "Variables:" + r.colors.Reset
+		lines = append(lines, escapeForMakefileEcho(varHeader))
+		for _, v := range target.Variables {
+			var varBuf strings.Builder
+			varBuf.WriteString("  - ")
+			varBuf.WriteString(r.colors.Variable)
+			varBuf.WriteString(v.Name)
+			varBuf.WriteString(r.colors.Reset)
+			if v.Description != "" {
+				varBuf.WriteString(": ")
+				varBuf.WriteString(r.colors.Documentation)
+				varBuf.WriteString(v.Description)
+				varBuf.WriteString(r.colors.Reset)
+			}
+			lines = append(lines, escapeForMakefileEcho(varBuf.String()))
+		}
+	}
+
+	// Full documentation
+	if len(target.Documentation) > 0 {
+		lines = append(lines, escapeForMakefileEcho(""))
+		docHeader := r.colors.Documentation + "Documentation:" + r.colors.Reset
+		lines = append(lines, escapeForMakefileEcho(docHeader))
+		for _, line := range target.Documentation {
+			docLine := "  " + line
+			lines = append(lines, escapeForMakefileEcho(docLine))
+		}
+	}
+
+	// Source information
+	if target.SourceFile != "" {
+		lines = append(lines, escapeForMakefileEcho(""))
+		sourceLine := fmt.Sprintf("Source: %s:%d", target.SourceFile, target.LineNumber)
+		lines = append(lines, escapeForMakefileEcho(sourceLine))
+	}
+
+	return lines
+}
+
+// escapeForMakefileEcho escapes a string for use in Makefile @echo statements.
+// Special characters that need escaping:
+//   - $ → $$ (Makefile variable escape)
+//   - " → \" (shell quote escape)
+//   - \ → \\ (shell backslash escape, except for ANSI codes)
+//   - ` → \` (shell backtick escape to prevent command substitution)
+//   - \x1b (ANSI escape) → \033 (literal form for echo)
+//
+// ANSI color codes (e.g., \x1b[36m) are converted to literal form (\033[36m) so they work in echo.
+func escapeForMakefileEcho(s string) string {
+	var result strings.Builder
+	for i := 0; i < len(s); i++ {
+		ch := s[i]
+		switch ch {
+		case '$':
+			// Escape $ as $$ for Makefile
+			result.WriteString("$$")
+		case '"':
+			// Escape " as \" for shell
+			result.WriteString("\\\"")
+		case '\\':
+			// Escape \ as \\ for shell
+			result.WriteString("\\\\")
+		case '`':
+			// Escape backtick to prevent command substitution
+			result.WriteString("\\`")
+		case '\x1b':
+			// Convert ANSI escape character to literal \033 for echo
+			result.WriteString("\\033")
+		default:
+			result.WriteByte(ch)
+		}
+	}
+	return result.String()
+}
