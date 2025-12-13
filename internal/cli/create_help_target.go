@@ -7,7 +7,9 @@ import (
 
 	"github.com/sdlcforge/make-help/internal/discovery"
 	"github.com/sdlcforge/make-help/internal/model"
+	"github.com/sdlcforge/make-help/internal/ordering"
 	"github.com/sdlcforge/make-help/internal/parser"
+	"github.com/sdlcforge/make-help/internal/summary"
 	"github.com/sdlcforge/make-help/internal/target"
 )
 
@@ -76,7 +78,26 @@ func runCreateHelpTarget(config *Config) error {
 		return err
 	}
 
-	// 5. Collect documented target names
+	// 5. Apply ordering rules to the model
+	orderingService := ordering.NewService(
+		config.KeepOrderCategories,
+		config.KeepOrderTargets,
+		config.CategoryOrder,
+	)
+	if err := orderingService.ApplyOrdering(helpModel); err != nil {
+		return fmt.Errorf("failed to apply ordering: %w", err)
+	}
+
+	// 6. Extract summaries for all targets
+	extractor := summary.NewExtractor()
+	for i := range helpModel.Categories {
+		for j := range helpModel.Categories[i].Targets {
+			target := &helpModel.Categories[i].Targets[j]
+			target.Summary = extractor.Extract(target.Documentation)
+		}
+	}
+
+	// 7. Collect documented target names
 	var documentedTargets []string
 	for _, category := range helpModel.Categories {
 		for _, t := range category.Targets {
@@ -88,7 +109,7 @@ func runCreateHelpTarget(config *Config) error {
 		fmt.Fprintf(os.Stderr, "Found %d documented target(s)\n", len(documentedTargets))
 	}
 
-	// 6. Check for help-<target> conflicts
+	// 8. Check for help-<target> conflicts
 	existingTargets := make(map[string]bool)
 	for _, t := range targetsResult.Targets {
 		existingTargets[t] = true
@@ -106,7 +127,7 @@ func runCreateHelpTarget(config *Config) error {
 		return fmt.Errorf("cannot generate help target - target already exists in Makefile")
 	}
 
-	// 7. Determine target file location
+	// 9. Determine target file location
 	var targetFile string
 	var needsInclude bool
 	if config.DryRun {
@@ -123,9 +144,12 @@ func runCreateHelpTarget(config *Config) error {
 		fmt.Fprintf(os.Stderr, "Target file: %s (needs include: %v)\n", targetFile, needsInclude)
 	}
 
-	// 8. Generate help file content
-	// TODO: Phase 4 will update this to use the new GenerateHelpFile() with HelpModel
+	// 10. Generate help file content
 	genConfig := &target.GeneratorConfig{
+		UseColor:            config.UseColor,
+		Makefiles:           makefiles,
+		HelpModel:           helpModel,
+		MakefileDir:         filepath.Dir(makefilePath),
 		KeepOrderCategories: config.KeepOrderCategories,
 		KeepOrderTargets:    config.KeepOrderTargets,
 		CategoryOrder:       config.CategoryOrder,
@@ -133,14 +157,17 @@ func runCreateHelpTarget(config *Config) error {
 		IncludeTargets:      parseIncludeTargets(config.IncludeTargets),
 		IncludeAllPhony:     config.IncludeAllPhony,
 	}
-	content := target.GenerateHelpFileDeprecated(genConfig, documentedTargets)
+	content, err := target.GenerateHelpFile(genConfig)
+	if err != nil {
+		return fmt.Errorf("failed to generate help file: %w", err)
+	}
 
-	// 9. Handle dry-run mode
+	// 11. Handle dry-run mode
 	if config.DryRun {
 		return printDryRunOutput(makefilePath, targetFile, needsInclude, content)
 	}
 
-	// 10. Write file atomically
+	// 12. Write file atomically
 	if err := target.AtomicWriteFile(targetFile, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write help target file %s: %w", targetFile, err)
 	}
@@ -149,7 +176,7 @@ func runCreateHelpTarget(config *Config) error {
 		fmt.Fprintf(os.Stderr, "Created help target file: %s\n", targetFile)
 	}
 
-	// 11. Add include directive if needed
+	// 13. Add include directive if needed
 	if needsInclude {
 		if err := target.AddIncludeDirective(makefilePath, targetFile); err != nil {
 			return err

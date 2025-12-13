@@ -56,9 +56,9 @@ test:
 	// Verify it shows what would be created
 	assert.Contains(t, output, "Would create:")
 
-	// Verify content preview is shown
+	// Verify content preview is shown (new static format)
 	assert.Contains(t, output, ".PHONY: help")
-	assert.Contains(t, output, "MAKE_HELP_BIN")
+	assert.Contains(t, output, "@echo") // New static format uses echo statements
 	assert.Contains(t, output, "--- end ---")
 
 	// Verify no files were actually created
