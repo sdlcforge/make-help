@@ -632,20 +632,14 @@ func TestMutualExclusivityFlags(t *testing.T) {
 		errorText   string
 	}{
 		{
-			name:        "create-help-target and remove-help-target together",
-			args:        []string{"--create-help-target", "--remove-help-target"},
-			expectError: true,
-			errorText:   "cannot use both --create-help-target and --remove-help-target",
-		},
-		{
-			name:        "only create-help-target",
-			args:        []string{"--create-help-target"},
+			name:        "only remove-help",
+			args:        []string{"--remove-help"},
 			expectError: true,
 			errorText:   "Makefile not found",
 		},
 		{
-			name:        "only remove-help-target",
-			args:        []string{"--remove-help-target"},
+			name:        "default behavior (generation)",
+			args:        []string{},
 			expectError: true,
 			errorText:   "Makefile not found",
 		},
@@ -669,7 +663,7 @@ func TestMutualExclusivityFlags(t *testing.T) {
 	}
 }
 
-func TestRemoveHelpTargetFlagRestrictions(t *testing.T) {
+func TestRemoveHelpFlagRestrictions(t *testing.T) {
 	tests := []struct {
 		name            string
 		args            []string
@@ -677,68 +671,74 @@ func TestRemoveHelpTargetFlagRestrictions(t *testing.T) {
 		expectedErrMsg  string
 	}{
 		{
-			name:        "remove-help-target with verbose",
-			args:        []string{"--remove-help-target", "--verbose"},
+			name:        "remove-help with verbose",
+			args:        []string{"--remove-help", "--verbose"},
 			expectError: false,
 		},
 		{
-			name:        "remove-help-target with makefile-path",
-			args:        []string{"--remove-help-target", "--makefile-path", "/tmp/Makefile"},
+			name:        "remove-help with makefile-path",
+			args:        []string{"--remove-help", "--makefile-path", "/tmp/Makefile"},
 			expectError: false,
 		},
 		{
-			name:           "remove-help-target with target",
-			args:           []string{"--remove-help-target", "--target", "build"},
+			name:           "remove-help with target",
+			args:           []string{"--remove-help", "--target", "build"},
 			expectError:    true,
-			expectedErrMsg: "--remove-help-target cannot be used with --target",
+			expectedErrMsg: "--remove-help cannot be used with --target",
 		},
 		{
-			name:           "remove-help-target with include-target",
-			args:           []string{"--remove-help-target", "--include-target", "foo"},
+			name:           "remove-help with include-target",
+			args:           []string{"--remove-help", "--include-target", "foo"},
 			expectError:    true,
-			expectedErrMsg: "--remove-help-target cannot be used with --include-target",
+			expectedErrMsg: "--remove-help cannot be used with --include-target",
 		},
 		{
-			name:           "remove-help-target with include-all-phony",
-			args:           []string{"--remove-help-target", "--include-all-phony"},
+			name:           "remove-help with include-all-phony",
+			args:           []string{"--remove-help", "--include-all-phony"},
 			expectError:    true,
-			expectedErrMsg: "--remove-help-target cannot be used with --include-all-phony",
+			expectedErrMsg: "--remove-help cannot be used with --include-all-phony",
 		},
 		{
-			name:           "remove-help-target with version",
-			args:           []string{"--remove-help-target", "--version", "v1.0.0"},
+			name:           "remove-help with show-help",
+			args:           []string{"--remove-help", "--show-help"},
 			expectError:    true,
-			expectedErrMsg: "--remove-help-target cannot be used with --version",
+			expectedErrMsg: "--remove-help cannot be used with --show-help",
 		},
 		{
-			name:           "remove-help-target with help-file-rel-path",
-			args:           []string{"--remove-help-target", "--help-file-rel-path", "help.mk"},
+			name:           "remove-help with help-file-rel-path",
+			args:           []string{"--remove-help", "--help-file-rel-path", "help.mk"},
 			expectError:    true,
-			expectedErrMsg: "--remove-help-target cannot be used with --help-file-rel-path",
+			expectedErrMsg: "--remove-help cannot be used with --help-file-rel-path",
 		},
 		{
-			name:           "remove-help-target with keep-order-categories",
-			args:           []string{"--remove-help-target", "--keep-order-categories"},
+			name:           "remove-help with keep-order-categories",
+			args:           []string{"--remove-help", "--keep-order-categories"},
 			expectError:    true,
-			expectedErrMsg: "--remove-help-target cannot be used with --keep-order-categories",
+			expectedErrMsg: "--remove-help cannot be used with --keep-order-categories",
 		},
 		{
-			name:           "remove-help-target with keep-order-targets",
-			args:           []string{"--remove-help-target", "--keep-order-targets"},
+			name:           "remove-help with keep-order-targets",
+			args:           []string{"--remove-help", "--keep-order-targets"},
 			expectError:    true,
-			expectedErrMsg: "--remove-help-target cannot be used with --keep-order-targets",
+			expectedErrMsg: "--remove-help cannot be used with --keep-order-targets",
 		},
 		{
-			name:           "remove-help-target with category-order",
-			args:           []string{"--remove-help-target", "--category-order", "Build"},
+			name:           "remove-help with category-order",
+			args:           []string{"--remove-help", "--category-order", "Build"},
 			expectError:    true,
-			expectedErrMsg: "--remove-help-target cannot be used with --category-order",
+			expectedErrMsg: "--remove-help cannot be used with --category-order",
 		},
 		{
-			name:           "remove-help-target with default-category",
-			args:           []string{"--remove-help-target", "--default-category", "Other"},
+			name:           "remove-help with default-category",
+			args:           []string{"--remove-help", "--default-category", "Other"},
 			expectError:    true,
-			expectedErrMsg: "--remove-help-target cannot be used with --default-category",
+			expectedErrMsg: "--remove-help cannot be used with --default-category",
+		},
+		{
+			name:           "remove-help with dry-run",
+			args:           []string{"--remove-help", "--dry-run"},
+			expectError:    true,
+			expectedErrMsg: "--remove-help cannot be used with --dry-run",
 		},
 	}
 
@@ -771,13 +771,18 @@ func TestNewFlags(t *testing.T) {
 	// Check that new flags are registered
 	flags := cmd.Flags()
 
-	assert.NotNil(t, flags.Lookup("create-help-target"))
-	assert.NotNil(t, flags.Lookup("remove-help-target"))
-	assert.NotNil(t, flags.Lookup("version"))
+	assert.NotNil(t, flags.Lookup("show-help"))
+	assert.NotNil(t, flags.Lookup("remove-help"))
 	assert.NotNil(t, flags.Lookup("include-target"))
 	assert.NotNil(t, flags.Lookup("include-all-phony"))
 	assert.NotNil(t, flags.Lookup("target"))
 	assert.NotNil(t, flags.Lookup("help-file-rel-path"))
+	assert.NotNil(t, flags.Lookup("dry-run"))
+
+	// Verify old flags are removed
+	assert.Nil(t, flags.Lookup("create-help-target"))
+	assert.Nil(t, flags.Lookup("remove-help-target"))
+	assert.Nil(t, flags.Lookup("version"))
 }
 
 func TestIncludeTargetFlag(t *testing.T) {
@@ -797,19 +802,19 @@ all:
 	}{
 		{
 			name: "single include-target",
-			args: []string{"--makefile-path", makefilePath, "--include-target", "foo", "--no-color"},
+			args: []string{"--show-help", "--makefile-path", makefilePath, "--include-target", "foo", "--no-color"},
 		},
 		{
 			name: "comma-separated include-target",
-			args: []string{"--makefile-path", makefilePath, "--include-target", "foo,bar", "--no-color"},
+			args: []string{"--show-help", "--makefile-path", makefilePath, "--include-target", "foo,bar", "--no-color"},
 		},
 		{
 			name: "multiple include-target flags",
-			args: []string{"--makefile-path", makefilePath, "--include-target", "foo", "--include-target", "bar", "--no-color"},
+			args: []string{"--show-help", "--makefile-path", makefilePath, "--include-target", "foo", "--include-target", "bar", "--no-color"},
 		},
 		{
 			name: "mixed include-target",
-			args: []string{"--makefile-path", makefilePath, "--include-target", "foo,bar", "--include-target", "baz", "--no-color"},
+			args: []string{"--show-help", "--makefile-path", makefilePath, "--include-target", "foo,bar", "--include-target", "baz", "--no-color"},
 		},
 	}
 
@@ -837,11 +842,11 @@ build:
 	require.NoError(t, err)
 
 	cmd := NewRootCmd()
-	cmd.SetArgs([]string{"--makefile-path", makefilePath, "--target", "build", "--no-color"})
+	cmd.SetArgs([]string{"--makefile-path", makefilePath, "--show-help", "--target", "build", "--no-color"})
 
-	// The --target flag is now implemented and should work without error
+	// The --target flag requires --show-help and should work without error
 	err = cmd.Execute()
-	require.NoError(t, err, "should successfully run with --target flag")
+	require.NoError(t, err, "should successfully run with --show-help and --target flags")
 }
 
 func TestIncludeAllPhonyFlag(t *testing.T) {
@@ -856,7 +861,7 @@ all:
 	require.NoError(t, err)
 
 	cmd := NewRootCmd()
-	cmd.SetArgs([]string{"--makefile-path", makefilePath, "--include-all-phony", "--no-color"})
+	cmd.SetArgs([]string{"--show-help", "--makefile-path", makefilePath, "--include-all-phony", "--no-color"})
 
 	err = cmd.Execute()
 	// Should succeed (filtering not yet implemented, but flag should work)
@@ -871,22 +876,22 @@ func TestDryRunFlagValidation(t *testing.T) {
 		expectedErrMsg string
 	}{
 		{
-			name:           "dry-run without create-help-target",
-			args:           []string{"--dry-run"},
+			name:           "dry-run with show-help",
+			args:           []string{"--dry-run", "--show-help"},
 			expectError:    true,
-			expectedErrMsg: "--dry-run can only be used with --create-help-target",
+			expectedErrMsg: "--dry-run cannot be used with --show-help",
 		},
 		{
-			name:           "dry-run with target flag",
-			args:           []string{"--dry-run", "--target", "build"},
+			name:           "dry-run with show-help and target flag",
+			args:           []string{"--dry-run", "--show-help", "--target", "build"},
 			expectError:    true,
-			expectedErrMsg: "--dry-run can only be used with --create-help-target",
+			expectedErrMsg: "--dry-run cannot be used with --show-help",
 		},
 		{
-			name:           "dry-run with remove-help-target",
-			args:           []string{"--dry-run", "--remove-help-target"},
-			expectError:    true,
-			expectedErrMsg: "--dry-run can only be used with --create-help-target",
+			name:        "dry-run with default mode (generation) - should work",
+			args:        []string{"--dry-run"},
+			expectError: true, // Will error because Makefile doesn't exist, not due to validation
+			expectedErrMsg: "Makefile not found",
 		},
 	}
 
@@ -917,4 +922,84 @@ func TestDryRunFlag(t *testing.T) {
 	dryRun, err := flags.GetBool("dry-run")
 	assert.NoError(t, err)
 	assert.False(t, dryRun)
+}
+
+func TestShowHelpFlag(t *testing.T) {
+	// Create a temp Makefile for the test
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	err := os.WriteFile(makefilePath, []byte(`
+## Build the project
+build:
+	@echo build
+`), 0644)
+	require.NoError(t, err)
+
+	tests := []struct {
+		name        string
+		args        []string
+		expectError bool
+	}{
+		{
+			name:        "show-help without target",
+			args:        []string{"--show-help", "--makefile-path", makefilePath, "--no-color"},
+			expectError: false,
+		},
+		{
+			name:        "show-help with target",
+			args:        []string{"--show-help", "--target", "build", "--makefile-path", makefilePath, "--no-color"},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := NewRootCmd()
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+			if tt.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestTargetRequiresShowHelp(t *testing.T) {
+	tests := []struct {
+		name           string
+		args           []string
+		expectError    bool
+		expectedErrMsg string
+	}{
+		{
+			name:           "target without show-help",
+			args:           []string{"--target", "build"},
+			expectError:    true,
+			expectedErrMsg: "--target can only be used with --show-help",
+		},
+		{
+			name:           "target with show-help",
+			args:           []string{"--show-help", "--target", "build"},
+			expectError:    true, // Will error due to missing Makefile, not validation
+			expectedErrMsg: "Makefile not found",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := NewRootCmd()
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErrMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }

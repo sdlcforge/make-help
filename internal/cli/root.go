@@ -24,10 +24,10 @@ func NewRootCmd() *cobra.Command {
 		Short: "Dynamic help generation for Makefiles",
 		Long: `make-help generates formatted help output from Makefile documentation.
 
-Default behavior displays help. Use flags for other operations:
-  --target <name>       Show detailed help for a target
-  --create-help-target  Generate help target file
-  --remove-help-target  Remove help targets
+Default behavior generates help file. Use flags for other operations:
+  --show-help           Display help dynamically
+  --target <name>       Show detailed help for a target (requires --show-help)
+  --remove-help         Remove help targets
 
 Documentation directives (in ## comments):
   @file         File-level documentation
@@ -48,21 +48,21 @@ Documentation directives (in ## comments):
 				config.KeepOrderTargets = true
 			}
 
-			// Mutual exclusivity validation
-			if config.CreateHelpTarget && config.RemoveHelpTarget {
-				return fmt.Errorf("cannot use both --create-help-target and --remove-help-target")
-			}
-
-			// --dry-run only valid with --create-help-target
-			if config.DryRun && !config.CreateHelpTarget {
-				return fmt.Errorf("--dry-run can only be used with --create-help-target")
-			}
-
-			// --remove-help-target only allows --verbose and --makefile-path
+			// --remove-help only allows --verbose and --makefile-path (check this first)
 			if config.RemoveHelpTarget {
-				if err := validateRemoveHelpTargetFlags(config); err != nil {
+				if err := validateRemoveHelpFlags(config); err != nil {
 					return err
 				}
+			}
+
+			// --target only valid with --show-help
+			if config.Target != "" && !config.ShowHelp {
+				return fmt.Errorf("--target can only be used with --show-help")
+			}
+
+			// --dry-run cannot be used with --show-help
+			if config.DryRun && config.ShowHelp {
+				return fmt.Errorf("--dry-run cannot be used with --show-help")
 			}
 
 			// Validate --help-file-rel-path is a relative path (no leading /)
@@ -80,15 +80,16 @@ Documentation directives (in ## comments):
 			config.UseColor = ResolveColorMode(config)
 
 			// Dispatch to appropriate handler
-			if config.RemoveHelpTarget {
-				return runRemoveHelpTarget(config)
-			} else if config.CreateHelpTarget {
-				return runCreateHelpTarget(config)
-			} else if config.Target != "" {
-				return runDetailedHelp(config)
-			} else {
-				// Default behavior: run help command
+			if config.ShowHelp {
+				if config.Target != "" {
+					return runDetailedHelp(config)
+				}
 				return runHelp(config)
+			} else if config.RemoveHelpTarget {
+				return runRemoveHelpTarget(config)
+			} else {
+				// Default behavior: generate help file
+				return runCreateHelpTarget(config)
 			}
 		},
 	}
@@ -119,22 +120,20 @@ Documentation directives (in ## comments):
 		"default-category", "", "Default category for uncategorized targets")
 
 	// New flags for target creation/removal and filtering
-	rootCmd.Flags().BoolVar(&config.CreateHelpTarget,
-		"create-help-target", false, "Generate help target file with local binary installation")
+	rootCmd.Flags().BoolVar(&config.ShowHelp,
+		"show-help", false, "Display help dynamically instead of generating a help file")
 	rootCmd.Flags().BoolVar(&config.RemoveHelpTarget,
-		"remove-help-target", false, "Remove help target from Makefile")
-	rootCmd.Flags().StringVar(&config.Version,
-		"version", "", "Version to pin in generated go install (e.g., v1.2.3)")
+		"remove-help", false, "Remove help target from Makefile")
 	rootCmd.Flags().StringSliceVar(&config.IncludeTargets,
 		"include-target", []string{}, "Include undocumented target in help (repeatable, comma-separated)")
 	rootCmd.Flags().BoolVar(&config.IncludeAllPhony,
 		"include-all-phony", false, "Include all .PHONY targets in help output")
 	rootCmd.Flags().StringVar(&config.Target,
-		"target", "", "Show detailed help for a specific target")
+		"target", "", "Show detailed help for a specific target (requires --show-help)")
 	rootCmd.Flags().StringVar(&config.HelpFileRelPath,
 		"help-file-rel-path", "", "Relative path for generated help target file (e.g., help.mk or make/help.mk)")
 	rootCmd.Flags().BoolVar(&config.DryRun,
-		"dry-run", false, "Show what files would be created/modified without making changes (only with --create-help-target)")
+		"dry-run", false, "Show what files would be created/modified without making changes")
 
 	return rootCmd
 }
@@ -156,9 +155,9 @@ func processColorFlags(mode *ColorMode, noColor, forceColor bool) error {
 	return nil
 }
 
-// validateRemoveHelpTargetFlags checks for incompatible flags with --remove-help-target.
+// validateRemoveHelpFlags checks for incompatible flags with --remove-help.
 // It uses a table-driven approach to provide specific error messages for each incompatible flag.
-func validateRemoveHelpTargetFlags(config *Config) error {
+func validateRemoveHelpFlags(config *Config) error {
 	// Table of incompatible flags: condition check, flag name
 	incompatibleFlags := []struct {
 		isSet    bool
@@ -167,8 +166,8 @@ func validateRemoveHelpTargetFlags(config *Config) error {
 		{config.Target != "", "--target"},
 		{len(config.IncludeTargets) > 0, "--include-target"},
 		{config.IncludeAllPhony, "--include-all-phony"},
-		{config.CreateHelpTarget, "--create-help-target"},
-		{config.Version != "", "--version"},
+		{config.ShowHelp, "--show-help"},
+		{config.DryRun, "--dry-run"},
 		{config.HelpFileRelPath != "", "--help-file-rel-path"},
 		{config.KeepOrderCategories, "--keep-order-categories"},
 		{config.KeepOrderTargets, "--keep-order-targets"},
@@ -178,7 +177,7 @@ func validateRemoveHelpTargetFlags(config *Config) error {
 
 	for _, flag := range incompatibleFlags {
 		if flag.isSet {
-			return fmt.Errorf("--remove-help-target cannot be used with %s", flag.flagName)
+			return fmt.Errorf("--remove-help cannot be used with %s", flag.flagName)
 		}
 	}
 

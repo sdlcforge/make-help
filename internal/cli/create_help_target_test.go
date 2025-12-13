@@ -31,7 +31,7 @@ test:
 	cmd := NewRootCmd()
 	cmd.SetArgs([]string{
 		"--makefile-path", makefilePath,
-		"--create-help-target",
+		"",
 		"--dry-run",
 	})
 
@@ -87,7 +87,7 @@ build:
 	cmd := NewRootCmd()
 	cmd.SetArgs([]string{
 		"--makefile-path", makefilePath,
-		"--create-help-target",
+		"",
 		"--dry-run",
 		"--help-file-rel-path", "custom-help.mk",
 	})
@@ -147,7 +147,7 @@ build:
 	cmd := NewRootCmd()
 	cmd.SetArgs([]string{
 		"--makefile-path", makefilePath,
-		"--create-help-target",
+		"",
 		"--dry-run",
 	})
 
@@ -206,11 +206,9 @@ test:
 	cmd := NewRootCmd()
 	cmd.SetArgs([]string{
 		"--makefile-path", makefilePath,
-		"--create-help-target",
 		"--dry-run",
 		"--keep-order-categories",
 		"--keep-order-targets",
-		"--version", "v1.0.0",
 		"--default-category", "General",
 	})
 
@@ -236,7 +234,6 @@ test:
 	assert.Contains(t, output, "--keep-order-categories")
 	assert.Contains(t, output, "--keep-order-targets")
 	assert.Contains(t, output, "--default-category General")
-	assert.Contains(t, output, "@v1.0.0")
 }
 
 func TestCreateHelpTarget_ActualCreation(t *testing.T) {
@@ -253,7 +250,7 @@ build:
 	cmd := NewRootCmd()
 	cmd.SetArgs([]string{
 		"--makefile-path", makefilePath,
-		"--create-help-target",
+		"",
 		"--help-file-rel-path", "help.mk",
 	})
 
@@ -341,7 +338,7 @@ build:
 	cmd := NewRootCmd()
 	cmd.SetArgs([]string{
 		"--makefile-path", makefilePath,
-		"--create-help-target",
+		"",
 		"--dry-run",
 		"--help-file-rel-path", "make/01-help.mk",
 	})

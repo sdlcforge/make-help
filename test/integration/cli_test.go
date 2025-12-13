@@ -77,7 +77,7 @@ func TestBasicMakefile(t *testing.T) {
 	binary := buildBinary(t)
 	fixture := getFixturePath(t, "basic.mk")
 
-	stdout, stderr, err := runMakeHelp(t, binary, "--makefile-path", fixture, "--no-color")
+	stdout, stderr, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--no-color")
 	require.NoError(t, err, "stderr: %s", stderr)
 
 	expected := readExpected(t, "basic_help.txt")
@@ -88,7 +88,7 @@ func TestCategorizedMakefile(t *testing.T) {
 	binary := buildBinary(t)
 	fixture := getFixturePath(t, "categorized.mk")
 
-	stdout, stderr, err := runMakeHelp(t, binary, "--makefile-path", fixture, "--no-color")
+	stdout, stderr, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--no-color")
 	require.NoError(t, err, "stderr: %s", stderr)
 
 	expected := readExpected(t, "categorized_help.txt")
@@ -99,7 +99,7 @@ func TestComplexMakefile(t *testing.T) {
 	binary := buildBinary(t)
 	fixture := getFixturePath(t, "complex.mk")
 
-	stdout, stderr, err := runMakeHelp(t, binary, "--makefile-path", fixture, "--no-color")
+	stdout, stderr, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--no-color")
 	require.NoError(t, err, "stderr: %s", stderr)
 
 	expected := readExpected(t, "complex_help.txt")
@@ -112,6 +112,7 @@ func TestCategoryOrderFlag(t *testing.T) {
 
 	// Test explicit category order
 	stdout, stderr, err := runMakeHelp(t, binary,
+		"--show-help",
 		"--makefile-path", fixture,
 		"--no-color",
 		"--category-order", "Test,Build")
@@ -129,6 +130,7 @@ func TestKeepOrderFlags(t *testing.T) {
 
 	// Test --keep-order-categories
 	stdout, stderr, err := runMakeHelp(t, binary,
+		"--show-help",
 		"--makefile-path", fixture,
 		"--no-color",
 		"--keep-order-categories")
@@ -145,6 +147,7 @@ func TestKeepOrderAllFlag(t *testing.T) {
 	fixture := getFixturePath(t, "categorized.mk")
 
 	stdout, stderr, err := runMakeHelp(t, binary,
+		"--show-help",
 		"--makefile-path", fixture,
 		"--no-color",
 		"--keep-order-all")
@@ -176,6 +179,7 @@ build:
 
 	// Test with --default-category flag (even though not needed here, should work)
 	stdout, stderr, err := runMakeHelp(t, binary,
+		"--show-help",
 		"--makefile-path", makefilePath,
 		"--no-color",
 		"--default-category", "Other")
@@ -188,7 +192,7 @@ func TestNoColorFlag(t *testing.T) {
 	binary := buildBinary(t)
 	fixture := getFixturePath(t, "basic.mk")
 
-	stdout, _, err := runMakeHelp(t, binary, "--makefile-path", fixture, "--no-color")
+	stdout, _, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--no-color")
 	require.NoError(t, err)
 
 	// Should not contain ANSI escape codes
@@ -200,7 +204,7 @@ func TestColorFlag(t *testing.T) {
 	binary := buildBinary(t)
 	fixture := getFixturePath(t, "basic.mk")
 
-	stdout, _, err := runMakeHelp(t, binary, "--makefile-path", fixture, "--color")
+	stdout, _, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--color")
 	require.NoError(t, err)
 
 	// Should contain ANSI escape codes
@@ -211,7 +215,7 @@ func TestVerboseFlag(t *testing.T) {
 	binary := buildBinary(t)
 	fixture := getFixturePath(t, "basic.mk")
 
-	_, stderr, err := runMakeHelp(t, binary, "--makefile-path", fixture, "--no-color", "--verbose")
+	_, stderr, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--no-color", "--verbose")
 	require.NoError(t, err)
 
 	// Verbose output goes to stderr
@@ -229,7 +233,7 @@ func TestEmptyMakefile(t *testing.T) {
 	binary := buildBinary(t)
 	fixture := getFixturePath(t, "empty.mk")
 
-	stdout, _, err := runMakeHelp(t, binary, "--makefile-path", fixture, "--no-color")
+	stdout, _, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--no-color")
 	require.NoError(t, err)
 
 	// Should still produce usage line
@@ -240,7 +244,7 @@ func TestWithAliasesMakefile(t *testing.T) {
 	binary := buildBinary(t)
 	fixture := getFixturePath(t, "with_aliases.mk")
 
-	stdout, _, err := runMakeHelp(t, binary, "--makefile-path", fixture, "--no-color")
+	stdout, _, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--no-color")
 	require.NoError(t, err)
 
 	// Should contain aliases
@@ -255,6 +259,7 @@ func TestUnknownCategoryOrder(t *testing.T) {
 	fixture := getFixturePath(t, "categorized.mk")
 
 	_, _, err := runMakeHelp(t, binary,
+		"--show-help",
 		"--makefile-path", fixture,
 		"--no-color",
 		"--category-order", "NonExistent")
@@ -319,7 +324,7 @@ func TestOutputFormat(t *testing.T) {
 	binary := buildBinary(t)
 	fixture := getFixturePath(t, "basic.mk")
 
-	stdout, _, err := runMakeHelp(t, binary, "--makefile-path", fixture, "--no-color")
+	stdout, _, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--no-color")
 	require.NoError(t, err)
 
 	// Check output format
@@ -342,7 +347,7 @@ build:
 `), 0644)
 	require.NoError(t, err)
 
-	stdout, _, err := runMakeHelp(t, binary, "--makefile-path", makefilePath, "--no-color")
+	stdout, _, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", makefilePath, "--no-color")
 	require.NoError(t, err)
 
 	// File documentation should appear
@@ -354,6 +359,7 @@ func TestDetailedHelp_DocumentedTarget(t *testing.T) {
 	fixture := getFixturePath(t, "with_undocumented.mk")
 
 	stdout, stderr, err := runMakeHelp(t, binary,
+		"--show-help",
 		"--makefile-path", fixture,
 		"--no-color",
 		"--target", "build")
@@ -385,6 +391,7 @@ func TestDetailedHelp_UndocumentedTarget(t *testing.T) {
 	fixture := getFixturePath(t, "with_undocumented.mk")
 
 	stdout, stderr, err := runMakeHelp(t, binary,
+		"--show-help",
 		"--makefile-path", fixture,
 		"--no-color",
 		"--target", "undocumented")
@@ -407,6 +414,7 @@ func TestDetailedHelp_NonexistentTarget(t *testing.T) {
 	fixture := getFixturePath(t, "basic.mk")
 
 	_, _, err := runMakeHelp(t, binary,
+		"--show-help",
 		"--makefile-path", fixture,
 		"--no-color",
 		"--target", "nonexistent")
@@ -420,6 +428,7 @@ func TestDetailedHelp_WithColors(t *testing.T) {
 	fixture := getFixturePath(t, "with_undocumented.mk")
 
 	stdout, stderr, err := runMakeHelp(t, binary,
+		"--show-help",
 		"--makefile-path", fixture,
 		"--color",
 		"--target", "build")
@@ -435,6 +444,7 @@ func TestDetailedHelp_MinimalTarget(t *testing.T) {
 	fixture := getFixturePath(t, "basic.mk")
 
 	stdout, stderr, err := runMakeHelp(t, binary,
+		"--show-help",
 		"--makefile-path", fixture,
 		"--no-color",
 		"--target", "build")

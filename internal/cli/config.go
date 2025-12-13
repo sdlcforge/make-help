@@ -64,14 +64,11 @@ type Config struct {
 	// Must be a relative path (no leading '/'). If empty, location is determined automatically.
 	HelpFileRelPath string
 
-	// CreateHelpTarget indicates whether to generate help target file.
-	CreateHelpTarget bool
+	// ShowHelp displays help dynamically instead of generating a help file.
+	ShowHelp bool
 
 	// RemoveHelpTarget indicates whether to remove help target from Makefile.
 	RemoveHelpTarget bool
-
-	// Version for go install (e.g., "v1.2.3"), empty = @latest.
-	Version string
 
 	// IncludeTargets lists undocumented targets to include in help.
 	// Populated from --include-target flag (repeatable, comma-separated).

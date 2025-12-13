@@ -131,7 +131,7 @@ func runCreateHelpTarget(config *Config) error {
 		DefaultCategory:     config.DefaultCategory,
 		IncludeTargets:      parseIncludeTargets(config.IncludeTargets),
 		IncludeAllPhony:     config.IncludeAllPhony,
-		Version:             config.Version,
+		Version:             "", // No version pinning - always use @latest
 	}
 	content := target.GenerateHelpFile(genConfig, documentedTargets)
 
