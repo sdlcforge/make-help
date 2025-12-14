@@ -490,14 +490,16 @@ func TestLintCommand_WithWarnings(t *testing.T) {
 	assert.Equal(t, 1, exitErr.ExitCode(), "expected exit code 1")
 
 	// Check for expected warnings in stdout
-	assert.Contains(t, stdout, "warning:", "should contain warning prefix")
+	assert.Contains(t, stdout, "lint-issues.mk", "should contain filename")
 	assert.Contains(t, stdout, "undocumented phony target 'setup'", "should warn about setup")
 	assert.Contains(t, stdout, "undocumented phony target 'check'", "should warn about check")
 	assert.Contains(t, stdout, "does not end with punctuation", "should warn about missing punctuation")
 	assert.Contains(t, stdout, "Found", "should show warning count")
 
-	// Warnings should be in compiler-style format (file:line: severity: message)
-	assert.Regexp(t, `.*:\d+: warning:`, stdout, "warnings should include line numbers where available")
+	// Warnings should show line numbers (format: "  N: message")
+	assert.Regexp(t, `\s+\d+:.*does not end with punctuation`, stdout, "warnings should include line numbers")
+	// Fixable warnings should be marked
+	assert.Contains(t, stdout, "[fixable]", "fixable warnings should be marked")
 }
 
 func TestLintCommand_InvalidFlags(t *testing.T) {
@@ -512,9 +514,13 @@ func TestLintCommand_InvalidFlags(t *testing.T) {
 	_, _, err = runMakeHelp(t, binary, "--lint", "--remove-help", "--makefile-path", fixture)
 	assert.Error(t, err, "should fail when combining --lint with --remove-help")
 
-	// --lint with --dry-run should fail
+	// --lint with --dry-run (without --fix) should fail
 	_, _, err = runMakeHelp(t, binary, "--lint", "--dry-run", "--makefile-path", fixture)
-	assert.Error(t, err, "should fail when combining --lint with --dry-run")
+	assert.Error(t, err, "should fail when combining --lint with --dry-run without --fix")
+
+	// --fix without --lint should fail
+	_, _, err = runMakeHelp(t, binary, "--fix", "--makefile-path", fixture)
+	assert.Error(t, err, "should fail when using --fix without --lint")
 }
 
 func TestLintCommand_Verbose(t *testing.T) {
@@ -529,4 +535,116 @@ func TestLintCommand_Verbose(t *testing.T) {
 	// stdout might contain "No warnings found" in verbose mode or be empty
 	// Just check it doesn't contain actual warnings
 	assert.NotContains(t, stdout, "warning:", "no warnings for clean Makefile")
+}
+
+func TestLintCommand_FixDryRun(t *testing.T) {
+	binary := buildBinary(t)
+
+	// Create a temporary file with fixable issues
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "Makefile")
+	content := `.PHONY: build
+
+## Build the project
+build:
+	@echo "building"
+`
+	err := os.WriteFile(tmpFile, []byte(content), 0644)
+	require.NoError(t, err)
+
+	// Run lint with --fix --dry-run
+	stdout, _, err := runMakeHelp(t, binary, "--lint", "--fix", "--dry-run", "--makefile-path", tmpFile)
+	// Should exit with code 1 (warnings found)
+	require.Error(t, err)
+	exitErr, ok := err.(*exec.ExitError)
+	require.True(t, ok, "error should be ExitError")
+	assert.Equal(t, 1, exitErr.ExitCode())
+
+	// Should show dry-run message
+	assert.Contains(t, stdout, "Would fix", "should show dry-run message")
+
+	// File should NOT be modified
+	got, err := os.ReadFile(tmpFile)
+	require.NoError(t, err)
+	assert.Equal(t, content, string(got), "file should not be modified in dry-run")
+}
+
+func TestLintCommand_FixApply(t *testing.T) {
+	binary := buildBinary(t)
+
+	// Create a temporary file with fixable and unfixable issues
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "Makefile")
+	content := `.PHONY: build test setup
+
+##
+## Build the project
+build:
+	@echo "building"
+
+## Run tests
+test:
+	@echo "testing"
+
+setup:
+	@echo "setup"
+`
+	err := os.WriteFile(tmpFile, []byte(content), 0644)
+	require.NoError(t, err)
+
+	// Run lint with --fix (first pass - should fix empty-doc)
+	stdout, _, _ := runMakeHelp(t, binary, "--lint", "--fix", "--makefile-path", tmpFile)
+	assert.Contains(t, stdout, "Fixed", "should show fixed message")
+	// Fixed warnings should NOT be shown
+	assert.NotContains(t, stdout, "empty documentation line", "fixed warnings should not be displayed")
+	// Unfixed warnings should still be shown
+	assert.Contains(t, stdout, "undocumented phony target 'setup'", "unfixed warnings should be displayed")
+
+	// Verify empty ## line was removed
+	got, err := os.ReadFile(tmpFile)
+	require.NoError(t, err)
+	assert.NotContains(t, string(got), "##\n## Build", "empty doc line should be removed")
+
+	// Run lint with --fix again (second pass - should fix punctuation)
+	stdout, _, _ = runMakeHelp(t, binary, "--lint", "--fix", "--makefile-path", tmpFile)
+	assert.Contains(t, stdout, "Fixed", "should fix punctuation issues")
+	// Fixed warnings should NOT be shown
+	assert.NotContains(t, stdout, "does not end with punctuation", "fixed warnings should not be displayed")
+
+	// Verify punctuation was added
+	got, err = os.ReadFile(tmpFile)
+	require.NoError(t, err)
+	assert.Contains(t, string(got), "## Build the project.", "punctuation should be added")
+	assert.Contains(t, string(got), "## Run tests.", "punctuation should be added")
+}
+
+func TestLintCommand_FixAllIssues(t *testing.T) {
+	binary := buildBinary(t)
+
+	// Create a temporary file with only fixable issues (both empty-doc and missing punctuation)
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "Makefile")
+	content := `.PHONY: build
+
+##
+## Build the project
+build:
+	@echo "building"
+`
+	err := os.WriteFile(tmpFile, []byte(content), 0644)
+	require.NoError(t, err)
+
+	// Run lint with --fix - first pass fixes empty-doc
+	stdout, _, err := runMakeHelp(t, binary, "--lint", "--fix", "--makefile-path", tmpFile)
+	require.NoError(t, err, "should exit with code 0 when all issues in this pass are fixed")
+	assert.Contains(t, stdout, "Fixed", "should show fixed message")
+
+	// Run lint with --fix again - second pass fixes punctuation
+	stdout, _, err = runMakeHelp(t, binary, "--lint", "--fix", "--makefile-path", tmpFile)
+	require.NoError(t, err, "should exit with code 0 when all remaining issues are fixed")
+	assert.Contains(t, stdout, "Fixed", "should show fixed message")
+
+	// Run lint again - should pass with no warnings
+	_, _, err = runMakeHelp(t, binary, "--lint", "--makefile-path", tmpFile)
+	require.NoError(t, err, "fully fixed file should have no warnings")
 }

@@ -155,30 +155,62 @@ func runLint(config *Config) error {
 	}
 
 	// Step 8: Run all lint checks
-	checks := []lint.CheckFunc{
-		lint.CheckUndocumentedPhony,
-		lint.CheckSummaryPunctuation,
-		lint.CheckOrphanAliases,
-		lint.CheckLongSummaries,
-		lint.CheckEmptyDocumentation,
-		lint.CheckMissingVarDescriptions,
-		lint.CheckInconsistentNaming,
-		lint.CheckCircularAliases,
-	}
-
+	checks := lint.AllChecks()
 	result := lint.Lint(checkCtx, checks)
 
-	// Step 9: Output warnings
-	if result.HasWarnings {
+	// Step 9: Apply fixes if --fix is set (before displaying warnings)
+	var fixResult *lint.FixResult
+	fixableCount := 0
+	for _, w := range result.Warnings {
+		if w.Fixable {
+			fixableCount++
+		}
+	}
+
+	if config.Fix && fixableCount > 0 {
+		fixes := lint.CollectFixes(checks, result.Warnings)
+
+		fixer := &lint.Fixer{DryRun: config.DryRun}
+		var err error
+		fixResult, err = fixer.ApplyFixes(fixes)
+		if err != nil {
+			return fmt.Errorf("failed to apply fixes: %w", err)
+		}
+	}
+
+	// Step 10: Determine which warnings to display
+	// If fixes were applied (not dry-run), filter out fixed warnings
+	warningsToDisplay := result.Warnings
+	if fixResult != nil && !config.DryRun && fixResult.TotalFixed > 0 {
+		// Filter out fixable warnings that were fixed
+		var remaining []lint.Warning
+		for _, w := range result.Warnings {
+			if !w.Fixable {
+				remaining = append(remaining, w)
+			}
+		}
+		warningsToDisplay = remaining
+	}
+
+	// Step 11: Output warnings
+	if len(warningsToDisplay) > 0 {
 		// Get current working directory for relative paths
 		cwd, err := os.Getwd()
 		if err != nil {
 			cwd = "" // Fall back to absolute paths if we can't get cwd
 		}
 
+		// Count fixable warnings in displayed set
+		displayFixableCount := 0
+		for _, w := range warningsToDisplay {
+			if w.Fixable {
+				displayFixableCount++
+			}
+		}
+
 		// Group warnings by file
 		var currentFile string
-		for _, warning := range result.Warnings {
+		for _, warning := range warningsToDisplay {
 			// Convert to relative path if possible
 			displayPath := warning.File
 			if cwd != "" {
@@ -196,24 +228,47 @@ func runLint(config *Config) error {
 				currentFile = warning.File
 			}
 
-			// Print warning: "line: message"
+			// Print warning: "line: message [fixable]"
+			fixableTag := ""
+			if warning.Fixable {
+				fixableTag = " [fixable]"
+			}
 			if warning.Line > 0 {
-				fmt.Printf("  %d: %s\n", warning.Line, warning.Message)
+				fmt.Printf("  %d: %s%s\n", warning.Line, warning.Message, fixableTag)
 			} else {
-				fmt.Printf("  %s\n", warning.Message)
+				fmt.Printf("  %s%s\n", warning.Message, fixableTag)
 			}
 		}
 
-		// Proper pluralization
-		count := len(result.Warnings)
+		// Summary line
+		count := len(warningsToDisplay)
 		fmt.Println()
-		if count == 1 {
+		if displayFixableCount > 0 {
+			fmt.Printf("Found %d warning(s) (%d fixable)\n", count, displayFixableCount)
+		} else if count == 1 {
 			fmt.Println("Found 1 warning")
 		} else {
 			fmt.Printf("Found %d warnings\n", count)
 		}
+	}
 
-		// Return sentinel error to indicate warnings were found (Cobra translates to exit code 1)
+	// Step 12: Report fix results
+	if fixResult != nil {
+		if len(warningsToDisplay) > 0 {
+			fmt.Println()
+		}
+		if config.DryRun {
+			fmt.Printf("Would fix %d issue(s) in %d file(s)\n",
+				fixResult.TotalFixed, len(fixResult.FilesModified))
+		} else {
+			fmt.Printf("Fixed %d issue(s) in %d file(s)\n",
+				fixResult.TotalFixed, len(fixResult.FilesModified))
+		}
+	}
+
+	// Step 13: Determine exit code
+	// If there are remaining warnings (unfixed), return error (exit code 1)
+	if len(warningsToDisplay) > 0 {
 		return ErrLintWarningsFound
 	}
 

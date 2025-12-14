@@ -71,28 +71,54 @@ func CheckSummaryPunctuation(ctx *CheckContext) []Warning {
 
 	for _, category := range ctx.HelpModel.Categories {
 		for _, target := range category.Targets {
-			// Extract summary (first sentence)
-			summary := strings.TrimSpace(target.Summary)
-			if summary == "" {
+			// Skip if no documentation
+			if len(target.Documentation) == 0 {
 				continue
 			}
 
-			// Check if summary ends with proper punctuation
-			lastChar := summary[len(summary)-1]
+			// The summary is the first documentation line
+			firstDocLine := strings.TrimSpace(target.Documentation[0])
+			if firstDocLine == "" {
+				continue
+			}
+
+			// Check if first doc line ends with proper punctuation
+			lastChar := firstDocLine[len(firstDocLine)-1]
 			if lastChar != '.' && lastChar != '!' && lastChar != '?' {
+				// Calculate the line number of the first doc line
+				// Docs are directly above the target, so first doc is at:
+				// target.LineNumber - len(Documentation)
+				docLineNumber := target.LineNumber - len(target.Documentation)
+
 				warnings = append(warnings, Warning{
 					File:      target.SourceFile,
-					Line:      target.LineNumber,
+					Line:      docLineNumber,
 					Severity:  SeverityWarning,
 					CheckName: "summary-punctuation",
 					Message:   fmt.Sprintf("summary for '%s' does not end with punctuation", target.Name),
-					Context:   summary,
+					Context:   "## " + firstDocLine, // Store full line for fix validation
 				})
 			}
 		}
 	}
 
 	return warnings
+}
+
+// fixSummaryPunctuation generates a fix for a summary-punctuation warning.
+// It appends a period to the end of the first documentation line.
+func fixSummaryPunctuation(w Warning) *Fix {
+	if w.Context == "" {
+		return nil // Can't fix without context
+	}
+
+	return &Fix{
+		File:       w.File,
+		Line:       w.Line,
+		Operation:  FixReplace,
+		OldContent: w.Context,
+		NewContent: w.Context + ".",
+	}
 }
 
 // CheckOrphanAliases checks for !alias directives that point to non-existent targets.
@@ -188,33 +214,51 @@ func CheckEmptyDocumentation(ctx *CheckContext) []Warning {
 				continue
 			}
 
+			// Calculate the first doc line number
+			// Docs are directly above the target, so first doc is at:
+			// target.LineNumber - len(Documentation)
+			firstDocLine := target.LineNumber - len(docs)
+
 			// Check first line for empty/whitespace-only content
 			if strings.TrimSpace(docs[0]) == "" {
 				warnings = append(warnings, Warning{
 					File:      target.SourceFile,
-					Line:      target.LineNumber,
+					Line:      firstDocLine,
 					Severity:  SeverityWarning,
 					CheckName: "empty-doc",
 					Message:   fmt.Sprintf("target '%s' has empty documentation line at the beginning", target.Name),
-					Context:   "##",
+					Context:   "##", // Empty doc line content for fix validation
 				})
 			}
 
 			// Check last line for empty/whitespace-only content
 			if len(docs) > 1 && strings.TrimSpace(docs[len(docs)-1]) == "" {
+				// Last doc line is at: target.LineNumber - 1
+				lastDocLine := target.LineNumber - 1
 				warnings = append(warnings, Warning{
 					File:      target.SourceFile,
-					Line:      target.LineNumber,
+					Line:      lastDocLine,
 					Severity:  SeverityWarning,
 					CheckName: "empty-doc",
 					Message:   fmt.Sprintf("target '%s' has empty documentation line at the end", target.Name),
-					Context:   "##",
+					Context:   "##", // Empty doc line content for fix validation
 				})
 			}
 		}
 	}
 
 	return warnings
+}
+
+// fixEmptyDocumentation generates a fix for an empty-doc warning.
+// It deletes the empty documentation line.
+func fixEmptyDocumentation(w Warning) *Fix {
+	return &Fix{
+		File:       w.File,
+		Line:       w.Line,
+		Operation:  FixDelete,
+		OldContent: "##", // Validate the line is an empty comment
+	}
 }
 
 // CheckMissingVarDescriptions checks for !var directives that lack descriptions.
@@ -384,4 +428,18 @@ func CheckCircularAliases(ctx *CheckContext) []Warning {
 	}
 
 	return warnings
+}
+
+// AllChecks returns all available lint checks.
+func AllChecks() []Check {
+	return []Check{
+		{Name: "undocumented-phony", CheckFunc: CheckUndocumentedPhony, FixFunc: nil},
+		{Name: "summary-punctuation", CheckFunc: CheckSummaryPunctuation, FixFunc: fixSummaryPunctuation},
+		{Name: "orphan-alias", CheckFunc: CheckOrphanAliases, FixFunc: nil},
+		{Name: "long-summary", CheckFunc: CheckLongSummaries, FixFunc: nil},
+		{Name: "empty-doc", CheckFunc: CheckEmptyDocumentation, FixFunc: fixEmptyDocumentation},
+		{Name: "missing-var-desc", CheckFunc: CheckMissingVarDescriptions, FixFunc: nil},
+		{Name: "naming", CheckFunc: CheckInconsistentNaming, FixFunc: nil},
+		{Name: "circular-alias", CheckFunc: CheckCircularAliases, FixFunc: nil},
+	}
 }

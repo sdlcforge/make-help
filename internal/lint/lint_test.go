@@ -171,16 +171,16 @@ func TestCheckSummaryPunctuation_MissingPunctuation(t *testing.T) {
 					Name: "Build",
 					Targets: []model.Target{
 						{
-							Name:       "build",
-							Summary:    "Build the project",
-							SourceFile: "Makefile",
-							LineNumber: 10,
+							Name:          "build",
+							Documentation: []string{"Build the project"},
+							SourceFile:    "Makefile",
+							LineNumber:    10,
 						},
 						{
-							Name:       "test",
-							Summary:    "Run tests",
-							SourceFile: "Makefile",
-							LineNumber: 15,
+							Name:          "test",
+							Documentation: []string{"Run tests"},
+							SourceFile:    "Makefile",
+							LineNumber:    15,
 						},
 					},
 				},
@@ -211,22 +211,22 @@ func TestCheckSummaryPunctuation_AllPunctuationTypes(t *testing.T) {
 					Name: "Build",
 					Targets: []model.Target{
 						{
-							Name:       "period",
-							Summary:    "Ends with period.",
-							SourceFile: "Makefile",
-							LineNumber: 10,
+							Name:          "period",
+							Documentation: []string{"Ends with period."},
+							SourceFile:    "Makefile",
+							LineNumber:    10,
 						},
 						{
-							Name:       "exclamation",
-							Summary:    "Ends with exclamation!",
-							SourceFile: "Makefile",
-							LineNumber: 15,
+							Name:          "exclamation",
+							Documentation: []string{"Ends with exclamation!"},
+							SourceFile:    "Makefile",
+							LineNumber:    15,
 						},
 						{
-							Name:       "question",
-							Summary:    "Ends with question?",
-							SourceFile: "Makefile",
-							LineNumber: 20,
+							Name:          "question",
+							Documentation: []string{"Ends with question?"},
+							SourceFile:    "Makefile",
+							LineNumber:    20,
 						},
 					},
 				},
@@ -248,10 +248,10 @@ func TestLint_MultipleChecks(t *testing.T) {
 					Name: "Build",
 					Targets: []model.Target{
 						{
-							Name:       "build",
-							Summary:    "Build the project",
-							SourceFile: "Makefile",
-							LineNumber: 10,
+							Name:          "build",
+							Documentation: []string{"Build the project"},
+							SourceFile:    "Makefile",
+							LineNumber:    10,
 						},
 					},
 				},
@@ -267,9 +267,9 @@ func TestLint_MultipleChecks(t *testing.T) {
 		Aliases: map[string]bool{},
 	}
 
-	checks := []CheckFunc{
-		CheckUndocumentedPhony,
-		CheckSummaryPunctuation,
+	checks := []Check{
+		{Name: "undocumented-phony", CheckFunc: CheckUndocumentedPhony},
+		{Name: "summary-punctuation", CheckFunc: CheckSummaryPunctuation},
 	}
 
 	result := Lint(ctx, checks)

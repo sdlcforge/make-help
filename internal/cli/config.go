@@ -85,11 +85,15 @@ type Config struct {
 	Target string
 
 	// DryRun shows what would be created/modified without actually making changes.
-	// Only valid with CreateHelpTarget.
+	// Valid with CreateHelpTarget or --lint --fix.
 	DryRun bool
 
 	// Lint enables lint mode to check documentation quality.
 	Lint bool
+
+	// Fix automatically fixes auto-fixable lint issues.
+	// Only valid with --lint.
+	Fix bool
 
 	// Derived state (computed at runtime)
 

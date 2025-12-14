@@ -5,7 +5,6 @@ MAKE_HELP_BIN:=make-help
 SRC_FILES:=$(shell find cmd internal -name "*.go" -not -name "*_test.go")
 
 ## !category Build
-##
 ## Builds the make-help binary.
 build: $(MAKE_HELP_BIN)
 .PHONY: build
@@ -19,7 +18,6 @@ clean:
 .PHONY: clean
 
 ## !category Test
-##
 ## Run unit tests. Use 'test.all' to run all tests.
 test.unit:
 	go test ./... -race -cover
@@ -44,13 +42,12 @@ test.all: test.unit test.integration
 .PHONY: test.all
 
 ## !category Quality
-##
 ## Run golangci-lint
 lint:
 	golangci-lint run
 .PHONY: lint
 
-## Run golangci-lint with auto-fix
+## Run golangci-lint with auto-fix.
 lint-fix:
 	golangci-lint run --fix
 .PHONY: lint-fix

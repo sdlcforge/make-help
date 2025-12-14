@@ -86,9 +86,14 @@ Documentation directives (in ## comments):
 				if config.RemoveHelpTarget {
 					return fmt.Errorf("--lint cannot be used with --remove-help")
 				}
-				if config.DryRun {
-					return fmt.Errorf("--lint cannot be used with --dry-run")
+				if config.DryRun && !config.Fix {
+					return fmt.Errorf("--dry-run with --lint requires --fix")
 				}
+			}
+
+			// --fix requires --lint
+			if config.Fix && !config.Lint {
+				return fmt.Errorf("--fix requires --lint")
 			}
 
 			// Validate --help-file-rel-path is a relative path (no leading /)
@@ -131,6 +136,8 @@ Documentation directives (in ## comments):
 		"dry-run", false, "Show what files would be created/modified without making changes")
 	rootCmd.Flags().BoolVar(&config.Lint,
 		"lint", false, "Check documentation quality and report issues")
+	rootCmd.Flags().BoolVar(&config.Fix,
+		"fix", false, "Automatically fix auto-fixable lint issues (requires --lint)")
 	rootCmd.Flags().StringVar(&config.Target,
 		"target", "", "Show detailed help for a specific target (requires --show-help)")
 

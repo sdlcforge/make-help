@@ -13,7 +13,7 @@ This document consolidates outstanding findings from three parallel reviews:
 
 ### Features
 
-- [ ] **Implement '--fix'**
+- [x] **Implement '--fix'**
   - same behavior and valid with our without '--lint'
 
 - [ ] **Add `-version` flag**

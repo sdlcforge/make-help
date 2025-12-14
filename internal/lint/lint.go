@@ -35,6 +35,9 @@ type Warning struct {
 
 	// Context provides additional context (e.g., the problematic line content).
 	Context string
+
+	// Fixable indicates whether this warning can be automatically fixed.
+	Fixable bool
 }
 
 // TargetLocation holds the source file and line number where a target is defined.
@@ -90,11 +93,17 @@ type LintResult struct {
 	HasWarnings bool
 }
 
+// checkResult holds warnings from a single check with its fixability info.
+type checkResult struct {
+	warnings []Warning
+	fixable  bool
+}
+
 // Lint runs all registered checks on the provided context in parallel using goroutines
 // and returns the combined results.
-func Lint(ctx *CheckContext, checks []CheckFunc) *LintResult {
+func Lint(ctx *CheckContext, checks []Check) *LintResult {
 	// Use a channel to collect warnings from all goroutines
-	warningsChan := make(chan []Warning, len(checks))
+	resultsChan := make(chan checkResult, len(checks))
 
 	// Use a WaitGroup to wait for all checks to complete
 	var wg sync.WaitGroup
@@ -102,23 +111,30 @@ func Lint(ctx *CheckContext, checks []CheckFunc) *LintResult {
 	// Launch each check in its own goroutine
 	for _, check := range checks {
 		wg.Add(1)
-		go func(checkFn CheckFunc) {
+		go func(c Check) {
 			defer wg.Done()
-			warnings := checkFn(ctx)
-			warningsChan <- warnings
+			warnings := c.CheckFunc(ctx)
+			resultsChan <- checkResult{
+				warnings: warnings,
+				fixable:  c.FixFunc != nil,
+			}
 		}(check)
 	}
 
 	// Close channel after all goroutines complete
 	go func() {
 		wg.Wait()
-		close(warningsChan)
+		close(resultsChan)
 	}()
 
 	// Collect all warnings from the channel
 	var allWarnings []Warning
-	for warnings := range warningsChan {
-		allWarnings = append(allWarnings, warnings...)
+	for result := range resultsChan {
+		// Mark warnings as fixable if the check has a FixFunc
+		for i := range result.warnings {
+			result.warnings[i].Fixable = result.fixable
+		}
+		allWarnings = append(allWarnings, result.warnings...)
 	}
 
 	// Sort warnings by file, line number, then check name for consistent output
@@ -136,6 +152,34 @@ func Lint(ctx *CheckContext, checks []CheckFunc) *LintResult {
 		Warnings:    allWarnings,
 		HasWarnings: len(allWarnings) > 0,
 	}
+}
+
+// CollectFixes generates Fix objects for all fixable warnings.
+func CollectFixes(checks []Check, warnings []Warning) []Fix {
+	// Build check lookup by name
+	checkMap := make(map[string]Check)
+	for _, check := range checks {
+		checkMap[check.Name] = check
+	}
+
+	var fixes []Fix
+	for _, w := range warnings {
+		if !w.Fixable {
+			continue
+		}
+
+		check, ok := checkMap[w.CheckName]
+		if !ok || check.FixFunc == nil {
+			continue
+		}
+
+		fix := check.FixFunc(w)
+		if fix != nil {
+			fixes = append(fixes, *fix)
+		}
+	}
+
+	return fixes
 }
 
 // FormatWarning formats a single warning in compiler-style format.
