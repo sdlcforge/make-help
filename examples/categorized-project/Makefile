@@ -14,13 +14,13 @@ build:
 	@echo "Building for production with LDFLAGS: $(LDFLAGS)"
 
 ## Builds with debug symbols and race detector.
-# NOTE: Inherits "Build" category from above (no !category needed)
+## NOTE: Inherits "Build" category from above (no !category needed)
 build-debug:
 	@echo "Building debug version with race detector..."
 
 ## Cross-compiles for multiple platforms.
 ## !var PLATFORMS Target platforms (default: linux/amd64,darwin/amd64)
-# NOTE: Still in "Build" category
+## NOTE: Still in "Build" category
 build-all:
 	@echo "Building for platforms: $(PLATFORMS)"
 
@@ -86,4 +86,4 @@ DEBUG ?= false
 
 
 
-include $(dir $(lastword $(MAKEFILE_LIST)))help.mk
+-include $(dir $(lastword $(MAKEFILE_LIST)))help.mk

@@ -2,80 +2,100 @@
 # Regenerate with: make-help --no-color
 
 MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile
+MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile $(MAKE_HELP_DIR)help.mk
 
 .PHONY: help
 ## Displays help for available targets.
-help: $(MAKE_HELP_DIR)help.mk
-	@echo "Usage: make [<target>...] [<ENV_VAR>=<value>...]"
-	@echo ""
-	@echo "Targets:"
-	@echo "  - build: Builds the application binary."
-	@echo "    Vars: BUILD_FLAGS Additional flags to pass to the compiler, OUTPUT_DIR Output directory for the binary (default: ./bin)"
-	@echo "  - clean: Removes build artifacts and temporary files."
-	@echo "  - install: Installs the application to GOPATH/bin."
-	@echo "  - serve run, dev: Runs the application in development mode."
-	@echo "    Vars: PORT Port to listen on (default: 8080)"
-	@echo "  - test: Runs the test suite."
-	@echo "    Vars: TEST_FLAGS Additional flags for go test, COVERAGE Enable coverage reporting (set to 1)"
+help:
+	@for f in $(MAKE_HELP_MAKEFILES); do \
+	  if [ "$$f" -nt "$(MAKE_HELP_DIR)help.mk" ]; then \
+	    printf 'Warning: %s is newer than help.mk. Run make update-help to refresh.\n' "$$f"; \
+	  fi; \
+	done
+	@printf '%b\n' "Usage: make [<target>...] [<ENV_VAR>=<value>...]"
+	@printf '%b\n' ""
+	@printf '%b\n' "Targets:"
+	@printf '%b\n' "  - build: Builds the application binary."
+	@printf '%b\n' "    Vars: BUILD_FLAGS Additional flags to pass to the compiler, OUTPUT_DIR Output directory for the binary (default: ./bin)"
+	@printf '%b\n' "  - clean: Removes build artifacts and temporary files."
+	@printf '%b\n' "  - help: Displays help for available targets."
+	@printf '%b\n' "  - install: Installs the application to GOPATH/bin."
+	@printf '%b\n' "  - serve run, dev: Runs the application in development mode."
+	@printf '%b\n' "    Vars: PORT Port to listen on (default: 8080)"
+	@printf '%b\n' "  - test: Runs the test suite."
+	@printf '%b\n' "    Vars: TEST_FLAGS Additional flags for go test, COVERAGE Enable coverage reporting (set to 1)"
+	@printf '%b\n' "  - update-help: Regenerates help.mk from source Makefiles."
 
 .PHONY: help-build
-help-build: $(MAKE_HELP_DIR)help.mk
-	@echo "Target: build"
-	@echo "Variables:"
-	@echo "  - BUILD_FLAGS Additional flags to pass to the compiler"
-	@echo "  - OUTPUT_DIR Output directory for the binary (default: ./bin)"
-	@echo ""
-	@echo "Documentation:"
-	@echo "  Builds the application binary."
-	@echo "  Creates an optimized build in the ./bin directory."
-	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:11"
+help-build:
+	@printf '%b\n' "Target: build"
+	@printf '%b\n' "Variables:"
+	@printf '%b\n' "  - BUILD_FLAGS Additional flags to pass to the compiler"
+	@printf '%b\n' "  - OUTPUT_DIR Output directory for the binary (default: ./bin)"
+	@printf '%b\n' ""
+	@printf '%b\n' "Builds the application binary."
+	@printf '%b\n' "Creates an optimized build in the ./bin directory."
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:11"
 
 .PHONY: help-clean
-help-clean: $(MAKE_HELP_DIR)help.mk
-	@echo "Target: clean"
-	@echo ""
-	@echo "Documentation:"
-	@echo "  Removes build artifacts and temporary files."
-	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:22"
+help-clean:
+	@printf '%b\n' "Target: clean"
+	@printf '%b\n' ""
+	@printf '%b\n' "Removes build artifacts and temporary files."
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:22"
+
+.PHONY: help-help
+help-help:
+	@printf '%b\n' "Target: help"
+	@printf '%b\n' ""
+	@printf '%b\n' "Displays help for available targets."
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/help.mk:9"
 
 .PHONY: help-install
-help-install: $(MAKE_HELP_DIR)help.mk
-	@echo "Target: install"
-	@echo ""
-	@echo "Documentation:"
-	@echo "  Installs the application to GOPATH/bin."
-	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:26"
+help-install:
+	@printf '%b\n' "Target: install"
+	@printf '%b\n' ""
+	@printf '%b\n' "Installs the application to GOPATH/bin."
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:26"
 
 .PHONY: help-serve
-help-serve: $(MAKE_HELP_DIR)help.mk
-	@echo "Target: serve"
-	@echo "Aliases: run, dev"
-	@echo "Variables:"
-	@echo "  - PORT Port to listen on (default: 8080)"
-	@echo ""
-	@echo "Documentation:"
-	@echo "  Runs the application in development mode."
-	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:32"
+help-serve:
+	@printf '%b\n' "Target: serve"
+	@printf '%b\n' "Aliases: run, dev"
+	@printf '%b\n' "Variables:"
+	@printf '%b\n' "  - PORT Port to listen on (default: 8080)"
+	@printf '%b\n' ""
+	@printf '%b\n' "Runs the application in development mode."
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:32"
 
 .PHONY: help-test
-help-test: $(MAKE_HELP_DIR)help.mk
-	@echo "Target: test"
-	@echo "Variables:"
-	@echo "  - TEST_FLAGS Additional flags for go test"
-	@echo "  - COVERAGE Enable coverage reporting (set to 1)"
-	@echo ""
-	@echo "Documentation:"
-	@echo "  Runs the test suite."
-	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:18"
+help-test:
+	@printf '%b\n' "Target: test"
+	@printf '%b\n' "Variables:"
+	@printf '%b\n' "  - TEST_FLAGS Additional flags for go test"
+	@printf '%b\n' "  - COVERAGE Enable coverage reporting (set to 1)"
+	@printf '%b\n' ""
+	@printf '%b\n' "Runs the test suite."
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:18"
 
-# Auto-regenerate help when source Makefiles change
-$(MAKE_HELP_DIR)help.mk: $(MAKE_HELP_MAKEFILES)
+.PHONY: help-update-help
+help-update-help:
+	@printf '%b\n' "Target: update-help"
+	@printf '%b\n' ""
+	@printf '%b\n' "Regenerates help.mk from source Makefiles."
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/help.mk:98"
+
+# Explicit target to regenerate help.mk
+.PHONY: update-help
+## Regenerates help.mk from source Makefiles.
+update-help:
 	@make-help --makefile-path $(MAKE_HELP_DIR)Makefile --no-color || \
 	 npx make-help --makefile-path $(MAKE_HELP_DIR)Makefile --no-color || \
 	 echo "make-help not found; install with 'go install github.com/sdlcforge/make-help/cmd/make-help@latest' or 'npm install -g make-help'"

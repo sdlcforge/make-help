@@ -2,58 +2,84 @@
 # Regenerate with: make-help --no-color
 
 MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile
+MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile $(MAKE_HELP_DIR)help.mk
 
+## !category Help
 .PHONY: help
 ## Displays help for available targets.
-help: $(MAKE_HELP_DIR)help.mk
-	@echo "Usage: make [<target>...] [<ENV_VAR>=<value>...]"
-	@echo ""
-	@echo "Targets:"
-	@echo ""
-	@echo "Build:"
-	@echo "  - build: Compiles the project."
-	@echo "  - test: Runs tests."
-	@echo ""
-	@echo "Deploy:"
-	@echo "  - deploy: Deploys to production."
-	@echo "    Vars: DEPLOY_ENV Target environment (staging, production)"
+help:
+	@for f in $(MAKE_HELP_MAKEFILES); do \
+	  if [ "$$f" -nt "$(MAKE_HELP_DIR)help.mk" ]; then \
+	    printf 'Warning: %s is newer than help.mk. Run make update-help to refresh.\n' "$$f"; \
+	  fi; \
+	done
+	@printf '%b\n' "Usage: make [<target>...] [<ENV_VAR>=<value>...]"
+	@printf '%b\n' ""
+	@printf '%b\n' "Targets:"
+	@printf '%b\n' ""
+	@printf '%b\n' "Build:"
+	@printf '%b\n' "  - build: Compiles the project."
+	@printf '%b\n' "  - test: Runs tests."
+	@printf '%b\n' ""
+	@printf '%b\n' "Deploy:"
+	@printf '%b\n' "  - deploy: Deploys to production."
+	@printf '%b\n' "    Vars: DEPLOY_ENV Target environment (staging, production)"
+	@printf '%b\n' ""
+	@printf '%b\n' "Help:"
+	@printf '%b\n' "  - help: Displays help for available targets."
+	@printf '%b\n' "  - update-help: Regenerates help.mk from source Makefiles."
 
 .PHONY: help-build
-help-build: $(MAKE_HELP_DIR)help.mk
-	@echo "Target: build"
-	@echo ""
-	@echo "Documentation:"
-	@echo "  Compiles the project."
-	@echo "  This is a documented target - always visible."
-	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/Makefile:15"
+help-build:
+	@printf '%b\n' "Target: build"
+	@printf '%b\n' ""
+	@printf '%b\n' "Compiles the project."
+	@printf '%b\n' "This is a documented target - always visible."
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/Makefile:15"
 
 .PHONY: help-test
-help-test: $(MAKE_HELP_DIR)help.mk
-	@echo "Target: test"
-	@echo ""
-	@echo "Documentation:"
-	@echo "  Runs tests."
-	@echo "  Also documented - always visible."
-	@echo "  NOTE: Inherits \"Build\" category from above"
-	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/Makefile:21"
+help-test:
+	@printf '%b\n' "Target: test"
+	@printf '%b\n' ""
+	@printf '%b\n' "Runs tests."
+	@printf '%b\n' "Also documented - always visible."
+	@printf '%b\n' "NOTE: Inherits \"Build\" category from above"
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/Makefile:21"
 
 .PHONY: help-deploy
-help-deploy: $(MAKE_HELP_DIR)help.mk
-	@echo "Target: deploy"
-	@echo "Variables:"
-	@echo "  - DEPLOY_ENV Target environment (staging, production)"
-	@echo ""
-	@echo "Documentation:"
-	@echo "  Deploys to production."
-	@echo "  Documented and categorized."
-	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/Makefile:28"
+help-deploy:
+	@printf '%b\n' "Target: deploy"
+	@printf '%b\n' "Variables:"
+	@printf '%b\n' "  - DEPLOY_ENV Target environment (staging, production)"
+	@printf '%b\n' ""
+	@printf '%b\n' "Deploys to production."
+	@printf '%b\n' "Documented and categorized."
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/Makefile:28"
 
-# Auto-regenerate help when source Makefiles change
-$(MAKE_HELP_DIR)help.mk: $(MAKE_HELP_MAKEFILES)
+.PHONY: help-help
+help-help:
+	@printf '%b\n' "Target: help"
+	@printf '%b\n' ""
+	@printf '%b\n' "Displays help for available targets."
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/help.mk:10"
+
+.PHONY: help-update-help
+help-update-help:
+	@printf '%b\n' "Target: update-help"
+	@printf '%b\n' ""
+	@printf '%b\n' "Regenerates help.mk from source Makefiles."
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/help.mk:82"
+
+# Explicit target to regenerate help.mk
+## !category Help
+.PHONY: update-help
+## Regenerates help.mk from source Makefiles.
+update-help:
 	@make-help --makefile-path $(MAKE_HELP_DIR)Makefile --no-color || \
 	 npx make-help --makefile-path $(MAKE_HELP_DIR)Makefile --no-color || \
 	 echo "make-help not found; install with 'go install github.com/sdlcforge/make-help/cmd/make-help@latest' or 'npm install -g make-help'"
