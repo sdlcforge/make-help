@@ -137,6 +137,12 @@ func runLint(config *Config) error {
 	checks := []lint.CheckFunc{
 		lint.CheckUndocumentedPhony,
 		lint.CheckSummaryPunctuation,
+		lint.CheckOrphanAliases,
+		lint.CheckLongSummaries,
+		lint.CheckEmptyDocumentation,
+		lint.CheckMissingVarDescriptions,
+		lint.CheckInconsistentNaming,
+		lint.CheckCircularAliases,
 	}
 
 	result := lint.Lint(checkCtx, checks)
