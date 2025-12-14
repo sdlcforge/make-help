@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/sdlcforge/make-help/internal/discovery"
 	"github.com/sdlcforge/make-help/internal/lint"
@@ -157,16 +158,47 @@ func runLint(config *Config) error {
 
 	// Step 9: Output warnings
 	if result.HasWarnings {
+		// Get current working directory for relative paths
+		cwd, err := os.Getwd()
+		if err != nil {
+			cwd = "" // Fall back to absolute paths if we can't get cwd
+		}
+
+		// Group warnings by file
+		var currentFile string
 		for _, warning := range result.Warnings {
-			fmt.Println(lint.FormatWarning(warning))
+			// Convert to relative path if possible
+			displayPath := warning.File
+			if cwd != "" {
+				if rel, err := filepath.Rel(cwd, warning.File); err == nil {
+					displayPath = rel
+				}
+			}
+
+			// Print file header when file changes
+			if warning.File != currentFile {
+				if currentFile != "" {
+					fmt.Println() // Blank line between files
+				}
+				fmt.Println(displayPath)
+				currentFile = warning.File
+			}
+
+			// Print warning: "line: message"
+			if warning.Line > 0 {
+				fmt.Printf("  %d: %s\n", warning.Line, warning.Message)
+			} else {
+				fmt.Printf("  %s\n", warning.Message)
+			}
 		}
 
 		// Proper pluralization
 		count := len(result.Warnings)
+		fmt.Println()
 		if count == 1 {
-			fmt.Println("\nFound 1 warning")
+			fmt.Println("Found 1 warning")
 		} else {
-			fmt.Printf("\nFound %d warnings\n", count)
+			fmt.Printf("Found %d warnings\n", count)
 		}
 
 		// Return sentinel error to indicate warnings were found (Cobra translates to exit code 1)

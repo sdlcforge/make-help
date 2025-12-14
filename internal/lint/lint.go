@@ -27,6 +27,9 @@ type Warning struct {
 	// Severity is the severity level of this warning.
 	Severity Severity
 
+	// CheckName identifies which check produced this warning (for sorting).
+	CheckName string
+
 	// Message is a human-readable description of the issue.
 	Message string
 
@@ -107,12 +110,15 @@ func Lint(ctx *CheckContext, checks []CheckFunc) *LintResult {
 		allWarnings = append(allWarnings, warnings...)
 	}
 
-	// Sort warnings by file and line number for consistent output
+	// Sort warnings by file, line number, then check name for consistent output
 	sort.Slice(allWarnings, func(i, j int) bool {
 		if allWarnings[i].File != allWarnings[j].File {
 			return allWarnings[i].File < allWarnings[j].File
 		}
-		return allWarnings[i].Line < allWarnings[j].Line
+		if allWarnings[i].Line != allWarnings[j].Line {
+			return allWarnings[i].Line < allWarnings[j].Line
+		}
+		return allWarnings[i].CheckName < allWarnings[j].CheckName
 	})
 
 	return &LintResult{

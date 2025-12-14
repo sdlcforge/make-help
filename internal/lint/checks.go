@@ -45,10 +45,11 @@ func CheckUndocumentedPhony(ctx *CheckContext) []Warning {
 	// Create warnings in sorted order
 	for _, targetName := range undocumentedTargets {
 		warnings = append(warnings, Warning{
-			File:     ctx.MakefilePath,
-			Line:     0, // Line number not available from discovery
-			Severity: SeverityWarning,
-			Message:  fmt.Sprintf("undocumented phony target '%s'", targetName),
+			File:      ctx.MakefilePath,
+			Line:      0, // Line number not available from discovery
+			Severity:  SeverityWarning,
+			CheckName: "undocumented-phony",
+			Message:   fmt.Sprintf("undocumented phony target '%s'", targetName),
 		})
 	}
 
@@ -72,11 +73,12 @@ func CheckSummaryPunctuation(ctx *CheckContext) []Warning {
 			lastChar := summary[len(summary)-1]
 			if lastChar != '.' && lastChar != '!' && lastChar != '?' {
 				warnings = append(warnings, Warning{
-					File:     target.SourceFile,
-					Line:     target.LineNumber,
-					Severity: SeverityWarning,
-					Message:  fmt.Sprintf("summary for '%s' does not end with punctuation", target.Name),
-					Context:  summary,
+					File:      target.SourceFile,
+					Line:      target.LineNumber,
+					Severity:  SeverityWarning,
+					CheckName: "summary-punctuation",
+					Message:   fmt.Sprintf("summary for '%s' does not end with punctuation", target.Name),
+					Context:   summary,
 				})
 			}
 		}
@@ -116,11 +118,12 @@ func CheckOrphanAliases(ctx *CheckContext) []Warning {
 				// Check if the alias points to a known target
 				if !allTargets[alias] {
 					warnings = append(warnings, Warning{
-						File:     target.SourceFile,
-						Line:     target.LineNumber,
-						Severity: SeverityWarning,
-						Message:  fmt.Sprintf("alias '%s' points to non-existent target (referenced by '%s')", alias, target.Name),
-						Context:  fmt.Sprintf("!alias %s", alias),
+						File:      target.SourceFile,
+						Line:      target.LineNumber,
+						Severity:  SeverityWarning,
+						CheckName: "orphan-alias",
+						Message:   fmt.Sprintf("alias '%s' points to non-existent target (referenced by '%s')", alias, target.Name),
+						Context:   fmt.Sprintf("!alias %s", alias),
 					})
 				}
 			}
@@ -151,11 +154,12 @@ func CheckLongSummaries(ctx *CheckContext) []Warning {
 			// Check if summary exceeds maximum length
 			if len(summary) > maxLength {
 				warnings = append(warnings, Warning{
-					File:     target.SourceFile,
-					Line:     target.LineNumber,
-					Severity: SeverityWarning,
-					Message:  fmt.Sprintf("summary for '%s' is too long (%d characters, max %d)", target.Name, len(summary), maxLength),
-					Context:  summary,
+					File:      target.SourceFile,
+					Line:      target.LineNumber,
+					Severity:  SeverityWarning,
+					CheckName: "long-summary",
+					Message:   fmt.Sprintf("summary for '%s' is too long (%d characters, max %d)", target.Name, len(summary), maxLength),
+					Context:   summary,
 				})
 			}
 		}
@@ -179,22 +183,24 @@ func CheckEmptyDocumentation(ctx *CheckContext) []Warning {
 			// Check first line for empty/whitespace-only content
 			if strings.TrimSpace(docs[0]) == "" {
 				warnings = append(warnings, Warning{
-					File:     target.SourceFile,
-					Line:     target.LineNumber,
-					Severity: SeverityWarning,
-					Message:  fmt.Sprintf("target '%s' has empty documentation line at the beginning", target.Name),
-					Context:  "##",
+					File:      target.SourceFile,
+					Line:      target.LineNumber,
+					Severity:  SeverityWarning,
+					CheckName: "empty-doc",
+					Message:   fmt.Sprintf("target '%s' has empty documentation line at the beginning", target.Name),
+					Context:   "##",
 				})
 			}
 
 			// Check last line for empty/whitespace-only content
 			if len(docs) > 1 && strings.TrimSpace(docs[len(docs)-1]) == "" {
 				warnings = append(warnings, Warning{
-					File:     target.SourceFile,
-					Line:     target.LineNumber,
-					Severity: SeverityWarning,
-					Message:  fmt.Sprintf("target '%s' has empty documentation line at the end", target.Name),
-					Context:  "##",
+					File:      target.SourceFile,
+					Line:      target.LineNumber,
+					Severity:  SeverityWarning,
+					CheckName: "empty-doc",
+					Message:   fmt.Sprintf("target '%s' has empty documentation line at the end", target.Name),
+					Context:   "##",
 				})
 			}
 		}
@@ -214,10 +220,11 @@ func CheckMissingVarDescriptions(ctx *CheckContext) []Warning {
 				// Check if variable has an empty description
 				if strings.TrimSpace(variable.Description) == "" {
 					warnings = append(warnings, Warning{
-						File:     target.SourceFile,
-						Line:     target.LineNumber,
-						Severity: SeverityWarning,
-						Message:  fmt.Sprintf("variable '%s' in target '%s' is missing a description", variable.Name, target.Name),
+						File:      target.SourceFile,
+						Line:      target.LineNumber,
+						Severity:  SeverityWarning,
+						CheckName: "missing-var-desc",
+						Message:   fmt.Sprintf("variable '%s' in target '%s' is missing a description", variable.Name, target.Name),
 					})
 				}
 			}
@@ -241,11 +248,12 @@ func CheckInconsistentNaming(ctx *CheckContext) []Warning {
 		for _, target := range category.Targets {
 			if !kebabCasePattern.MatchString(target.Name) {
 				warnings = append(warnings, Warning{
-					File:     target.SourceFile,
-					Line:     target.LineNumber,
-					Severity: SeverityWarning,
-					Message:  fmt.Sprintf("target '%s' does not follow kebab-case naming convention", target.Name),
-					Context:  target.Name,
+					File:      target.SourceFile,
+					Line:      target.LineNumber,
+					Severity:  SeverityWarning,
+					CheckName: "naming",
+					Message:   fmt.Sprintf("target '%s' does not follow kebab-case naming convention", target.Name),
+					Context:   target.Name,
 				})
 			}
 		}
@@ -359,10 +367,11 @@ func CheckCircularAliases(ctx *CheckContext) []Warning {
 		cycle := cycles[key]
 		cycleStr := strings.Join(cycle, " → ")
 		warnings = append(warnings, Warning{
-			File:     ctx.MakefilePath,
-			Line:     0, // Line number not available from discovery
-			Severity: SeverityWarning,
-			Message:  fmt.Sprintf("circular alias chain detected: %s", cycleStr),
+			File:      ctx.MakefilePath,
+			Line:      0, // Line number not available from discovery
+			Severity:  SeverityWarning,
+			CheckName: "circular-alias",
+			Message:   fmt.Sprintf("circular alias chain detected: %s", cycleStr),
 		})
 	}
 
