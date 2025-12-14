@@ -22,7 +22,7 @@ clean:
 ##
 ## Run unit tests. Use 'test.all' to run all tests.
 test.unit:
-	go test ./...
+	go test ./... -race -cover
 .PHONY: test.unit
 
 ## !alias t

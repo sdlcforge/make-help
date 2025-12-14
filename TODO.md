@@ -13,8 +13,11 @@ This document consolidates outstanding findings from three parallel reviews:
 
 ### Features
 
-- [ ] **Add `--show-version` flag**
-  - Issue: No way to display tool's own version (existing `--version` flag is for pinning in generated files)
+- [ ] **Implement '--fix'**
+  - same behavior and valid with our without '--lint'
+
+- [ ] **Add `-version` flag**
+  - Issue: No way to display tool's own version
 
 - [ ] **Add `--check` / `--lint` validation mode**
   - Use case: CI pipelines to validate documentation without generating output
