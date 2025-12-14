@@ -5,7 +5,13 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
+
+func init() {
+	// Register custom template function for flag grouping
+	cobra.AddTemplateFunc("flagGroups", flagGroupsFunc)
+}
 
 // NewRootCmd creates the root command for make-help.
 // The default action is to run the help command.
@@ -94,46 +100,69 @@ Documentation directives (in ## comments):
 		},
 	}
 
-	// Global flags
+	// Mode flags
+	rootCmd.Flags().BoolVar(&config.ShowHelp,
+		"show-help", false, "Display help dynamically instead of generating a help file")
+	rootCmd.Flags().BoolVar(&config.RemoveHelpTarget,
+		"remove-help", false, "Remove help target from Makefile")
+	rootCmd.Flags().BoolVar(&config.DryRun,
+		"dry-run", false, "Show what files would be created/modified without making changes")
+	rootCmd.Flags().StringVar(&config.Target,
+		"target", "", "Show detailed help for a specific target (requires --show-help)")
+
+	// Input flags
 	rootCmd.PersistentFlags().StringVar(&config.MakefilePath,
 		"makefile-path", "", "Path to Makefile (defaults to ./Makefile)")
-	rootCmd.PersistentFlags().BoolVar(&noColor,
-		"no-color", false, "Disable colored output")
+	rootCmd.Flags().StringVar(&config.HelpFileRelPath,
+		"help-file-rel-path", "", "Relative path for generated help target file (e.g., help.mk or make/help.mk)")
+
+	// Output flags
 	rootCmd.PersistentFlags().BoolVar(&forceColor,
 		"color", false, "Force colored output")
-	rootCmd.PersistentFlags().BoolVarP(&config.Verbose,
-		"verbose", "v", false, "Enable verbose output for debugging")
-
-	// Help generation flags (only on root command, not subcommands)
+	rootCmd.PersistentFlags().BoolVar(&noColor,
+		"no-color", false, "Disable colored output")
+	rootCmd.Flags().StringSliceVar(&config.IncludeTargets,
+		"include-target", []string{}, "Include undocumented target in help (repeatable, comma-separated)")
+	rootCmd.Flags().BoolVar(&config.IncludeAllPhony,
+		"include-all-phony", false, "Include all .PHONY targets in help output")
 	rootCmd.Flags().BoolVar(&config.KeepOrderCategories,
 		"keep-order-categories", false, "Preserve category discovery order")
 	rootCmd.Flags().BoolVar(&config.KeepOrderTargets,
 		"keep-order-targets", false, "Preserve target discovery order within categories")
-
-	// --keep-order-all is a convenience flag that sets both
 	rootCmd.Flags().BoolVar(&keepOrderAll,
 		"keep-order-all", false, "Preserve both category and target discovery order")
-
 	rootCmd.Flags().StringSliceVar(&config.CategoryOrder,
 		"category-order", []string{}, "Explicit category order (comma-separated)")
 	rootCmd.Flags().StringVar(&config.DefaultCategory,
 		"default-category", "", "Default category for uncategorized targets")
 
-	// New flags for target creation/removal and filtering
-	rootCmd.Flags().BoolVar(&config.ShowHelp,
-		"show-help", false, "Display help dynamically instead of generating a help file")
-	rootCmd.Flags().BoolVar(&config.RemoveHelpTarget,
-		"remove-help", false, "Remove help target from Makefile")
-	rootCmd.Flags().StringSliceVar(&config.IncludeTargets,
-		"include-target", []string{}, "Include undocumented target in help (repeatable, comma-separated)")
-	rootCmd.Flags().BoolVar(&config.IncludeAllPhony,
-		"include-all-phony", false, "Include all .PHONY targets in help output")
-	rootCmd.Flags().StringVar(&config.Target,
-		"target", "", "Show detailed help for a specific target (requires --show-help)")
-	rootCmd.Flags().StringVar(&config.HelpFileRelPath,
-		"help-file-rel-path", "", "Relative path for generated help target file (e.g., help.mk or make/help.mk)")
-	rootCmd.Flags().BoolVar(&config.DryRun,
-		"dry-run", false, "Show what files would be created/modified without making changes")
+	// Misc flags
+	rootCmd.PersistentFlags().BoolVarP(&config.Verbose,
+		"verbose", "v", false, "Enable verbose output for debugging")
+
+	// Annotate flags with their groups for custom help display
+	annotateFlag(rootCmd, "show-help", "Mode")
+	annotateFlag(rootCmd, "remove-help", "Mode")
+	annotateFlag(rootCmd, "dry-run", "Mode")
+	annotateFlag(rootCmd, "target", "Mode")
+
+	annotateFlag(rootCmd, "makefile-path", "Input")
+	annotateFlag(rootCmd, "help-file-rel-path", "Input")
+
+	annotateFlag(rootCmd, "color", "Output")
+	annotateFlag(rootCmd, "no-color", "Output")
+	annotateFlag(rootCmd, "include-target", "Output")
+	annotateFlag(rootCmd, "include-all-phony", "Output")
+	annotateFlag(rootCmd, "keep-order-categories", "Output")
+	annotateFlag(rootCmd, "keep-order-targets", "Output")
+	annotateFlag(rootCmd, "keep-order-all", "Output")
+	annotateFlag(rootCmd, "category-order", "Output")
+	annotateFlag(rootCmd, "default-category", "Output")
+
+	annotateFlag(rootCmd, "verbose", "Misc")
+
+	// Set custom usage template
+	rootCmd.SetUsageTemplate(usageTemplate)
 
 	return rootCmd
 }
@@ -199,4 +228,172 @@ func parseCategoryOrder(input []string) []string {
 		}
 	}
 	return result
+}
+
+// annotateFlag adds a group annotation to a flag for custom help grouping.
+func annotateFlag(cmd *cobra.Command, flagName, group string) {
+	// Try local flags first
+	flag := cmd.Flags().Lookup(flagName)
+	// If not found, try persistent flags
+	if flag == nil {
+		flag = cmd.PersistentFlags().Lookup(flagName)
+	}
+
+	if flag != nil {
+		if flag.Annotations == nil {
+			flag.Annotations = make(map[string][]string)
+		}
+		flag.Annotations["group"] = []string{group}
+	}
+}
+
+// usageTemplate is a custom template that groups flags by their annotations.
+const usageTemplate = `Usage:{{if .Runnable}}
+  {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+
+Aliases:
+  {{.NameAndAliases}}{{end}}{{if .HasExample}}
+
+Examples:
+{{.Example}}{{end}}{{if .HasAvailableSubCommands}}
+
+Available Commands:{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+
+{{flagGroups .}}{{end}}{{if .HasAvailableInheritedFlags}}
+
+Global Flags:
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`
+
+// flagGroupsFunc generates grouped flag output for the custom usage template.
+func flagGroupsFunc(cmd *cobra.Command) string {
+	// Define the order of groups
+	groupOrder := []string{"Mode", "Input", "Output", "Misc"}
+
+	// Collect flags by group
+	flagsByGroup := make(map[string][]string)
+	seenFlags := make(map[string]bool)
+
+	// Process both local and persistent flags
+	processFlags := func(flags *pflag.FlagSet) {
+		flags.VisitAll(func(flag *pflag.Flag) {
+			if flag.Hidden {
+				return
+			}
+
+			// Skip if we've already processed this flag
+			if seenFlags[flag.Name] {
+				return
+			}
+			seenFlags[flag.Name] = true
+
+			group := "Misc" // default group
+			if flag.Annotations != nil {
+				if groups, ok := flag.Annotations["group"]; ok && len(groups) > 0 {
+					group = groups[0]
+				}
+			}
+
+			// Format the flag usage
+			usage := formatFlagUsage(flag)
+			flagsByGroup[group] = append(flagsByGroup[group], usage)
+		})
+	}
+
+	// Process local flags first, then persistent flags
+	processFlags(cmd.Flags())
+	processFlags(cmd.PersistentFlags())
+
+	// Build output string with groups in order
+	var sb strings.Builder
+	for _, group := range groupOrder {
+		flags, ok := flagsByGroup[group]
+		if !ok || len(flags) == 0 {
+			continue
+		}
+
+		sb.WriteString(group)
+		sb.WriteString(":\n")
+		for _, flagUsage := range flags {
+			sb.WriteString(flagUsage)
+		}
+		sb.WriteString("\n")
+	}
+
+	return strings.TrimSuffix(sb.String(), "\n")
+}
+
+// formatFlagUsage formats a single flag for display in the help output.
+func formatFlagUsage(flag *pflag.Flag) string {
+	var sb strings.Builder
+
+	// Start with shorthand if it exists
+	if flag.Shorthand != "" && flag.ShorthandDeprecated == "" {
+		sb.WriteString("  -")
+		sb.WriteString(flag.Shorthand)
+		sb.WriteString(", ")
+	} else {
+		sb.WriteString("      ")
+	}
+
+	// Add the long flag name
+	sb.WriteString("--")
+	sb.WriteString(flag.Name)
+
+	// Add the type/value info if not a boolean
+	if flag.Value.Type() != "bool" {
+		sb.WriteString(" ")
+		// Normalize type names for better readability
+		typeName := flag.Value.Type()
+		switch typeName {
+		case "stringSlice":
+			typeName = "strings"
+		case "intSlice":
+			typeName = "ints"
+		}
+		sb.WriteString(typeName)
+	}
+
+	// Pad to align descriptions (using 36 as a reasonable width)
+	currentLen := sb.Len()
+	paddingNeeded := 36 - currentLen
+	if paddingNeeded > 0 {
+		sb.WriteString(strings.Repeat(" ", paddingNeeded))
+	} else {
+		sb.WriteString("   ")
+	}
+
+	// Add the usage description
+	sb.WriteString(flag.Usage)
+
+	// Add default value if meaningful (not empty, false, [], etc.)
+	if shouldShowDefault(flag) {
+		sb.WriteString(fmt.Sprintf(" (default %s)", flag.DefValue))
+	}
+
+	sb.WriteString("\n")
+
+	return sb.String()
+}
+
+// shouldShowDefault determines if a flag's default value should be displayed.
+func shouldShowDefault(flag *pflag.Flag) bool {
+	if flag.DefValue == "" {
+		return false
+	}
+	if flag.Value.Type() == "bool" && flag.DefValue == "false" {
+		return false
+	}
+	// Don't show empty slice/array defaults
+	if flag.DefValue == "[]" {
+		return false
+	}
+	return true
 }
