@@ -225,6 +225,7 @@ func validateRemoveHelpFlags(config *Config) error {
 		{config.IncludeAllPhony, "--include-all-phony"},
 		{config.ShowHelp, "--show-help"},
 		{config.DryRun, "--dry-run"},
+		{config.Lint, "--lint"},
 		{config.HelpFileRelPath != "", "--help-file-rel-path"},
 		{config.KeepOrderCategories, "--keep-order-categories"},
 		{config.KeepOrderTargets, "--keep-order-targets"},

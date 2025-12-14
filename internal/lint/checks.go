@@ -2,6 +2,7 @@ package lint
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -9,6 +10,9 @@ import (
 // It reports warnings for phony targets that are neither documented nor aliases.
 func CheckUndocumentedPhony(ctx *CheckContext) []Warning {
 	var warnings []Warning
+
+	// Collect undocumented phony target names first
+	var undocumentedTargets []string
 
 	for targetName, isPhony := range ctx.PhonyTargets {
 		if !isPhony {
@@ -26,9 +30,17 @@ func CheckUndocumentedPhony(ctx *CheckContext) []Warning {
 		}
 
 		// This is an undocumented phony target
+		undocumentedTargets = append(undocumentedTargets, targetName)
+	}
+
+	// Sort target names for deterministic output
+	sort.Strings(undocumentedTargets)
+
+	// Create warnings in sorted order
+	for _, targetName := range undocumentedTargets {
 		warnings = append(warnings, Warning{
-			File:     "Makefile", // Could be enhanced to track actual file in future
-			Line:     0,          // Line number not available from discovery
+			File:     ctx.MakefilePath,
+			Line:     0, // Line number not available from discovery
 			Severity: SeverityWarning,
 			Message:  fmt.Sprintf("undocumented phony target '%s'", targetName),
 		})

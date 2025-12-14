@@ -38,6 +38,9 @@ type CheckContext struct {
 	// HelpModel contains the parsed and built help model.
 	HelpModel *model.HelpModel
 
+	// MakefilePath is the resolved path to the main Makefile being checked.
+	MakefilePath string
+
 	// PhonyTargets maps target names to their .PHONY status.
 	PhonyTargets map[string]bool
 

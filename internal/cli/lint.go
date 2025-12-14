@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -10,6 +11,10 @@ import (
 	"github.com/sdlcforge/make-help/internal/parser"
 	"github.com/sdlcforge/make-help/internal/summary"
 )
+
+// ErrLintWarningsFound is a sentinel error returned when lint warnings are found.
+// Cobra will translate this into exit code 1.
+var ErrLintWarningsFound = errors.New("lint warnings found")
 
 // runLint performs static analysis on Makefiles and their documentation.
 // It orchestrates the following steps:
@@ -25,6 +30,11 @@ import (
 //   1 - Warnings found
 //   2 - Error (invalid flags, file not found, etc.)
 func runLint(config *Config) error {
+	// Check for recursion: prevent make-help from running if we're already in a make-help process
+	if os.Getenv("MAKE_HELP_GENERATING") == "1" {
+		return fmt.Errorf("recursion detected: make-help was invoked from within a make process spawned by make-help")
+	}
+
 	// Step 1: Resolve and validate Makefile path
 	makefilePath, err := discovery.ResolveMakefilePath(config.MakefilePath)
 	if err != nil {
@@ -115,6 +125,7 @@ func runLint(config *Config) error {
 
 	checkCtx := &lint.CheckContext{
 		HelpModel:         helpModel,
+		MakefilePath:      makefilePath,
 		PhonyTargets:      targetsResult.IsPhony,
 		Dependencies:      targetsResult.Dependencies,
 		HasRecipe:         targetsResult.HasRecipe,
@@ -135,9 +146,17 @@ func runLint(config *Config) error {
 		for _, warning := range result.Warnings {
 			fmt.Println(lint.FormatWarning(warning))
 		}
-		fmt.Printf("\nFound %d warning(s)\n", len(result.Warnings))
-		// Exit with code 1 to indicate warnings were found
-		os.Exit(1)
+
+		// Proper pluralization
+		count := len(result.Warnings)
+		if count == 1 {
+			fmt.Println("\nFound 1 warning")
+		} else {
+			fmt.Printf("\nFound %d warnings\n", count)
+		}
+
+		// Return sentinel error to indicate warnings were found (Cobra translates to exit code 1)
+		return ErrLintWarningsFound
 	}
 
 	if config.Verbose {
