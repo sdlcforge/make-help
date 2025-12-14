@@ -19,7 +19,7 @@ This document consolidates outstanding findings from three parallel reviews:
 - [ ] **Add `-version` flag**
   - Issue: No way to display tool's own version
 
-- [ ] **Add `--check` / `--lint` validation mode**
+- [x] **Add `--check` / `--lint` validation mode**
   - Use case: CI pipelines to validate documentation without generating output
   - Would validate: all targets documented, categories consistent, no orphaned directives
 
