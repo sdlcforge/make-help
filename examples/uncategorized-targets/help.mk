@@ -2,7 +2,7 @@
 # Regenerate with: make-help --no-color
 
 MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile $(MAKE_HELP_DIR)help.mk
+MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile
 
 .PHONY: help
 ## Displays help for available targets.
@@ -18,13 +18,11 @@ help:
 	@printf '%b\n' "  - build: Builds the application binary."
 	@printf '%b\n' "    Vars: BUILD_FLAGS Additional flags to pass to the compiler, OUTPUT_DIR Output directory for the binary (default: ./bin)"
 	@printf '%b\n' "  - clean: Removes build artifacts and temporary files."
-	@printf '%b\n' "  - help: Displays help for available targets."
 	@printf '%b\n' "  - install: Installs the application to GOPATH/bin."
 	@printf '%b\n' "  - serve run, dev: Runs the application in development mode."
 	@printf '%b\n' "    Vars: PORT Port to listen on (default: 8080)"
 	@printf '%b\n' "  - test: Runs the test suite."
 	@printf '%b\n' "    Vars: TEST_FLAGS Additional flags for go test, COVERAGE Enable coverage reporting (set to 1)"
-	@printf '%b\n' "  - update-help: Regenerates help.mk from source Makefiles."
 
 .PHONY: help-build
 help-build:
@@ -41,23 +39,13 @@ help-build:
 .PHONY: help-clean
 help-clean:
 	@printf '%b\n' "Target: clean"
-	@printf '%b\n' ""
 	@printf '%b\n' "Removes build artifacts and temporary files."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:22"
 
-.PHONY: help-help
-help-help:
-	@printf '%b\n' "Target: help"
-	@printf '%b\n' ""
-	@printf '%b\n' "Displays help for available targets."
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/help.mk:9"
-
 .PHONY: help-install
 help-install:
 	@printf '%b\n' "Target: install"
-	@printf '%b\n' ""
 	@printf '%b\n' "Installs the application to GOPATH/bin."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:26"
@@ -83,14 +71,6 @@ help-test:
 	@printf '%b\n' "Runs the test suite."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/Makefile:18"
-
-.PHONY: help-update-help
-help-update-help:
-	@printf '%b\n' "Target: update-help"
-	@printf '%b\n' ""
-	@printf '%b\n' "Regenerates help.mk from source Makefiles."
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/uncategorized-targets/help.mk:98"
 
 # Explicit target to regenerate help.mk
 .PHONY: update-help

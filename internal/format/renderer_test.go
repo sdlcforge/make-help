@@ -385,7 +385,6 @@ func TestRenderDetailedTarget_Complete(t *testing.T) {
 	assert.Contains(t, output, "- GOOS: Target operating system")
 	assert.Contains(t, output, "- GOARCH: Target architecture")
 	assert.Contains(t, output, "- DEBUG: Enable debug symbols")
-	assert.Contains(t, output, "Documentation:")
 	assert.Contains(t, output, "Build the project.")
 	assert.Contains(t, output, "This compiles all source files and generates the binary.")
 	assert.Contains(t, output, "The output is placed in the bin/ directory.")
@@ -848,9 +847,8 @@ func TestRenderDetailedForMakefile_Complete(t *testing.T) {
 	assert.Contains(t, lines, "Variables:")
 	assert.Contains(t, lines, "  - GOOS: Target OS")
 	assert.Contains(t, lines, "  - GOARCH: Target architecture")
-	assert.Contains(t, lines, "Documentation:")
-	assert.Contains(t, lines, "  Build the project.")
-	assert.Contains(t, lines, "  This compiles all source files.")
+	assert.Contains(t, lines, "Build the project.")
+	assert.Contains(t, lines, "This compiles all source files.")
 	assert.Contains(t, lines, "Source: /path/to/Makefile:42")
 }
 

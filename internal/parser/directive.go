@@ -18,6 +18,11 @@ func IsTargetLine(line string) bool {
 		return false
 	}
 
+	// Comment lines start with # - skip those
+	if strings.HasPrefix(line, "#") {
+		return false
+	}
+
 	// Must contain a colon to be a target definition
 	return strings.Contains(line, ":")
 }

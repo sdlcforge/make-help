@@ -2,7 +2,7 @@
 # Regenerate with: make-help --no-color
 
 MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile $(MAKE_HELP_DIR)help.mk
+MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile
 
 ## !category Help
 .PHONY: help
@@ -29,10 +29,6 @@ help:
 	@printf '%b\n' "  - serve run, dev: Runs the application locally."
 	@printf '%b\n' "    Vars: PORT Server port (default: 8080), DEBUG Enable debug mode (default: false)"
 	@printf '%b\n' "  - watch: Watches for changes and rebuilds."
-	@printf '%b\n' ""
-	@printf '%b\n' "Help:"
-	@printf '%b\n' "  - help: Displays help for available targets."
-	@printf '%b\n' "  - update-help: Regenerates help.mk from source Makefiles."
 	@printf '%b\n' ""
 	@printf '%b\n' "Maintenance:"
 	@printf '%b\n' "  - clean: Removes all build artifacts."
@@ -71,7 +67,6 @@ help-build-all:
 .PHONY: help-build-debug
 help-build-debug:
 	@printf '%b\n' "Target: build-debug"
-	@printf '%b\n' ""
 	@printf '%b\n' "Builds with debug symbols and race detector."
 	@printf '%b\n' "NOTE: Inherits \"Build\" category from above (no !category needed)"
 	@printf '%b\n' ""
@@ -80,7 +75,6 @@ help-build-debug:
 .PHONY: help-generate
 help-generate:
 	@printf '%b\n' "Target: generate"
-	@printf '%b\n' ""
 	@printf '%b\n' "Generates code (mocks, protobuf, etc)."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:59"
@@ -100,31 +94,13 @@ help-serve:
 .PHONY: help-watch
 help-watch:
 	@printf '%b\n' "Target: watch"
-	@printf '%b\n' ""
 	@printf '%b\n' "Watches for changes and rebuilds."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:54"
 
-.PHONY: help-help
-help-help:
-	@printf '%b\n' "Target: help"
-	@printf '%b\n' ""
-	@printf '%b\n' "Displays help for available targets."
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/help.mk:10"
-
-.PHONY: help-update-help
-help-update-help:
-	@printf '%b\n' "Target: update-help"
-	@printf '%b\n' ""
-	@printf '%b\n' "Regenerates help.mk from source Makefiles."
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/help.mk:182"
-
 .PHONY: help-clean
 help-clean:
 	@printf '%b\n' "Target: clean"
-	@printf '%b\n' ""
 	@printf '%b\n' "Removes all build artifacts."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:64"
@@ -132,7 +108,6 @@ help-clean:
 .PHONY: help-deps
 help-deps:
 	@printf '%b\n' "Target: deps"
-	@printf '%b\n' ""
 	@printf '%b\n' "Updates dependencies."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:69"
@@ -170,7 +145,6 @@ help-test:
 .PHONY: help-test-coverage
 help-test-coverage:
 	@printf '%b\n' "Target: test-coverage"
-	@printf '%b\n' ""
 	@printf '%b\n' "Runs tests with coverage report."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:35"

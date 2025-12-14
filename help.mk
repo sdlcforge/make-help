@@ -31,73 +31,59 @@ help:
 	@printf '%b\n' "  - \033[1;32mqa\033[0m: \033[0;37mRun all quality checks (test.all + lint).\033[0m"
 	@printf '%b\n' ""
 	@printf '%b\n' "\033[1;36mTest:\033[0m"
-	@printf '%b\n' "  - \033[1;32mtest\033[0m \033[0;33mt\033[0m: \033[0;37mRun unit tests\033[0m"
-	@printf '%b\n' "  - \033[1;32mtest.all\033[0m: \033[0;37mRun all tests (unit + integration)\033[0m"
-	@printf '%b\n' "  - \033[1;32mtest.integration\033[0m: \033[0;37mRun integration tests only\033[0m"
+	@printf '%b\n' "  - \033[1;32mtest\033[0m \033[0;33mt\033[0m: \033[0;37mRun unit tests.\033[0m"
+	@printf '%b\n' "  - \033[1;32mtest.all\033[0m: \033[0;37mRun all tests (unit + integration).\033[0m"
+	@printf '%b\n' "  - \033[1;32mtest.integration\033[0m: \033[0;37mRun integration tests.\033[0m"
 	@printf '%b\n' "  - \033[1;32mtest.unit\033[0m: \033[0;37mRun unit tests.\033[0m"
 
 .PHONY: help-build
 help-build:
 	@printf '%b\n' "\033[1;32mTarget: build\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  "
-	@printf '%b\n' "  Builds the make-help binary."
+	@printf '%b\n' "Builds the make-help binary."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:10"
 
 .PHONY: help-clean
 help-clean:
 	@printf '%b\n' "\033[1;32mTarget: clean\033[0m"
-	@printf '%b\n' ""
-	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  Deletes all built artifacts."
+	@printf '%b\n' "Deletes all built artifacts."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:17"
 
 .PHONY: help-help
 help-help:
 	@printf '%b\n' "\033[1;32mTarget: help\033[0m"
-	@printf '%b\n' ""
-	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  Displays help for available targets."
+	@printf '%b\n' "Displays help for available targets."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/help.mk:10"
 
 .PHONY: help-update-help
 help-update-help:
 	@printf '%b\n' "\033[1;32mTarget: update-help\033[0m"
+	@printf '%b\n' "Regenerates help.mk from source Makefiles."
 	@printf '%b\n' ""
-	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  Regenerates help.mk from source Makefiles."
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/help.mk:147"
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/help.mk:136"
 
 .PHONY: help-lint
 help-lint:
 	@printf '%b\n' "\033[1;32mTarget: lint\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  "
-	@printf '%b\n' "  Run golangci-lint"
+	@printf '%b\n' "Run golangci-lint"
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:49"
 
 .PHONY: help-lint-fix
 help-lint-fix:
 	@printf '%b\n' "\033[1;32mTarget: lint-fix\033[0m"
-	@printf '%b\n' ""
-	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  Run golangci-lint with auto-fix"
+	@printf '%b\n' "Run golangci-lint with auto-fix"
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:54"
 
 .PHONY: help-qa
 help-qa:
 	@printf '%b\n' "\033[1;32mTarget: qa\033[0m"
-	@printf '%b\n' ""
-	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  Run all quality checks (test.all + lint)."
+	@printf '%b\n' "Run all quality checks (test.all + lint)."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:59"
 
@@ -106,27 +92,21 @@ help-test:
 	@printf '%b\n' "\033[1;32mTarget: test\033[0m"
 	@printf '%b\n' "\033[0;33mAliases: t\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  "
-	@printf '%b\n' "  Run unit tests"
+	@printf '%b\n' "Run unit tests."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:31"
 
 .PHONY: help-test.all
 help-test.all:
 	@printf '%b\n' "\033[1;32mTarget: test.all\033[0m"
-	@printf '%b\n' ""
-	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  Run all tests (unit + integration)"
+	@printf '%b\n' "Run all tests (unit + integration)."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:43"
 
 .PHONY: help-test.integration
 help-test.integration:
 	@printf '%b\n' "\033[1;32mTarget: test.integration\033[0m"
-	@printf '%b\n' ""
-	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  Run integration tests only"
+	@printf '%b\n' "Run integration tests. Use 'test.all' to run all tests."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:38"
 
@@ -134,9 +114,7 @@ help-test.integration:
 help-test.unit:
 	@printf '%b\n' "\033[1;32mTarget: test.unit\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  "
-	@printf '%b\n' "  Run unit tests. Use 'test.all' to run all tests."
+	@printf '%b\n' "Run unit tests. Use 'test.all' to run all tests."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:24"
 

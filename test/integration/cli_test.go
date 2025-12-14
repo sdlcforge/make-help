@@ -379,7 +379,6 @@ func TestDetailedHelp_DocumentedTarget(t *testing.T) {
 	assert.Contains(t, stdout, "OUTPUT_DIR: Directory for build output")
 
 	// Should show full documentation (not just summary)
-	assert.Contains(t, stdout, "Documentation:")
 	assert.Contains(t, stdout, "Build the project.")
 	assert.Contains(t, stdout, "This compiles all source files and generates")
 	assert.Contains(t, stdout, "the binary in the output directory.")
@@ -456,7 +455,6 @@ func TestDetailedHelp_MinimalTarget(t *testing.T) {
 	assert.Contains(t, stdout, "Target: build")
 
 	// Should show documentation
-	assert.Contains(t, stdout, "Documentation:")
 	assert.Contains(t, stdout, "Build the project")
 
 	// Should not have aliases or variables for this simple target

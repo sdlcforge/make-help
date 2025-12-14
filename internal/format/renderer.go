@@ -165,17 +165,15 @@ func (r *Renderer) RenderDetailedTarget(target *model.Target) string {
 		}
 	}
 
-	// Full documentation
+	// Full documentation (blank line only after Variables section)
 	if len(target.Documentation) > 0 {
-		buf.WriteString("\n")
-		buf.WriteString(r.colors.Documentation)
-		buf.WriteString("Documentation:\n")
+		if len(target.Variables) > 0 {
+			buf.WriteString("\n")
+		}
 		for _, line := range target.Documentation {
-			buf.WriteString("  ")
 			buf.WriteString(line)
 			buf.WriteString("\n")
 		}
-		buf.WriteString(r.colors.Reset)
 	}
 
 	// Source information
@@ -350,14 +348,13 @@ func (r *Renderer) RenderDetailedForMakefile(target *model.Target) []string {
 		}
 	}
 
-	// Full documentation
+	// Full documentation (blank line only after Variables section)
 	if len(target.Documentation) > 0 {
-		lines = append(lines, escapeForMakefileEcho(""))
-		docHeader := r.colors.Documentation + "Documentation:" + r.colors.Reset
-		lines = append(lines, escapeForMakefileEcho(docHeader))
+		if len(target.Variables) > 0 {
+			lines = append(lines, escapeForMakefileEcho(""))
+		}
 		for _, line := range target.Documentation {
-			docLine := "  " + line
-			lines = append(lines, escapeForMakefileEcho(docLine))
+			lines = append(lines, escapeForMakefileEcho(line))
 		}
 	}
 

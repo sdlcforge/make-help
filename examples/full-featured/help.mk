@@ -2,7 +2,7 @@
 # Regenerate with: make-help --no-color
 
 MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile $(MAKE_HELP_DIR)help.mk
+MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile
 
 ## !category Help
 .PHONY: help
@@ -47,10 +47,6 @@ help:
 	@printf '%b\n' "  - docker-up docker-run: Runs the application in a Docker container."
 	@printf '%b\n' "    Vars: DOCKER_PORT Host port to bind (default: 8080)"
 	@printf '%b\n' ""
-	@printf '%b\n' "Help:"
-	@printf '%b\n' "  - help: Displays help for available targets."
-	@printf '%b\n' "  - update-help: Regenerates help.mk from source Makefiles."
-	@printf '%b\n' ""
 	@printf '%b\n' "Release:"
 	@printf '%b\n' "  - release: Creates a new release."
 	@printf '%b\n' "    Vars: RELEASE_DIR Directory for release artifacts (default: dist)"
@@ -61,7 +57,6 @@ help:
 help-clean:
 	@printf '%b\n' "Target: clean"
 	@printf '%b\n' "Aliases: c"
-	@printf '%b\n' ""
 	@printf '%b\n' "Removes all generated files."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:132"
@@ -69,7 +64,6 @@ help-clean:
 .PHONY: help-clean-all
 help-clean-all:
 	@printf '%b\n' "Target: clean-all"
-	@printf '%b\n' ""
 	@printf '%b\n' "Deep clean including caches."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:137"
@@ -77,7 +71,6 @@ help-clean-all:
 .PHONY: help-fmt
 help-fmt:
 	@printf '%b\n' "Target: fmt"
-	@printf '%b\n' ""
 	@printf '%b\n' "Formats all Go code."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:120"
@@ -96,7 +89,6 @@ help-lint:
 help-sec:
 	@printf '%b\n' "Target: sec"
 	@printf '%b\n' "Aliases: security"
-	@printf '%b\n' ""
 	@printf '%b\n' "Checks for security vulnerabilities."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:126"
@@ -124,7 +116,6 @@ help-build:
 help-install:
 	@printf '%b\n' "Target: install"
 	@printf '%b\n' "Aliases: i"
-	@printf '%b\n' ""
 	@printf '%b\n' "Installs the application to your GOPATH."
 	@printf '%b\n' "NOTE: Still in \"Core\" category"
 	@printf '%b\n' ""
@@ -168,7 +159,6 @@ help-dev:
 .PHONY: help-repl
 help-repl:
 	@printf '%b\n' "Target: repl"
-	@printf '%b\n' ""
 	@printf '%b\n' "Opens a REPL for interactive development."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:109"
@@ -209,22 +199,6 @@ help-docker-up:
 	@printf '%b\n' "Runs the application in a Docker container."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:73"
-
-.PHONY: help-help
-help-help:
-	@printf '%b\n' "Target: help"
-	@printf '%b\n' ""
-	@printf '%b\n' "Displays help for available targets."
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/help.mk:10"
-
-.PHONY: help-update-help
-help-update-help:
-	@printf '%b\n' "Target: update-help"
-	@printf '%b\n' ""
-	@printf '%b\n' "Regenerates help.mk from source Makefiles."
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/help.mk:260"
 
 .PHONY: help-release
 help-release:

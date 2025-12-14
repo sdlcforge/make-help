@@ -3,6 +3,7 @@ package discovery
 import (
 	"bytes"
 	"context"
+	"os"
 	"os/exec"
 )
 
@@ -30,8 +31,14 @@ func (e *DefaultExecutor) Execute(cmd string, args ...string) (string, string, e
 }
 
 // ExecuteContext runs a command with context support for timeout/cancellation.
+// It sets MAKE_HELP_GENERATING=1 in the child process environment to prevent
+// infinite recursion if the Makefile contains auto-regeneration rules.
 func (e *DefaultExecutor) ExecuteContext(ctx context.Context, cmd string, args ...string) (string, string, error) {
 	command := exec.CommandContext(ctx, cmd, args...)
+
+	// Set MAKE_HELP_GENERATING=1 in the child environment to prevent recursion.
+	// This is inherited by any process the child spawns (e.g., if make runs make-help).
+	command.Env = append(os.Environ(), "MAKE_HELP_GENERATING=1")
 
 	var stdout, stderr bytes.Buffer
 	command.Stdout = &stdout

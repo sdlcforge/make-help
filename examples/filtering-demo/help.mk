@@ -2,7 +2,7 @@
 # Regenerate with: make-help --no-color
 
 MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile $(MAKE_HELP_DIR)help.mk
+MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile
 
 ## !category Help
 .PHONY: help
@@ -24,15 +24,10 @@ help:
 	@printf '%b\n' "Deploy:"
 	@printf '%b\n' "  - deploy: Deploys to production."
 	@printf '%b\n' "    Vars: DEPLOY_ENV Target environment (staging, production)"
-	@printf '%b\n' ""
-	@printf '%b\n' "Help:"
-	@printf '%b\n' "  - help: Displays help for available targets."
-	@printf '%b\n' "  - update-help: Regenerates help.mk from source Makefiles."
 
 .PHONY: help-build
 help-build:
 	@printf '%b\n' "Target: build"
-	@printf '%b\n' ""
 	@printf '%b\n' "Compiles the project."
 	@printf '%b\n' "This is a documented target - always visible."
 	@printf '%b\n' ""
@@ -41,7 +36,6 @@ help-build:
 .PHONY: help-test
 help-test:
 	@printf '%b\n' "Target: test"
-	@printf '%b\n' ""
 	@printf '%b\n' "Runs tests."
 	@printf '%b\n' "Also documented - always visible."
 	@printf '%b\n' "NOTE: Inherits \"Build\" category from above"
@@ -58,22 +52,6 @@ help-deploy:
 	@printf '%b\n' "Documented and categorized."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/Makefile:28"
-
-.PHONY: help-help
-help-help:
-	@printf '%b\n' "Target: help"
-	@printf '%b\n' ""
-	@printf '%b\n' "Displays help for available targets."
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/help.mk:10"
-
-.PHONY: help-update-help
-help-update-help:
-	@printf '%b\n' "Target: update-help"
-	@printf '%b\n' ""
-	@printf '%b\n' "Regenerates help.mk from source Makefiles."
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/help.mk:82"
 
 # Explicit target to regenerate help.mk
 ## !category Help

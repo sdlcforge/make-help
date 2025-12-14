@@ -15,6 +15,15 @@ import (
 
 // runCreateHelpTarget generates and writes the help target file.
 func runCreateHelpTarget(config *Config) error {
+	// Recursion detection: if MAKE_HELP_GENERATING is set, we're being called
+	// from within a make process that was spawned by make-help. This indicates
+	// infinite recursion (make-help -> make -p -> auto-regen rule -> make-help).
+	if os.Getenv("MAKE_HELP_GENERATING") == "1" {
+		return fmt.Errorf("recursion detected: make-help was invoked from within a make process spawned by make-help. " +
+			"This usually happens when help.mk contains an auto-regeneration rule. " +
+			"Regenerate help.mk with the latest make-help to fix this issue")
+	}
+
 	// 1. Resolve Makefile path
 	makefilePath, err := discovery.ResolveMakefilePath(config.MakefilePath)
 	if err != nil {

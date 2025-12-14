@@ -78,8 +78,7 @@ func ExampleRenderer_RenderDetailedTarget() {
 	// Variables:
 	//   - VERBOSE: Enable verbose output
 	//
-	// Documentation:
-	//   Run all tests with verbose output.
+	// Run all tests with verbose output.
 	//
 	// Source: Makefile:15
 }
