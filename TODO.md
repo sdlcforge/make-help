@@ -16,7 +16,7 @@ This document consolidates outstanding findings from three parallel reviews:
 - [x] **Implement '--fix'**
   - same behavior and valid with our without '--lint'
 
-- [ ] **Add `-version` flag**
+- [x] **Add `-version` flag**
   - Issue: No way to display tool's own version
 
 - [x] **Add `--check` / `--lint` validation mode**
@@ -30,6 +30,8 @@ This document consolidates outstanding findings from three parallel reviews:
   - Docs: Updated README.md, components.md, developer-brief.md
 
 - [ ] **Move 'help.mk' to 'make/00-help.mk' by default**
+
+- [ ] **move the 'make-help' binary into ./bin.**
 
 ### Documentation
 
