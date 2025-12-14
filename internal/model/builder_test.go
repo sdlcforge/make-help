@@ -152,6 +152,61 @@ func TestBuild_MultipleCategories(t *testing.T) {
 	assert.True(t, categoryNames["Test"])
 }
 
+func TestBuild_CategorySwitchBehavior(t *testing.T) {
+	// Test that @category acts as a switch - subsequent targets
+	// inherit the category until another @category is encountered
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveCategory, Value: "Build", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "Compile the project.", SourceFile: "Makefile", LineNumber: 2},
+				{Type: parser.DirectiveDoc, Value: "Build with debug.", SourceFile: "Makefile", LineNumber: 5},
+				{Type: parser.DirectiveCategory, Value: "Test", SourceFile: "Makefile", LineNumber: 8},
+				{Type: parser.DirectiveDoc, Value: "Run unit tests.", SourceFile: "Makefile", LineNumber: 9},
+				{Type: parser.DirectiveDoc, Value: "Run integration tests.", SourceFile: "Makefile", LineNumber: 12},
+			},
+			TargetMap: map[string]int{
+				"build":       3,
+				"build-debug": 6,
+				"test":        10,
+				"test-integration": 13,
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.True(t, model.HasCategories)
+	assert.Len(t, model.Categories, 2)
+
+	// Find Build category - should have 2 targets
+	buildCat := findCategory(model, "Build")
+	require.NotNil(t, buildCat, "Build category should exist")
+	assert.Len(t, buildCat.Targets, 2, "Build category should have 2 targets")
+	targetNames := make(map[string]bool)
+	for _, target := range buildCat.Targets {
+		targetNames[target.Name] = true
+	}
+	assert.True(t, targetNames["build"], "Build category should contain 'build' target")
+	assert.True(t, targetNames["build-debug"], "Build category should contain 'build-debug' target")
+
+	// Find Test category - should have 2 targets
+	testCat := findCategory(model, "Test")
+	require.NotNil(t, testCat, "Test category should exist")
+	assert.Len(t, testCat.Targets, 2, "Test category should have 2 targets")
+	targetNames = make(map[string]bool)
+	for _, target := range testCat.Targets {
+		targetNames[target.Name] = true
+	}
+	assert.True(t, targetNames["test"], "Test category should contain 'test' target")
+	assert.True(t, targetNames["test-integration"], "Test category should contain 'test-integration' target")
+}
+
 func TestBuild_TargetWithVariables(t *testing.T) {
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
@@ -778,4 +833,258 @@ func TestBuild_CombinedFiltering(t *testing.T) {
 	assert.True(t, targetNames["clean"])
 	assert.True(t, targetNames["special"])
 	assert.False(t, targetNames["hidden"])
+}
+
+func TestBuild_CategoryReset(t *testing.T) {
+	// Test that @category _ resets the category to empty/uncategorized
+	// This should create a mixed categorization error without a default category
+	config := &BuilderConfig{DefaultCategory: "Misc"}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveCategory, Value: "Build", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "Build the project.", SourceFile: "Makefile", LineNumber: 2},
+				{Type: parser.DirectiveCategory, Value: "_", SourceFile: "Makefile", LineNumber: 5},
+				{Type: parser.DirectiveDoc, Value: "Clean artifacts.", SourceFile: "Makefile", LineNumber: 6},
+			},
+			TargetMap: map[string]int{
+				"build": 3,
+				"clean": 7,
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.True(t, model.HasCategories, "HasCategories should be true")
+	assert.Len(t, model.Categories, 2, "Should have 2 categories: Build and Misc")
+
+	// Find Build category - should have 1 target
+	buildCat := findCategory(model, "Build")
+	require.NotNil(t, buildCat, "Build category should exist")
+	assert.Len(t, buildCat.Targets, 1, "Build category should have 1 target")
+	assert.Equal(t, "build", buildCat.Targets[0].Name)
+
+	// Find Misc category (default applied to uncategorized)
+	miscCat := findCategory(model, "Misc")
+	require.NotNil(t, miscCat, "Misc category should exist")
+	assert.Len(t, miscCat.Targets, 1, "Misc category should have 1 target")
+	assert.Equal(t, "clean", miscCat.Targets[0].Name)
+}
+
+func TestBuild_CategoryResetMixedError(t *testing.T) {
+	// Test that @category _ creates mixed categorization error
+	// when there are both categorized and uncategorized targets
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveCategory, Value: "Build", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "Build the project.", SourceFile: "Makefile", LineNumber: 2},
+				{Type: parser.DirectiveCategory, Value: "_", SourceFile: "Makefile", LineNumber: 5},
+				{Type: parser.DirectiveDoc, Value: "Clean artifacts.", SourceFile: "Makefile", LineNumber: 6},
+			},
+			TargetMap: map[string]int{
+				"build": 3,
+				"clean": 7,
+			},
+		},
+	}
+
+	_, err := builder.Build(parsedFiles)
+
+	require.Error(t, err)
+	assert.IsType(t, &errors.MixedCategorizationError{}, err)
+}
+
+func TestBuild_CategoryResetWithDefaultCategory(t *testing.T) {
+	// Test that @category _ with --default-category resolves the mixed categorization
+	defaultCategory := "Other"
+	config := &BuilderConfig{DefaultCategory: defaultCategory}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveCategory, Value: "Build", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "Build the project.", SourceFile: "Makefile", LineNumber: 2},
+				{Type: parser.DirectiveCategory, Value: "_", SourceFile: "Makefile", LineNumber: 5},
+				{Type: parser.DirectiveDoc, Value: "Clean artifacts.", SourceFile: "Makefile", LineNumber: 6},
+			},
+			TargetMap: map[string]int{
+				"build": 3,
+				"clean": 7,
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.True(t, model.HasCategories)
+	assert.Len(t, model.Categories, 2, "Should have 2 categories: Build and Other")
+
+	// Find Build category
+	buildCat := findCategory(model, "Build")
+	require.NotNil(t, buildCat)
+	assert.Len(t, buildCat.Targets, 1)
+	assert.Equal(t, "build", buildCat.Targets[0].Name)
+
+	// Find Other category (default category applied to uncategorized)
+	otherCat := findCategory(model, "Other")
+	require.NotNil(t, otherCat, "Other category should exist")
+	assert.Len(t, otherCat.Targets, 1)
+	assert.Equal(t, "clean", otherCat.Targets[0].Name)
+}
+
+func TestBuild_CategoryResetMultipleTimes(t *testing.T) {
+	// Test that @category _ can be used multiple times
+	config := &BuilderConfig{DefaultCategory: "Misc"}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveCategory, Value: "Build", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "Build the project.", SourceFile: "Makefile", LineNumber: 2},
+				{Type: parser.DirectiveCategory, Value: "_", SourceFile: "Makefile", LineNumber: 5},
+				{Type: parser.DirectiveDoc, Value: "Clean artifacts.", SourceFile: "Makefile", LineNumber: 6},
+				{Type: parser.DirectiveCategory, Value: "Test", SourceFile: "Makefile", LineNumber: 9},
+				{Type: parser.DirectiveDoc, Value: "Run tests.", SourceFile: "Makefile", LineNumber: 10},
+				{Type: parser.DirectiveCategory, Value: "_", SourceFile: "Makefile", LineNumber: 13},
+				{Type: parser.DirectiveDoc, Value: "Show help.", SourceFile: "Makefile", LineNumber: 14},
+			},
+			TargetMap: map[string]int{
+				"build": 3,
+				"clean": 7,
+				"test":  11,
+				"help":  15,
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 3, "Should have 3 categories: Build, Test, and Misc")
+
+	// Find Build category
+	buildCat := findCategory(model, "Build")
+	require.NotNil(t, buildCat)
+	assert.Len(t, buildCat.Targets, 1)
+	assert.Equal(t, "build", buildCat.Targets[0].Name)
+
+	// Find Test category
+	testCat := findCategory(model, "Test")
+	require.NotNil(t, testCat)
+	assert.Len(t, testCat.Targets, 1)
+	assert.Equal(t, "test", testCat.Targets[0].Name)
+
+	// Find Misc category (default applied to both uncategorized targets)
+	miscCat := findCategory(model, "Misc")
+	require.NotNil(t, miscCat)
+	assert.Len(t, miscCat.Targets, 2, "Misc should have 2 targets from reset")
+	targetNames := make(map[string]bool)
+	for _, target := range miscCat.Targets {
+		targetNames[target.Name] = true
+	}
+	assert.True(t, targetNames["clean"])
+	assert.True(t, targetNames["help"])
+}
+
+func TestBuild_CategoryResetNoTargetsAfter(t *testing.T) {
+	// Test @category _ with no targets following it (edge case)
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveCategory, Value: "Build", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "Build the project.", SourceFile: "Makefile", LineNumber: 2},
+				{Type: parser.DirectiveCategory, Value: "_", SourceFile: "Makefile", LineNumber: 5},
+			},
+			TargetMap: map[string]int{
+				"build": 3,
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1, "Should only have Build category")
+	assert.Equal(t, "Build", model.Categories[0].Name)
+	assert.Len(t, model.Categories[0].Targets, 1)
+}
+
+func TestBuild_CategoryResetAtStart(t *testing.T) {
+	// Test @category _ at the start of a file (before any other category)
+	// All targets should be uncategorized
+	config := &BuilderConfig{DefaultCategory: "Misc"}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveCategory, Value: "_", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "Build the project.", SourceFile: "Makefile", LineNumber: 2},
+				{Type: parser.DirectiveDoc, Value: "Run tests.", SourceFile: "Makefile", LineNumber: 5},
+			},
+			TargetMap: map[string]int{
+				"build": 3,
+				"test":  6,
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	// With @category _ at start, HasCategories is true but all targets are uncategorized
+	// DefaultCategory "Misc" should collect them
+	assert.Len(t, model.Categories, 1)
+	assert.Equal(t, "Misc", model.Categories[0].Name)
+	assert.Len(t, model.Categories[0].Targets, 2)
+}
+
+func TestBuild_CategoryResetAtStartNoDefault(t *testing.T) {
+	// Test @category _ at start without default category
+	// This should NOT error - there's no mixing since no real categories exist.
+	// All targets are simply uncategorized.
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveCategory, Value: "_", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "Build the project.", SourceFile: "Makefile", LineNumber: 2},
+			},
+			TargetMap: map[string]int{
+				"build": 3,
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	// Should NOT error - no actual categories exist, just uncategorized targets
+	require.NoError(t, err)
+	// The targets end up in the uncategorized (empty name) bucket
+	assert.Len(t, model.Categories, 1)
+	assert.Equal(t, "", model.Categories[0].Name)
+	assert.Len(t, model.Categories[0].Targets, 1)
 }

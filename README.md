@@ -205,26 +205,46 @@ The first sentence becomes the summary in the help output.
 
 ### Categories
 
-Group related targets using `@category`:
+Group related targets using `@category`. The `@category` directive acts as a **switch** that applies to all subsequent targets until changed:
 
 ```makefile
 ## @category Build
 ## Build the project
-build:
+build:                    # category: Build
 	@echo "Building..."
 
-## @category Build
-## Compile source files
-compile:
+## Compile source files (still in Build category)
+compile:                  # category: Build (inherited)
 	@echo "Compiling..."
 
 ## @category Test
 ## Run unit tests
-test:
+test:                     # category: Test
 	@echo "Testing..."
+
+## Run integration tests (still in Test category)
+integration:              # category: Test (inherited)
+	@echo "Running integration tests..."
 ```
 
-**Note**: If you use categories, all documented targets must be categorized. Use `--default-category` to assign uncategorized targets to a default category.
+**Key Behaviors:**
+- **Sticky directive**: Once set, `@category` applies to all subsequent targets until another `@category` is encountered
+- **Reset to uncategorized**: Use `@category _` to reset the category to uncategorized (nil)
+- **Mixed categorization**: If you use categories, all documented targets must be categorized. Use `--default-category` to assign uncategorized targets to a default category
+
+**Example with reset:**
+
+```makefile
+## @category Build
+## Build the project
+build:                    # category: Build
+	@echo "Building..."
+
+## @category _
+## This target is uncategorized
+standalone:               # category: (none) - will error without --default-category
+	@echo "Standalone task..."
+```
 
 ### Aliases
 

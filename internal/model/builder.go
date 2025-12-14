@@ -252,6 +252,13 @@ func (b *Builder) processFile(
 				model.HasCategories = true
 				currentCategory = directive.Value
 
+				// Handle @category _ as reset to uncategorized
+				if currentCategory == "_" {
+					currentCategory = ""
+					// Don't create a category entry for "_"
+					break
+				}
+
 				// Create category if it doesn't exist
 				if _, exists := categoryMap[currentCategory]; !exists {
 					categoryMap[currentCategory] = &Category{

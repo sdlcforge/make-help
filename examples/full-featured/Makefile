@@ -3,10 +3,13 @@
 ##
 ## This example demonstrates all make-help directives and features:
 ## - @file for project-level documentation
-## - @category for organizing targets
+## - @category for organizing targets (sticky directive)
 ## - @var for documenting environment variables
 ## - @alias for target shortcuts
 ## - Multi-line documentation
+##
+## NOTE: @category acts as a switch - once set, it applies to all
+## subsequent targets until another @category is encountered.
 ##
 ## Use `make help` for a summary or `make help-<target>` for details.
 
@@ -25,11 +28,12 @@
 build:
 	@echo "Building version $(VERSION) (commit: $(COMMIT), date: $(BUILD_DATE))"
 
-## @category Core
 ## Runs the complete test suite with race detection.
 ##
 ## Includes unit tests, integration tests, and race condition detection.
 ## Set INTEGRATION=1 to include integration tests.
+##
+## NOTE: Inherits "Core" category from above
 ##
 ## @alias t
 ## @var TEST_FLAGS Additional go test flags
@@ -38,8 +42,8 @@ build:
 test:
 	@echo "Running tests with flags: $(TEST_FLAGS)"
 
-## @category Core
 ## Installs the application to your GOPATH.
+## NOTE: Still in "Core" category
 ## @alias i
 install: build
 	@echo "Installing application..."

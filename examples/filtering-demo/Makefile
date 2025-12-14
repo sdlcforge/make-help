@@ -15,9 +15,9 @@
 build:
 	@echo "Building..."
 
-## @category Build
 ## Runs tests.
 ## Also documented - always visible.
+## NOTE: Inherits "Build" category from above
 test:
 	@echo "Testing..."
 

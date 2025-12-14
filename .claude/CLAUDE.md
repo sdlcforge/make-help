@@ -66,13 +66,28 @@ CLI Layer → Discovery → Parser → Model Builder → Ordering → Summary �
 
 ```makefile
 ## @file                     # File-level docs (appears before targets)
-## @category Build           # Groups subsequent targets under "Build"
+## @category Build           # Switch: all subsequent targets use "Build" category
 ## @var CC [description]     # Documents environment variable
 ## @alias b, build-all       # Alternative target names
 ## Build the project         # Target documentation (first sentence = summary)
 build:
 	go build ./...
+
+## Test the project         # Still in "Build" category (inherited)
+test:
+	go test ./...
+
+## @category _               # Reset to uncategorized (underscore = reset)
+## Standalone task           # No category (will error if mixed with categorized)
+standalone:
+	@echo "Task"
 ```
+
+**Key @category Behavior:**
+- **Sticky directive**: Once set, applies to all subsequent targets until another `@category` is encountered
+- **Category inheritance**: Targets inherit the current category; no need to repeat `@category` for each target
+- **Reset syntax**: Use `@category _` to reset to uncategorized state
+- **Mixed categorization error**: Can't mix categorized and uncategorized targets (use `--default-category` to resolve)
 
 ## Test Fixtures
 
