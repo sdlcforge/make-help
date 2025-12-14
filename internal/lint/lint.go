@@ -1,0 +1,109 @@
+package lint
+
+import (
+	"fmt"
+	"sort"
+
+	"github.com/sdlcforge/make-help/internal/model"
+)
+
+// Severity represents the severity level of a lint warning.
+type Severity string
+
+const (
+	// SeverityWarning indicates a potential issue that should be reviewed.
+	SeverityWarning Severity = "warning"
+)
+
+// Warning represents a single lint issue found during analysis.
+type Warning struct {
+	// File is the path to the Makefile where the issue was found.
+	File string
+
+	// Line is the line number where the issue occurs (0 if not applicable).
+	Line int
+
+	// Severity is the severity level of this warning.
+	Severity Severity
+
+	// Message is a human-readable description of the issue.
+	Message string
+
+	// Context provides additional context (e.g., the problematic line content).
+	Context string
+}
+
+// CheckContext provides all data needed by lint checks.
+type CheckContext struct {
+	// HelpModel contains the parsed and built help model.
+	HelpModel *model.HelpModel
+
+	// PhonyTargets maps target names to their .PHONY status.
+	PhonyTargets map[string]bool
+
+	// Dependencies maps target names to their prerequisite targets.
+	Dependencies map[string][]string
+
+	// HasRecipe maps target names to whether they have a recipe.
+	HasRecipe map[string]bool
+
+	// DocumentedTargets contains the set of documented target names.
+	DocumentedTargets map[string]bool
+
+	// Aliases contains the set of all alias names (explicit and implicit).
+	Aliases map[string]bool
+}
+
+// CheckFunc is a function that performs a specific lint check.
+// It examines the CheckContext and returns a slice of warnings.
+type CheckFunc func(ctx *CheckContext) []Warning
+
+// LintResult contains the aggregated results of all lint checks.
+type LintResult struct {
+	// Warnings contains all lint warnings found, sorted by file and line.
+	Warnings []Warning
+
+	// HasWarnings returns true if any warnings were found.
+	HasWarnings bool
+}
+
+// Lint runs all registered checks on the provided context and returns the results.
+func Lint(ctx *CheckContext, checks []CheckFunc) *LintResult {
+	var allWarnings []Warning
+
+	for _, check := range checks {
+		warnings := check(ctx)
+		allWarnings = append(allWarnings, warnings...)
+	}
+
+	// Sort warnings by file and line number for consistent output
+	sort.Slice(allWarnings, func(i, j int) bool {
+		if allWarnings[i].File != allWarnings[j].File {
+			return allWarnings[i].File < allWarnings[j].File
+		}
+		return allWarnings[i].Line < allWarnings[j].Line
+	})
+
+	return &LintResult{
+		Warnings:    allWarnings,
+		HasWarnings: len(allWarnings) > 0,
+	}
+}
+
+// FormatWarning formats a single warning in compiler-style format.
+// Format: file:line: severity: message
+func FormatWarning(w Warning) string {
+	if w.Line > 0 {
+		msg := fmt.Sprintf("%s:%d: %s: %s", w.File, w.Line, w.Severity, w.Message)
+		if w.Context != "" {
+			msg += fmt.Sprintf("\n  | %s", w.Context)
+		}
+		return msg
+	}
+	// No line number available
+	msg := fmt.Sprintf("%s: %s: %s", w.File, w.Severity, w.Message)
+	if w.Context != "" {
+		msg += fmt.Sprintf("\n  | %s", w.Context)
+	}
+	return msg
+}

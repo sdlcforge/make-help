@@ -88,6 +88,9 @@ type Config struct {
 	// Only valid with CreateHelpTarget.
 	DryRun bool
 
+	// Lint enables lint mode to check documentation quality.
+	Lint bool
+
 	// Derived state (computed at runtime)
 
 	// UseColor is the resolved color setting based on ColorMode and terminal detection.

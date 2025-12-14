@@ -461,3 +461,72 @@ func TestDetailedHelp_MinimalTarget(t *testing.T) {
 	assert.NotContains(t, stdout, "Aliases:")
 	assert.NotContains(t, stdout, "Variables:")
 }
+
+func TestLintCommand_NoWarnings(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "lint-clean.mk")
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--lint", "--makefile-path", fixture)
+	require.NoError(t, err, "stderr: %s\nstdout: %s", stderr, stdout)
+
+	// Should have no output for clean Makefile
+	assert.Empty(t, stdout, "expected no warnings in output")
+
+	if len(stderr) > 0 {
+		// Only verbose messages allowed in stderr
+		assert.NotContains(t, stderr, "warning")
+	}
+}
+
+func TestLintCommand_WithWarnings(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "lint-issues.mk")
+
+	stdout, _, err := runMakeHelp(t, binary, "--lint", "--makefile-path", fixture)
+	// Should exit with code 1 when warnings are found
+	require.Error(t, err, "expected exit code 1 for warnings")
+	exitErr, ok := err.(*exec.ExitError)
+	require.True(t, ok, "error should be ExitError")
+	assert.Equal(t, 1, exitErr.ExitCode(), "expected exit code 1")
+
+	// Check for expected warnings in stdout
+	assert.Contains(t, stdout, "warning:", "should contain warning prefix")
+	assert.Contains(t, stdout, "undocumented phony target 'setup'", "should warn about setup")
+	assert.Contains(t, stdout, "undocumented phony target 'check'", "should warn about check")
+	assert.Contains(t, stdout, "does not end with punctuation", "should warn about missing punctuation")
+	assert.Contains(t, stdout, "Found", "should show warning count")
+
+	// Warnings should be in compiler-style format (file:line: severity: message)
+	assert.Regexp(t, `.*:\d+: warning:`, stdout, "warnings should include line numbers where available")
+}
+
+func TestLintCommand_InvalidFlags(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "basic.mk")
+
+	// --lint with --show-help should fail
+	_, _, err := runMakeHelp(t, binary, "--lint", "--show-help", "--makefile-path", fixture)
+	assert.Error(t, err, "should fail when combining --lint with --show-help")
+
+	// --lint with --remove-help should fail
+	_, _, err = runMakeHelp(t, binary, "--lint", "--remove-help", "--makefile-path", fixture)
+	assert.Error(t, err, "should fail when combining --lint with --remove-help")
+
+	// --lint with --dry-run should fail
+	_, _, err = runMakeHelp(t, binary, "--lint", "--dry-run", "--makefile-path", fixture)
+	assert.Error(t, err, "should fail when combining --lint with --dry-run")
+}
+
+func TestLintCommand_Verbose(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "lint-clean.mk")
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--lint", "--makefile-path", fixture, "--verbose")
+	require.NoError(t, err)
+
+	// Verbose mode should output to stderr
+	assert.Contains(t, stderr, "Using Makefile", "verbose should show Makefile path")
+	// stdout might contain "No warnings found" in verbose mode or be empty
+	// Just check it doesn't contain actual warnings
+	assert.NotContains(t, stdout, "warning:", "no warnings for clean Makefile")
+}

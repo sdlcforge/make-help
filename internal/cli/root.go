@@ -78,6 +78,19 @@ Documentation directives (in ## comments):
 				return fmt.Errorf("--dry-run cannot be used with --show-help")
 			}
 
+			// --lint validations
+			if config.Lint {
+				if config.ShowHelp {
+					return fmt.Errorf("--lint cannot be used with --show-help")
+				}
+				if config.RemoveHelpTarget {
+					return fmt.Errorf("--lint cannot be used with --remove-help")
+				}
+				if config.DryRun {
+					return fmt.Errorf("--lint cannot be used with --dry-run")
+				}
+			}
+
 			// Validate --help-file-rel-path is a relative path (no leading /)
 			if config.HelpFileRelPath != "" && strings.HasPrefix(config.HelpFileRelPath, "/") {
 				return fmt.Errorf("--help-file-rel-path must be a relative path (no leading '/')")
@@ -93,7 +106,9 @@ Documentation directives (in ## comments):
 			config.UseColor = ResolveColorMode(config)
 
 			// Dispatch to appropriate handler
-			if config.ShowHelp {
+			if config.Lint {
+				return runLint(config)
+			} else if config.ShowHelp {
 				if config.Target != "" {
 					return runDetailedHelp(config)
 				}
@@ -114,6 +129,8 @@ Documentation directives (in ## comments):
 		"remove-help", false, "Remove help target from Makefile")
 	rootCmd.Flags().BoolVar(&config.DryRun,
 		"dry-run", false, "Show what files would be created/modified without making changes")
+	rootCmd.Flags().BoolVar(&config.Lint,
+		"lint", false, "Check documentation quality and report issues")
 	rootCmd.Flags().StringVar(&config.Target,
 		"target", "", "Show detailed help for a specific target (requires --show-help)")
 
@@ -153,6 +170,7 @@ Documentation directives (in ## comments):
 	annotateFlag(rootCmd, "show-help", modeGroupLabel)
 	annotateFlag(rootCmd, "remove-help", modeGroupLabel)
 	annotateFlag(rootCmd, "dry-run", modeGroupLabel)
+	annotateFlag(rootCmd, "lint", modeGroupLabel)
 	annotateFlag(rootCmd, "target", modeGroupLabel)
 
 	annotateFlag(rootCmd, "makefile-path", inputGroupLabel)
