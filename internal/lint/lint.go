@@ -3,6 +3,7 @@ package lint
 import (
 	"fmt"
 	"sort"
+	"sync"
 
 	"github.com/sdlcforge/make-help/internal/model"
 )
@@ -70,12 +71,34 @@ type LintResult struct {
 	HasWarnings bool
 }
 
-// Lint runs all registered checks on the provided context and returns the results.
+// Lint runs all registered checks on the provided context in parallel using goroutines
+// and returns the combined results.
 func Lint(ctx *CheckContext, checks []CheckFunc) *LintResult {
-	var allWarnings []Warning
+	// Use a channel to collect warnings from all goroutines
+	warningsChan := make(chan []Warning, len(checks))
 
+	// Use a WaitGroup to wait for all checks to complete
+	var wg sync.WaitGroup
+
+	// Launch each check in its own goroutine
 	for _, check := range checks {
-		warnings := check(ctx)
+		wg.Add(1)
+		go func(checkFn CheckFunc) {
+			defer wg.Done()
+			warnings := checkFn(ctx)
+			warningsChan <- warnings
+		}(check)
+	}
+
+	// Close channel after all goroutines complete
+	go func() {
+		wg.Wait()
+		close(warningsChan)
+	}()
+
+	// Collect all warnings from the channel
+	var allWarnings []Warning
+	for warnings := range warningsChan {
 		allWarnings = append(allWarnings, warnings...)
 	}
 
