@@ -60,6 +60,10 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	buf.WriteString("\n")
 
 	// Main help target with static content
+	// If source Makefiles use categories, add category directive for consistency
+	if config.HelpModel.HasCategories {
+		buf.WriteString("## !category Help\n")
+	}
 	buf.WriteString(".PHONY: help\n")
 	buf.WriteString("## Displays help for available targets.\n")
 	buf.WriteString("help:\n")
@@ -161,7 +165,13 @@ func generateRegenerationTarget(config *GeneratorConfig) string {
 	flags := buildRegenerateFlags(config)
 
 	buf.WriteString("# Explicit target to regenerate help.mk\n")
+	// If source Makefiles use categories, add category directive for consistency
+	// (uses same "Help" category as the help target)
+	if config.HelpModel.HasCategories {
+		buf.WriteString("## !category Help\n")
+	}
 	buf.WriteString(".PHONY: update-help\n")
+	buf.WriteString("## Regenerates help.mk from source Makefiles.\n")
 	buf.WriteString("update-help:\n")
 	buf.WriteString(fmt.Sprintf("\t@make-help --makefile-path $(MAKE_HELP_DIR)Makefile%s || \\\n", flags))
 	buf.WriteString(fmt.Sprintf("\t npx make-help --makefile-path $(MAKE_HELP_DIR)Makefile%s || \\\n", flags))

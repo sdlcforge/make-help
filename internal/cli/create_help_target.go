@@ -109,25 +109,7 @@ func runCreateHelpTarget(config *Config) error {
 		fmt.Fprintf(os.Stderr, "Found %d documented target(s)\n", len(documentedTargets))
 	}
 
-	// 8. Check for help-<target> conflicts
-	existingTargets := make(map[string]bool)
-	for _, t := range targetsResult.Targets {
-		existingTargets[t] = true
-	}
-
-	for _, t := range documentedTargets {
-		helpTargetName := "help-" + t
-		if existingTargets[helpTargetName] {
-			return fmt.Errorf("cannot generate %s target - target already exists in Makefile\nConsider renaming your existing %s target", helpTargetName, helpTargetName)
-		}
-	}
-
-	// Also check for 'help' conflict
-	if existingTargets["help"] {
-		return fmt.Errorf("cannot generate help target - target already exists in Makefile")
-	}
-
-	// 9. Determine target file location
+	// 8. Determine target file location
 	var targetFile string
 	var needsInclude bool
 	if config.DryRun {
