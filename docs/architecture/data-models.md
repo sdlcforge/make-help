@@ -18,9 +18,9 @@ Core data structures used throughout the make-help system.
 ```go
 // HelpModel represents the complete parsed help documentation
 type HelpModel struct {
-    FileDocs     []string              // @file documentation sections (ordered)
+    FileDocs     []string              // !file documentation sections (ordered)
     Categories   []Category            // Ordered list of categories
-    HasCategories bool                 // True if any @category directives found
+    HasCategories bool                 // True if any !category directives found
     DefaultCategory string             // Category for uncategorized targets
 }
 
@@ -34,7 +34,7 @@ type Category struct {
 // Target represents a documented target
 type Target struct {
     Name           string              // Primary target name
-    Aliases        []string            // Alternative names (@alias)
+    Aliases        []string            // Alternative names (!alias)
     Documentation  []string            // Full documentation lines
     Summary        string              // Extracted summary (computed)
     Variables      []Variable          // Associated environment variables
@@ -51,7 +51,7 @@ type Variable struct {
 
 // Directive represents a parsed documentation directive
 type Directive struct {
-    Type          DirectiveType        // @file, @category, @var, @alias, or doc
+    Type          DirectiveType        // !file, !category, !var, !alias, or doc
     Value         string               // Directive value/content
     SourceFile    string               // File where directive appears
     LineNumber    int                  // Line number

@@ -1,12 +1,12 @@
-## @file
+## !file
 ## Main Makefile
 
-## @category Core
+## !category Core
 ## Build everything
 all: build test
 	@echo done
 
-## @category Core
+## !category Core
 ## Build the project
 build:
 	@echo building

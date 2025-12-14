@@ -19,7 +19,7 @@ func TestIsDocumentationLine(t *testing.T) {
 		},
 		{
 			name:     "documentation line with directive",
-			line:     "## @category Build",
+			line:     "## !category Build",
 			expected: true,
 		},
 		{

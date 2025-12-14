@@ -170,7 +170,7 @@ func TestDefaultCategoryFlag(t *testing.T) {
 
 	// Create a Makefile with a single categorized target
 	err := os.WriteFile(makefilePath, []byte(`
-## @category Build
+## !category Build
 ## Build the project
 build:
 	@echo building
@@ -336,11 +336,11 @@ func TestOutputFormat(t *testing.T) {
 func TestFileDocumentation(t *testing.T) {
 	binary := buildBinary(t)
 
-	// Create a Makefile with inline @file documentation (on same line)
+	// Create a Makefile with inline !file documentation (on same line)
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 	err := os.WriteFile(makefilePath, []byte(`
-## @file This is the file documentation
+## !file This is the file documentation
 ## Build the project
 build:
 	@echo building

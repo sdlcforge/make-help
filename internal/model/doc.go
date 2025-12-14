@@ -10,11 +10,11 @@
 // The model hierarchy is:
 //
 //	HelpModel
-//	├── FileDocs []string           // @file documentation
+//	├── FileDocs []string           // !file documentation
 //	└── Categories []Category
 //	    └── Targets []Target
-//	        ├── Aliases []string    // @alias directives
-//	        └── Variables []Variable // @var directives
+//	        ├── Aliases []string    // !alias directives
+//	        └── Variables []Variable // !var directives
 //
 // # Discovery Order
 //

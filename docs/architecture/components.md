@@ -40,10 +40,10 @@ Default behavior generates help.mk with embedded help text. Use flags for other 
   --remove-help         Remove generated help files
 
 Documentation directives (in ## comments):
-  @file         File-level documentation
-  @category     Group targets into categories
-  @var          Document environment variables
-  @alias        Define target aliases`,
+  !file         File-level documentation
+  !category     Group targets into categories
+  !var          Document environment variables
+  !alias        Define target aliases`,
         RunE: func(cmd *cobra.Command, args []string) error {
             // Normalize IncludeTargets from comma-separated + repeatable flags
             config.IncludeTargets = parseIncludeTargets(config.IncludeTargets)
@@ -341,24 +341,24 @@ func (s *Scanner) parseDirective(line string, lineNum int) Directive {
     }
 
     switch {
-    case strings.HasPrefix(content, "@file"):
+    case strings.HasPrefix(content, "!file"):
         directive.Type = DirectiveFile
-        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "@file"))
+        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!file"))
 
-    case strings.HasPrefix(content, "@category "):
+    case strings.HasPrefix(content, "!category "):
         directive.Type = DirectiveCategory
-        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "@category "))
+        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!category "))
         // SWITCH BEHAVIOR: Category is "sticky" - applies to all subsequent targets
-        // until changed. Use "@category _" to reset to uncategorized (nil).
+        // until changed. Use "!category _" to reset to uncategorized (nil).
         s.currentCategory = directive.Value
 
-    case strings.HasPrefix(content, "@var "):
+    case strings.HasPrefix(content, "!var "):
         directive.Type = DirectiveVar
-        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "@var "))
+        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!var "))
 
-    case strings.HasPrefix(content, "@alias "):
+    case strings.HasPrefix(content, "!alias "):
         directive.Type = DirectiveAlias
-        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "@alias "))
+        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!alias "))
 
     default:
         directive.Type = DirectiveDoc
@@ -409,14 +409,14 @@ func (s *Scanner) parseTarget(line string) string {
 ```
 
 **Key Design Decisions:**
-- **Stateful scanning to track current category**: `@category` sets the current category that applies to all following targents until another `@category` directive is encountered
+- **Stateful scanning to track current category**: `!category` sets the current category that applies to all following targents until another `!category` directive is encountered
 - **Pending documentation queue**: Documentation lines are queued and associated with the next target definition
 - **Simple regex-free parsing for robustness**: Target parsing uses string operations instead of complex regex
 - **Target name extraction handles grouped and variable targets**: Supports `foo:`, `foo&:`, and `$(VAR):` patterns
 
 **Error Handling:**
 - Invalid directive syntax (log warning, skip)
-- Malformed @var or @alias (log warning, skip)
+- Malformed !var or !alias (log warning, skip)
 
 ### 4 Model Builder
 
@@ -566,7 +566,7 @@ func (b *Builder) validateCategorization(model *HelpModel, targetMap map[string]
     return nil
 }
 
-// parseVarDirective parses @var directive: <NAME> - <description>
+// parseVarDirective parses !var directive: <NAME> - <description>
 func (b *Builder) parseVarDirective(value string) Variable {
     parts := strings.SplitN(value, " - ", 2)
     if len(parts) != 2 {
@@ -578,7 +578,7 @@ func (b *Builder) parseVarDirective(value string) Variable {
     }
 }
 
-// parseAliasDirective parses @alias directive: <name>[, <name>...]
+// parseAliasDirective parses !alias directive: <name>[, <name>...]
 func (b *Builder) parseAliasDirective(value string) []string {
     parts := strings.Split(value, ",")
     aliases := make([]string, 0, len(parts))

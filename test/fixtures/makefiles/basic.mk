@@ -1,4 +1,4 @@
-## @file
+## !file
 ## Basic Makefile for testing
 
 ## Build the project

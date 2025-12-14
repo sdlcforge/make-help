@@ -16,12 +16,12 @@ func TestCreateHelpTarget_DryRun(t *testing.T) {
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 	err := os.WriteFile(makefilePath, []byte(`
-## @category Build
+## !category Build
 ## Build the project
 build:
 	@echo building
 
-## @category Test
+## !category Test
 ## Run tests
 test:
 	@echo testing
@@ -191,12 +191,12 @@ func TestCreateHelpTarget_DryRunWithOptions(t *testing.T) {
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 	err := os.WriteFile(makefilePath, []byte(`
-## @category Build
+## !category Build
 ## Build the project
 build:
 	@echo building
 
-## @category Test
+## !category Test
 ## Run tests
 test:
 	@echo testing

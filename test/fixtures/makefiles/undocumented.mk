@@ -1,4 +1,4 @@
-## @file
+## !file
 ## Test fixture with documented, undocumented, and .PHONY targets
 
 ## Documented target.

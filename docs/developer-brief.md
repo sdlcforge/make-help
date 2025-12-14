@@ -228,7 +228,7 @@ This shows:
 - Verify file permissions
 
 **Issue:** "Mixed categorization" error
-- Check if some targets have `@category`, others don't
+- Check if some targets have `!category`, others don't
 - Use `--default-category Misc` to resolve
 - Or categorize all targets
 

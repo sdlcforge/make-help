@@ -10,7 +10,7 @@
 //
 //	Usage: make [<target>...] [<ENV_VAR>=<value>...]
 //
-//	<@file documentation>
+//	<!file documentation>
 //
 //	Targets:
 //

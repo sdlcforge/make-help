@@ -4,16 +4,16 @@ package parser
 type DirectiveType int
 
 const (
-	// DirectiveFile represents @file directive for file-level documentation.
+	// DirectiveFile represents !file directive for file-level documentation.
 	DirectiveFile DirectiveType = iota
 
-	// DirectiveCategory represents @category directive for target grouping.
+	// DirectiveCategory represents !category directive for target grouping.
 	DirectiveCategory
 
-	// DirectiveVar represents @var directive for environment variable documentation.
+	// DirectiveVar represents !var directive for environment variable documentation.
 	DirectiveVar
 
-	// DirectiveAlias represents @alias directive for target aliases.
+	// DirectiveAlias represents !alias directive for target aliases.
 	DirectiveAlias
 
 	// DirectiveDoc represents a regular documentation line (not a special directive).
@@ -40,13 +40,13 @@ func (d DirectiveType) String() string {
 
 // Directive represents a parsed documentation directive from a Makefile.
 type Directive struct {
-	// Type indicates the directive type (@file, @category, @var, @alias, or doc).
+	// Type indicates the directive type (!file, !category, !var, !alias, or doc).
 	Type DirectiveType
 
 	// Value contains the directive content after the directive keyword.
-	// For @category: the category name
-	// For @var: "NAME - description"
-	// For @alias: "alias1, alias2, ..."
+	// For !category: the category name
+	// For !var: "NAME - description"
+	// For !alias: "alias1, alias2, ..."
 	// For doc: the documentation text
 	Value string
 

@@ -1,22 +1,22 @@
-## @file
+## !file
 ## Categorized Makefile for testing
 
-## @category Build
+## !category Build
 ## Build the project
 build:
 	@echo building
 
-## @category Build
+## !category Build
 ## Compile sources
 compile:
 	@echo compiling
 
-## @category Test
+## !category Test
 ## Run unit tests
 test:
 	@echo testing
 
-## @category Test
+## !category Test
 ## Run integration tests
 integration:
 	@echo integration

@@ -334,12 +334,12 @@ func TestRootCmd_CategoryOrder(t *testing.T) {
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 	err := os.WriteFile(makefilePath, []byte(`
-## @category Build
+## !category Build
 ## Build the project
 build:
 	@echo build
 
-## @category Test
+## !category Test
 ## Run tests
 test:
 	@echo test
@@ -365,7 +365,7 @@ func TestRootCmd_DefaultCategory(t *testing.T) {
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 	err := os.WriteFile(makefilePath, []byte(`
-## @category Build
+## !category Build
 ## Build the project
 build:
 	@echo build
@@ -409,17 +409,17 @@ func TestRunHelp_Success(t *testing.T) {
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 	err := os.WriteFile(makefilePath, []byte(`
-## @file
+## !file
 ## This is a test Makefile
 
-## @category Build
+## !category Build
 ## Build the project
 ## This target compiles everything.
-## @var VERBOSE Print verbose output
+## !var VERBOSE Print verbose output
 build:
 	@echo build
 
-## @alias t
+## !alias t
 ## Run tests
 test:
 	@echo test
@@ -439,17 +439,17 @@ func TestRunHelp_WithOrdering(t *testing.T) {
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 	err := os.WriteFile(makefilePath, []byte(`
-## @category Build
+## !category Build
 ## Build the project
 build:
 	@echo build
 
-## @category Test
+## !category Test
 ## Run tests
 test:
 	@echo test
 
-## @category Deploy
+## !category Deploy
 ## Deploy the project
 deploy:
 	@echo deploy
@@ -508,7 +508,7 @@ func TestRunHelp_WithDefaultCategory(t *testing.T) {
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 	err := os.WriteFile(makefilePath, []byte(`
-## @category Build
+## !category Build
 ## Build the project
 build:
 	@echo build
@@ -533,12 +533,12 @@ func TestRunHelp_CategoryOrder(t *testing.T) {
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 	err := os.WriteFile(makefilePath, []byte(`
-## @category Build
+## !category Build
 ## Build the project
 build:
 	@echo build
 
-## @category Test
+## !category Test
 ## Run tests
 test:
 	@echo test
@@ -559,7 +559,7 @@ func TestRunHelp_InvalidCategoryOrder(t *testing.T) {
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 	err := os.WriteFile(makefilePath, []byte(`
-## @category Build
+## !category Build
 ## Build the project
 build:
 	@echo build

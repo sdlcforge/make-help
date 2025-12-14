@@ -23,7 +23,7 @@ func TestScanContent_FileDirective(t *testing.T) {
 	}{
 		{
 			name: "file directive without description",
-			content: `## @file
+			content: `## !file
 build:
 	echo "building"`,
 			expected: []Directive{
@@ -32,7 +32,7 @@ build:
 		},
 		{
 			name: "file directive with description",
-			content: `## @file
+			content: `## !file
 ## This is the main build file
 ## with multiple lines of documentation
 build:
@@ -45,9 +45,9 @@ build:
 		},
 		{
 			name: "multiple file directives",
-			content: `## @file
+			content: `## !file
 ## First section
-## @file
+## !file
 ## Second section`,
 			expected: []Directive{
 				{Type: DirectiveFile, Value: "", SourceFile: "test.mk", LineNumber: 1},
@@ -80,7 +80,7 @@ func TestScanContent_CategoryDirective(t *testing.T) {
 	}{
 		{
 			name: "single category with target",
-			content: `## @category Build
+			content: `## !category Build
 ## Build the project
 build:
 	go build`,
@@ -91,12 +91,12 @@ build:
 		},
 		{
 			name: "multiple categories",
-			content: `## @category Build
+			content: `## !category Build
 ## Build the project
 build:
 	go build
 
-## @category Test
+## !category Test
 ## Run tests
 test:
 	go test`,
@@ -109,7 +109,7 @@ test:
 		},
 		{
 			name: "category with multi-word name",
-			content: `## @category Build and Deploy
+			content: `## !category Build and Deploy
 ## Build and deploy the project
 deploy:
 	./deploy.sh`,
@@ -143,7 +143,7 @@ func TestScanContent_VarDirective(t *testing.T) {
 	}{
 		{
 			name: "var directive with description",
-			content: `## @var PORT - The port to listen on
+			content: `## !var PORT - The port to listen on
 ## Start the server
 serve:
 	./server`,
@@ -154,8 +154,8 @@ serve:
 		},
 		{
 			name: "multiple var directives",
-			content: `## @var HOST - The hostname
-## @var PORT - The port number
+			content: `## !var HOST - The hostname
+## !var PORT - The port number
 ## Start the server
 serve:
 	./server`,
@@ -189,7 +189,7 @@ func TestScanContent_AliasDirective(t *testing.T) {
 	}{
 		{
 			name: "single alias",
-			content: `## @alias b
+			content: `## !alias b
 ## Build the project
 build:
 	go build`,
@@ -200,7 +200,7 @@ build:
 		},
 		{
 			name: "multiple aliases",
-			content: `## @alias b, compile
+			content: `## !alias b, compile
 ## Build the project
 build:
 	go build`,
@@ -364,7 +364,7 @@ build:
 		},
 		{
 			name: "category and docs associated",
-			content: `## @category Build
+			content: `## !category Build
 ## Build the project
 build:
 	go build`,
@@ -415,25 +415,25 @@ clean:
 }
 
 func TestScanContent_ComplexMakefile(t *testing.T) {
-	content := `## @file
+	content := `## !file
 ## Main build file for the project
 
-## @category Build
+## !category Build
 ## Build the application
-## @var GO_VERSION - Go version to use
-## @alias b, compile
+## !var GO_VERSION - Go version to use
+## !alias b, compile
 build:
 	go build -o app
 
-## @category Test
+## !category Test
 ## Run unit tests
-## @var COVERAGE - Enable coverage report
+## !var COVERAGE - Enable coverage report
 test:
 	go test ./...
 
-## @category Deploy
+## !category Deploy
 ## Deploy to production
-## @var ENV - Target environment
+## !var ENV - Target environment
 deploy:
 	./deploy.sh`
 
@@ -464,10 +464,10 @@ deploy:
 		}
 	}
 
-	assert.Equal(t, 1, fileCount)    // 1 @file
-	assert.Equal(t, 3, catCount)     // 3 @category
-	assert.Equal(t, 3, varCount)     // 3 @var
-	assert.Equal(t, 1, aliasCount)   // 1 @alias
+	assert.Equal(t, 1, fileCount)    // 1 !file
+	assert.Equal(t, 3, catCount)     // 3 !category
+	assert.Equal(t, 3, varCount)     // 3 !var
+	assert.Equal(t, 1, aliasCount)   // 1 !alias
 	assert.Equal(t, 3, docCount)     // 3 regular doc lines (one per target)
 }
 
@@ -496,7 +496,7 @@ test:
 }
 
 func TestScanContent_OnlyDocumentation(t *testing.T) {
-	content := `## @file
+	content := `## !file
 ## This is a documentation-only file
 ## With multiple lines`
 
@@ -517,7 +517,7 @@ func TestScanFile_FileNotFound(t *testing.T) {
 }
 
 func TestScanContent_SourceFileTracking(t *testing.T) {
-	content := `## @category Build
+	content := `## !category Build
 ## Build the project
 build:
 	go build`
@@ -562,7 +562,7 @@ func TestScanContent_StatePersistenceAcrossScans(t *testing.T) {
 	scanner := NewScanner()
 
 	// First scan
-	content1 := `## @category Build
+	content1 := `## !category Build
 ## Build
 build:
 	go build`

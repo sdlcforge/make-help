@@ -36,6 +36,7 @@ help-test: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Runs tests."
 	@echo "  Also documented - always visible."
+	@echo "  NOTE: Inherits \"Build\" category from above"
 	@echo ""
 	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/filtering-demo/Makefile:21"
 

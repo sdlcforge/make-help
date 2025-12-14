@@ -2,13 +2,13 @@ package model
 
 // HelpModel represents the complete parsed help documentation from all Makefiles.
 type HelpModel struct {
-	// FileDocs contains @file documentation sections in discovery order.
+	// FileDocs contains !file documentation sections in discovery order.
 	FileDocs []string
 
 	// Categories contains all documented categories with their targets.
 	Categories []Category
 
-	// HasCategories is true if any @category directives were found.
+	// HasCategories is true if any !category directives were found.
 	HasCategories bool
 
 	// DefaultCategory is the category name for uncategorized targets
@@ -18,7 +18,7 @@ type HelpModel struct {
 
 // Category represents a documentation category containing related targets.
 type Category struct {
-	// Name is the category name from @category directive.
+	// Name is the category name from !category directive.
 	// Empty string represents the default/uncategorized group.
 	Name string
 
@@ -35,7 +35,7 @@ type Target struct {
 	// Name is the primary target name.
 	Name string
 
-	// Aliases contains alternative names from @alias directives.
+	// Aliases contains alternative names from !alias directives.
 	Aliases []string
 
 	// Documentation contains the full documentation lines (without ## prefix).
@@ -44,7 +44,7 @@ type Target struct {
 	// Summary is the extracted first sentence (computed from Documentation).
 	Summary string
 
-	// Variables contains associated environment variables from @var directives.
+	// Variables contains associated environment variables from !var directives.
 	Variables []Variable
 
 	// DiscoveryOrder tracks when this target was first encountered
@@ -66,6 +66,6 @@ type Variable struct {
 	// Name is the variable name (e.g., "DEBUG", "PORT").
 	Name string
 
-	// Description is the full description text from @var directive.
+	// Description is the full description text from !var directive.
 	Description string
 }

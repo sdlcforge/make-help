@@ -1,10 +1,10 @@
 // Package parser scans Makefile content and extracts documentation directives.
 //
 // It recognizes the following directive types:
-//   - @file: File-level documentation
-//   - @category: Category grouping for targets
-//   - @var: Environment variable documentation
-//   - @alias: Target aliases
+//   - !file: File-level documentation
+//   - !category: Category grouping for targets
+//   - !var: Environment variable documentation
+//   - !alias: Target aliases
 //
 // # Documentation Syntax
 //
@@ -40,7 +40,7 @@
 //	       │                                │
 //	       │ Doc line (##)                  │ Target line (foo:)
 //	       │ - Queue to pendingDocs         │ - No docs to attach
-//	       │ - @file goes to output         │ - Continue
+//	       │ - !file goes to output         │ - Continue
 //	       │                                │
 //	       v                                │
 //	┌─────────────────────────────────────┐ │
@@ -70,12 +70,12 @@
 //
 // State Variables:
 //   - pendingDocs: Queue of directives awaiting target association
-//   - currentCategory: Active category from last @category directive
+//   - currentCategory: Active category from last !category directive
 //   - currentFile: Source file path for error reporting
 //
 // Key Behaviors:
-//   - @file directives bypass pendingDocs and go directly to output
-//   - @category directives update currentCategory state AND queue to pendingDocs
+//   - !file directives bypass pendingDocs and go directly to output
+//   - !category directives update currentCategory state AND queue to pendingDocs
 //   - Orphaned docs (followed by non-target line) are discarded
 //   - Multiple doc blocks can exist; each associates with the next target
 package parser

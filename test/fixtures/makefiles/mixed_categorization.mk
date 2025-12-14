@@ -1,4 +1,4 @@
-## @category Build
+## !category Build
 ## Build the project
 build:
 	@echo building

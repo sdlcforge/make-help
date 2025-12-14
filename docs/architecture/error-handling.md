@@ -21,7 +21,7 @@ Error classification, types, and handling strategies in make-help.
 | Unknown category in --category-order | CRITICAL | Exit with list of available categories |
 | Make command execution failure | CRITICAL | Exit with stderr output |
 | Invalid directive syntax | WARNING | Log warning, skip directive, continue |
-| Malformed @var or @alias | WARNING | Log warning, best-effort parse |
+| Malformed !var or !alias | WARNING | Log warning, best-effort parse |
 | Duplicate help target | WARNING | Ask user to remove with --remove-help-target first |
 | File write failure | CRITICAL | Exit with error message |
 
@@ -70,7 +70,7 @@ func (e *MakeExecutionError) Error() string {
 
 **Scenario 1: Mixed Categorization**
 ```
-Problem: Some targets have @category, others don't
+Problem: Some targets have !category, others don't
 Detection: Model validator counts categorized vs uncategorized
 Action:
   - If --default-category set: assign uncategorized to default
@@ -93,10 +93,10 @@ Action: Return MakefileNotFoundError
 
 **Scenario 4: Invalid Directive Syntax**
 ```
-Problem: Malformed @var or @alias directive
+Problem: Malformed !var or !alias directive
 Detection: Parser fails to split on expected delimiter
 Action: Log warning, skip directive, continue parsing
-Example: "@var NODELIM" -> log "invalid @var directive at line X: missing ' - '"
+Example: "!var NODELIM" -> log "invalid !var directive at line X: missing ' - '"
 ```
 
 **Scenario 5: Make Command Failure**

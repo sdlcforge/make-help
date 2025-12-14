@@ -81,9 +81,9 @@ State:
 
 For each line:
   1. If line starts with "## ":
-     - Parse directive (detect @file, @category, @var, @alias, or doc)
-     - If @category: update currentCategory
-     - If @file: add to FileDocs immediately
+     - Parse directive (detect !file, !category, !var, !alias, or doc)
+     - If !category: update currentCategory
+     - If !file: add to FileDocs immediately
      - Else: add to pendingDocs
 
   2. Else if line is target definition (contains : or &:):

@@ -153,8 +153,8 @@ func TestBuild_MultipleCategories(t *testing.T) {
 }
 
 func TestBuild_CategorySwitchBehavior(t *testing.T) {
-	// Test that @category acts as a switch - subsequent targets
-	// inherit the category until another @category is encountered
+	// Test that !category acts as a switch - subsequent targets
+	// inherit the category until another !category is encountered
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -836,7 +836,7 @@ func TestBuild_CombinedFiltering(t *testing.T) {
 }
 
 func TestBuild_CategoryReset(t *testing.T) {
-	// Test that @category _ resets the category to empty/uncategorized
+	// Test that !category _ resets the category to empty/uncategorized
 	// This should create a mixed categorization error without a default category
 	config := &BuilderConfig{DefaultCategory: "Misc"}
 	builder := NewBuilder(config)
@@ -877,7 +877,7 @@ func TestBuild_CategoryReset(t *testing.T) {
 }
 
 func TestBuild_CategoryResetMixedError(t *testing.T) {
-	// Test that @category _ creates mixed categorization error
+	// Test that !category _ creates mixed categorization error
 	// when there are both categorized and uncategorized targets
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
@@ -905,7 +905,7 @@ func TestBuild_CategoryResetMixedError(t *testing.T) {
 }
 
 func TestBuild_CategoryResetWithDefaultCategory(t *testing.T) {
-	// Test that @category _ with --default-category resolves the mixed categorization
+	// Test that !category _ with --default-category resolves the mixed categorization
 	defaultCategory := "Other"
 	config := &BuilderConfig{DefaultCategory: defaultCategory}
 	builder := NewBuilder(config)
@@ -946,7 +946,7 @@ func TestBuild_CategoryResetWithDefaultCategory(t *testing.T) {
 }
 
 func TestBuild_CategoryResetMultipleTimes(t *testing.T) {
-	// Test that @category _ can be used multiple times
+	// Test that !category _ can be used multiple times
 	config := &BuilderConfig{DefaultCategory: "Misc"}
 	builder := NewBuilder(config)
 
@@ -1002,7 +1002,7 @@ func TestBuild_CategoryResetMultipleTimes(t *testing.T) {
 }
 
 func TestBuild_CategoryResetNoTargetsAfter(t *testing.T) {
-	// Test @category _ with no targets following it (edge case)
+	// Test !category _ with no targets following it (edge case)
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -1029,7 +1029,7 @@ func TestBuild_CategoryResetNoTargetsAfter(t *testing.T) {
 }
 
 func TestBuild_CategoryResetAtStart(t *testing.T) {
-	// Test @category _ at the start of a file (before any other category)
+	// Test !category _ at the start of a file (before any other category)
 	// All targets should be uncategorized
 	config := &BuilderConfig{DefaultCategory: "Misc"}
 	builder := NewBuilder(config)
@@ -1052,7 +1052,7 @@ func TestBuild_CategoryResetAtStart(t *testing.T) {
 	model, err := builder.Build(parsedFiles)
 
 	require.NoError(t, err)
-	// With @category _ at start, HasCategories is true but all targets are uncategorized
+	// With !category _ at start, HasCategories is true but all targets are uncategorized
 	// DefaultCategory "Misc" should collect them
 	assert.Len(t, model.Categories, 1)
 	assert.Equal(t, "Misc", model.Categories[0].Name)
@@ -1060,7 +1060,7 @@ func TestBuild_CategoryResetAtStart(t *testing.T) {
 }
 
 func TestBuild_CategoryResetAtStartNoDefault(t *testing.T) {
-	// Test @category _ at start without default category
+	// Test !category _ at start without default category
 	// This should NOT error - there's no mixing since no real categories exist.
 	// All targets are simply uncategorized.
 	config := &BuilderConfig{DefaultCategory: ""}

@@ -55,7 +55,7 @@ help-clean: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Removes all generated files."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:128"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:132"
 
 .PHONY: help-clean-all
 help-clean-all: $(MAKE_HELP_DIR)help.mk
@@ -64,7 +64,7 @@ help-clean-all: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Deep clean including caches."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:133"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:137"
 
 .PHONY: help-fmt
 help-fmt: $(MAKE_HELP_DIR)help.mk
@@ -73,7 +73,7 @@ help-fmt: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Formats all Go code."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:116"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:120"
 
 .PHONY: help-lint
 help-lint: $(MAKE_HELP_DIR)help.mk
@@ -84,7 +84,7 @@ help-lint: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Runs all linters."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:111"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:115"
 
 .PHONY: help-sec
 help-sec: $(MAKE_HELP_DIR)help.mk
@@ -94,7 +94,7 @@ help-sec: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Checks for security vulnerabilities."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:122"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:126"
 
 .PHONY: help-build
 help-build: $(MAKE_HELP_DIR)help.mk
@@ -114,7 +114,7 @@ help-build: $(MAKE_HELP_DIR)help.mk
 	@echo "  3. Outputs to bin/ directory"
 	@echo "  "
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:25"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:28"
 
 .PHONY: help-install
 help-install: $(MAKE_HELP_DIR)help.mk
@@ -123,8 +123,9 @@ help-install: $(MAKE_HELP_DIR)help.mk
 	@echo ""
 	@echo "Documentation:"
 	@echo "  Installs the application to your GOPATH."
+	@echo "  NOTE: Still in \"Core\" category"
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:44"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:48"
 
 .PHONY: help-test
 help-test: $(MAKE_HELP_DIR)help.mk
@@ -141,8 +142,10 @@ help-test: $(MAKE_HELP_DIR)help.mk
 	@echo "  Includes unit tests, integration tests, and race condition detection."
 	@echo "  Set INTEGRATION=1 to include integration tests."
 	@echo "  "
+	@echo "  NOTE: Inherits \"Core\" category from above"
+	@echo "  "
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:38"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:42"
 
 .PHONY: help-dev
 help-dev: $(MAKE_HELP_DIR)help.mk
@@ -159,7 +162,7 @@ help-dev: $(MAKE_HELP_DIR)help.mk
 	@echo "  Install air: go install github.com/cosmtrek/air@latest"
 	@echo "  "
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:100"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:104"
 
 .PHONY: help-repl
 help-repl: $(MAKE_HELP_DIR)help.mk
@@ -168,7 +171,7 @@ help-repl: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Opens a REPL for interactive development."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:105"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:109"
 
 .PHONY: help-docker-build
 help-docker-build: $(MAKE_HELP_DIR)help.mk
@@ -185,7 +188,7 @@ help-docker-build: $(MAKE_HELP_DIR)help.mk
 	@echo "  The image is tagged with both the version and 'latest'."
 	@echo "  "
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:56"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:60"
 
 .PHONY: help-docker-push
 help-docker-push: $(MAKE_HELP_DIR)help.mk
@@ -196,7 +199,7 @@ help-docker-push: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Pushes the Docker image to the registry."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:62"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:66"
 
 .PHONY: help-docker-up
 help-docker-up: $(MAKE_HELP_DIR)help.mk
@@ -208,7 +211,7 @@ help-docker-up: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Runs the application in a Docker container."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:69"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:73"
 
 .PHONY: help-release
 help-release: $(MAKE_HELP_DIR)help.mk
@@ -226,7 +229,7 @@ help-release: $(MAKE_HELP_DIR)help.mk
 	@echo "  4. Generates checksums"
 	@echo "  "
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:82"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:86"
 
 .PHONY: help-release-publish
 help-release-publish: $(MAKE_HELP_DIR)help.mk
@@ -237,7 +240,7 @@ help-release-publish: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Publishes release to GitHub."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:88"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/full-featured/Makefile:92"
 
 # Auto-regenerate help when source Makefiles change
 $(MAKE_HELP_DIR)help.mk: $(MAKE_HELP_MAKEFILES)

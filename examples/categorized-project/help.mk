@@ -12,10 +12,10 @@ help: $(MAKE_HELP_DIR)help.mk
 	@echo "Targets:"
 	@echo ""
 	@echo "Build:"
-	@echo "  - build: Builds the production binary with optimizations."
-	@echo "    Vars: LDFLAGS Linker flags for build"
-	@echo "  - build-all: Cross-compiles for multiple platforms."
+	@echo "  - #: Cross-compiles for multiple platforms."
 	@echo "    Vars: PLATFORMS Target platforms (default: linux/amd64,darwin/amd64)"
+	@echo "  - build: Categorized Project Example This example demonstrates using !category to organize targets into logical groups. Categories appear as section headers. Builds the production binary with optimizations."
+	@echo "    Vars: LDFLAGS Linker flags for build"
 	@echo "  - build-debug: Builds with debug symbols and race detector."
 	@echo ""
 	@echo "Development:"
@@ -37,6 +37,17 @@ help: $(MAKE_HELP_DIR)help.mk
 	@echo "    Vars: TEST_TIMEOUT Timeout for tests (default: 5m)"
 	@echo "  - test-coverage: Runs tests with coverage report."
 
+.PHONY: help-#
+help-#: $(MAKE_HELP_DIR)help.mk
+	@echo "Target: #"
+	@echo "Variables:"
+	@echo "  - PLATFORMS Target platforms (default: linux/amd64,darwin/amd64)"
+	@echo ""
+	@echo "Documentation:"
+	@echo "  Cross-compiles for multiple platforms."
+	@echo ""
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:23"
+
 .PHONY: help-build
 help-build: $(MAKE_HELP_DIR)help.mk
 	@echo "Target: build"
@@ -44,20 +55,14 @@ help-build: $(MAKE_HELP_DIR)help.mk
 	@echo "  - LDFLAGS Linker flags for build"
 	@echo ""
 	@echo "Documentation:"
+	@echo "  Categorized Project Example"
+	@echo "  "
+	@echo "  This example demonstrates using !category to organize targets"
+	@echo "  into logical groups. Categories appear as section headers."
+	@echo "  "
 	@echo "  Builds the production binary with optimizations."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:10"
-
-.PHONY: help-build-all
-help-build-all: $(MAKE_HELP_DIR)help.mk
-	@echo "Target: build-all"
-	@echo "Variables:"
-	@echo "  - PLATFORMS Target platforms (default: linux/amd64,darwin/amd64)"
-	@echo ""
-	@echo "Documentation:"
-	@echo "  Cross-compiles for multiple platforms."
-	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:21"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:13"
 
 .PHONY: help-build-debug
 help-build-debug: $(MAKE_HELP_DIR)help.mk
@@ -66,7 +71,7 @@ help-build-debug: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Builds with debug symbols and race detector."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:15"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:18"
 
 .PHONY: help-generate
 help-generate: $(MAKE_HELP_DIR)help.mk
@@ -75,7 +80,7 @@ help-generate: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Generates code (mocks, protobuf, etc)."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:56"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:59"
 
 .PHONY: help-serve
 help-serve: $(MAKE_HELP_DIR)help.mk
@@ -88,7 +93,7 @@ help-serve: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Runs the application locally."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:46"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:49"
 
 .PHONY: help-watch
 help-watch: $(MAKE_HELP_DIR)help.mk
@@ -97,7 +102,7 @@ help-watch: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Watches for changes and rebuilds."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:51"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:54"
 
 .PHONY: help-clean
 help-clean: $(MAKE_HELP_DIR)help.mk
@@ -106,7 +111,7 @@ help-clean: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Removes all build artifacts."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:61"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:64"
 
 .PHONY: help-deps
 help-deps: $(MAKE_HELP_DIR)help.mk
@@ -115,7 +120,7 @@ help-deps: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Updates dependencies."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:66"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:69"
 
 .PHONY: help-lint
 help-lint: $(MAKE_HELP_DIR)help.mk
@@ -126,7 +131,7 @@ help-lint: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Runs linters and formatters."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:72"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:75"
 
 .PHONY: help-bench
 help-bench: $(MAKE_HELP_DIR)help.mk
@@ -137,7 +142,7 @@ help-bench: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Runs benchmarks."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:38"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:41"
 
 .PHONY: help-test
 help-test: $(MAKE_HELP_DIR)help.mk
@@ -148,7 +153,7 @@ help-test: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Runs the full test suite."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:27"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:30"
 
 .PHONY: help-test-coverage
 help-test-coverage: $(MAKE_HELP_DIR)help.mk
@@ -157,7 +162,7 @@ help-test-coverage: $(MAKE_HELP_DIR)help.mk
 	@echo "Documentation:"
 	@echo "  Runs tests with coverage report."
 	@echo ""
-	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:32"
+	@echo "Source: /Users/zane/playground/sdlcforge/make-help/examples/categorized-project/Makefile:35"
 
 # Auto-regenerate help when source Makefiles change
 $(MAKE_HELP_DIR)help.mk: $(MAKE_HELP_MAKEFILES)

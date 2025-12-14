@@ -31,8 +31,8 @@ make-help --show-help --makefile-path examples/<example-name>/Makefile
 
 Demonstrates basic target documentation without categories. Targets appear in a flat list with their descriptions. Shows:
 - Basic `##` comment documentation
-- `@var` directives for environment variables
-- `@alias` directives for target shortcuts
+- `!var` directives for environment variables
+- `!alias` directives for target shortcuts
 - Multi-line target descriptions
 
 Best for small projects with fewer than 10 targets where grouping isn't necessary.
@@ -41,8 +41,8 @@ Best for small projects with fewer than 10 targets where grouping isn't necessar
 
 **When to use:** Organizing medium to large projects with logical groupings.
 
-Shows how to use `@category` to organize targets into sections like Build, Test, Development, and Maintenance. Each category appears as a header in the help output. Demonstrates:
-- `@category` directives for grouping related targets
+Shows how to use `!category` to organize targets into sections like Build, Test, Development, and Maintenance. Each category appears as a header in the help output. Demonstrates:
+- `!category` directives for grouping related targets
 - Consistent organization across multiple categories
 - Complete project structure (build, test, dev, maintenance workflows)
 
@@ -65,10 +65,10 @@ Best for understanding how to create public vs. internal/utility targets and con
 **When to use:** Comprehensive reference for all make-help features.
 
 Complete showcase of all available directives and features:
-- `@file` for project-level documentation
-- `@category` for organizing targets
-- `@var` for documenting environment variables
-- `@alias` for target shortcuts
+- `!file` for project-level documentation
+- `!category` for organizing targets
+- `!var` for documenting environment variables
+- `!alias` for target shortcuts
 - Multi-line documentation with detailed descriptions
 - Real-world examples (Docker, releases, development, code quality)
 
@@ -107,10 +107,10 @@ The help file will also auto-regenerate when you run `make help` if the source M
 
 | Feature | uncategorized | categorized | filtering | full-featured |
 |---------|---------------|-------------|-----------|---------------|
-| @file documentation | ✓ | ✓ | ✓ | ✓ |
-| @category | ✗ | ✓ | ✓ | ✓ |
-| @var | ✓ | ✓ | ✓ | ✓ |
-| @alias | ✓ | ✓ | ✗ | ✓ |
+| !file documentation | ✓ | ✓ | ✓ | ✓ |
+| !category | ✗ | ✓ | ✓ | ✓ |
+| !var | ✓ | ✓ | ✓ | ✓ |
+| !alias | ✓ | ✓ | ✗ | ✓ |
 | Multi-line docs | ✓ | ✗ | ✗ | ✓ |
 | Filtering demo | ✗ | ✗ | ✓ | ✗ |
 | Complexity | Simple | Medium | Medium | Complex |
@@ -121,7 +121,7 @@ The help file will also auto-regenerate when you run `make help` if the source M
 To use an example as a starting point for your project:
 
 1. Copy the Makefile structure you need
-2. Update the `@file` documentation with your project description
+2. Update the `!file` documentation with your project description
 3. Modify targets and categories to match your workflow
 4. Generate your help file:
    ```bash
@@ -152,8 +152,8 @@ Use multi-line documentation when targets need detailed explanations, prerequisi
 
 - **Keep it simple**: Start with basic documentation (uncategorized or categorized) and add complexity only when needed
 - **Consistency matters**: Use consistent category names and documentation style across targets
-- **Document variables**: Always use `@var` for environment variables users might need to set
-- **Use aliases**: Add `@alias` for common shortcuts (e.g., `b` for `build`, `t` for `test`)
+- **Document variables**: Always use `!var` for environment variables users might need to set
+- **Use aliases**: Add `!alias` for common shortcuts (e.g., `b` for `build`, `t` for `test`)
 - **Test filtering**: Use the filtering-demo patterns to keep internal/utility targets hidden from regular users
 - **Commit help files**: The generated help.mk files are self-contained and should be committed to your repository
 - **Auto-regeneration**: Help files will automatically regenerate when source Makefiles change (when running `make help`)

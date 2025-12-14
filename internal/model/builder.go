@@ -160,8 +160,8 @@ func (b *Builder) shouldIncludeTarget(target *Target) bool {
 //
 // Given this Makefile content:
 //
-//	Line 1:  ## @category Build      <- directive (category)
-//	Line 2:  ## @var CC Compiler     <- directive (var)
+//	Line 1:  ## !category Build      <- directive (category)
+//	Line 2:  ## !var CC Compiler     <- directive (var)
 //	Line 3:  ## Build the project    <- directive (doc)
 //	Line 4:  build:                  <- target
 //	Line 5:  ## Run tests            <- directive (doc)
@@ -179,8 +179,8 @@ func (b *Builder) shouldIncludeTarget(target *Target) bool {
 //
 // # Special Cases
 //
-//   - @file directives: Added to model.FileDocs (not associated with targets)
-//   - @category directives: Update currentCategory for subsequent targets
+//   - !file directives: Added to model.FileDocs (not associated with targets)
+//   - !category directives: Update currentCategory for subsequent targets
 //   - Duplicate targets: If a target was already processed from another file,
 //     skip it and clear pending state (first definition wins)
 //
@@ -252,7 +252,7 @@ func (b *Builder) processFile(
 				model.HasCategories = true
 				currentCategory = directive.Value
 
-				// Handle @category _ as reset to uncategorized
+				// Handle !category _ as reset to uncategorized
 				if currentCategory == "_" {
 					currentCategory = ""
 					// Don't create a category entry for "_"
@@ -314,7 +314,7 @@ func (b *Builder) processFile(
 	}
 }
 
-// parseVarDirective parses @var directive: NAME - description
+// parseVarDirective parses !var directive: NAME - description
 // or just NAME if no description is provided.
 func (b *Builder) parseVarDirective(value string) Variable {
 	parts := strings.SplitN(value, " - ", 2)
@@ -330,7 +330,7 @@ func (b *Builder) parseVarDirective(value string) Variable {
 	}
 }
 
-// parseAliasDirective parses @alias directive: alias1, alias2, ...
+// parseAliasDirective parses !alias directive: alias1, alias2, ...
 func (b *Builder) parseAliasDirective(value string) []string {
 	parts := strings.Split(value, ",")
 	aliases := make([]string, 0, len(parts))

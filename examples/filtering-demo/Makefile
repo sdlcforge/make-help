@@ -1,4 +1,4 @@
-## @file
+## !file
 ## Filtering Demo
 ##
 ## This example demonstrates target filtering with --include-target
@@ -9,7 +9,7 @@
 ##   make-help --makefile-path examples/filtering-demo/Makefile --include-target setup,check
 ##   make-help --makefile-path examples/filtering-demo/Makefile --include-all-phony
 
-## @category Build
+## !category Build
 ## Compiles the project.
 ## This is a documented target - always visible.
 build:
@@ -21,10 +21,10 @@ build:
 test:
 	@echo "Testing..."
 
-## @category Deploy
+## !category Deploy
 ## Deploys to production.
 ## Documented and categorized.
-## @var DEPLOY_ENV Target environment (staging, production)
+## !var DEPLOY_ENV Target environment (staging, production)
 deploy:
 	@echo "Deploying to $(DEPLOY_ENV)..."
 
@@ -61,6 +61,7 @@ _cleanup-temp:
 .PHONY: build test deploy setup check format _internal-task _cleanup-temp
 
 DEPLOY_ENV ?= staging
+
 
 
 include $(dir $(lastword $(MAKEFILE_LIST)))help.mk

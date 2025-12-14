@@ -25,7 +25,7 @@ func TestScanFile(t *testing.T) {
     }{
         {
             name: "file directive",
-            input: `## @file
+            input: `## !file
 ## This is file documentation
 ## Second line`,
             expected: &ParsedFile{
@@ -38,7 +38,7 @@ func TestScanFile(t *testing.T) {
         },
         {
             name: "category and target",
-            input: `## @category Build
+            input: `## !category Build
 ## Build the project
 build:
 	go build`,
@@ -305,7 +305,7 @@ func TestAddTarget(t *testing.T) {
 test/fixtures/
 ├── makefiles/
 │   ├── basic.mk                   # Simple Makefile with targets
-│   ├── categorized.mk             # Targets with @category
+│   ├── categorized.mk             # Targets with !category
 │   ├── with_includes.mk           # Makefile with includes
 │   ├── mixed_categorization.mk    # Error case: mixed
 │   └── empty.mk                   # Empty Makefile

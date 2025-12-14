@@ -46,7 +46,7 @@ CLI Layer → Discovery → Parser → Model Builder → Ordering → Summary �
 |---------|---------|-------------------|
 | `internal/cli/` | Cobra CLI, flag validation, routing | `root.go`, `help.go` |
 | `internal/discovery/` | Find Makefiles & targets via `make` commands | `Service.DiscoverTargets()` |
-| `internal/parser/` | Extract `@file`, `@category`, `@var`, `@alias` | `Scanner.ScanFile()` |
+| `internal/parser/` | Extract `!file`, `!category`, `!var`, `!alias` | `Scanner.ScanFile()` |
 | `internal/model/` | Build & validate help model | `Builder.Build()`, `HelpModel` |
 | `internal/ordering/` | Sort categories/targets | `Service.ApplyOrdering()` |
 | `internal/summary/` | Extract first sentence (strip markdown) | `Extractor.Extract()` |
@@ -65,10 +65,10 @@ CLI Layer → Discovery → Parser → Model Builder → Ordering → Summary �
 ## Documentation Syntax (for parser)
 
 ```makefile
-## @file                     # File-level docs (appears before targets)
-## @category Build           # Switch: all subsequent targets use "Build" category
-## @var CC [description]     # Documents environment variable
-## @alias b, build-all       # Alternative target names
+## !file                     # File-level docs (appears before targets)
+## !category Build           # Switch: all subsequent targets use "Build" category
+## !var CC [description]     # Documents environment variable
+## !alias b, build-all       # Alternative target names
 ## Build the project         # Target documentation (first sentence = summary)
 build:
 	go build ./...
@@ -77,16 +77,16 @@ build:
 test:
 	go test ./...
 
-## @category _               # Reset to uncategorized (underscore = reset)
+## !category _               # Reset to uncategorized (underscore = reset)
 ## Standalone task           # No category (will error if mixed with categorized)
 standalone:
 	@echo "Task"
 ```
 
-**Key @category Behavior:**
-- **Sticky directive**: Once set, applies to all subsequent targets until another `@category` is encountered
-- **Category inheritance**: Targets inherit the current category; no need to repeat `@category` for each target
-- **Reset syntax**: Use `@category _` to reset to uncategorized state
+**Key !category Behavior:**
+- **Sticky directive**: Once set, applies to all subsequent targets until another `!category` is encountered
+- **Category inheritance**: Targets inherit the current category; no need to repeat `!category` for each target
+- **Reset syntax**: Use `!category _` to reset to uncategorized state
 - **Mixed categorization error**: Can't mix categorized and uncategorized targets (use `--default-category` to resolve)
 
 ## Test Fixtures

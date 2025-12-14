@@ -30,10 +30,10 @@ Default behavior generates help file. Use flags for other operations:
   --remove-help         Remove help targets
 
 Documentation directives (in ## comments):
-  @file         File-level documentation
-  @category     Group targets into categories
-  @var          Document environment variables
-  @alias        Define target aliases`,
+  !file         File-level documentation
+  !category     Group targets into categories
+  !var          Document environment variables
+  !alias        Define target aliases`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {

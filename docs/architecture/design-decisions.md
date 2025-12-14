@@ -354,7 +354,7 @@ This document records the key architectural and design decisions made in the mak
 
 **Decision**: Enforce that either all targets are categorized or none are (unless `--default-category` is provided).
 
-**Context**: When some targets have `@category` and others don't, it's ambiguous whether the uncategorized targets should be shown separately or were simply forgotten.
+**Context**: When some targets have `!category` and others don't, it's ambiguous whether the uncategorized targets should be shown separately or were simply forgotten.
 
 **Rationale**:
 1. **Clarity**: Forces users to be explicit about categorization strategy

@@ -65,22 +65,22 @@ The file location is auto-detected:
 Add documentation comments using the `##` prefix:
 
 ```makefile
-## @file
+## !file
 ## My Project Makefile
 ## This file contains build and deployment targets.
 
-## @category Build
+## !category Build
 ## Build the application
 build:
 	go build -o myapp ./cmd/myapp
 
-## @category Test
+## !category Test
 ## Run all tests
 test:
 	go test ./...
 
-## @category Deploy
-## @var ENV Target environment (dev, staging, prod)
+## !category Deploy
+## !var ENV Target environment (dev, staging, prod)
 ## Deploy the application
 deploy:
 	./scripts/deploy.sh $(ENV)
@@ -182,10 +182,10 @@ make-help --remove-help                # Remove generated help files
 
 ### File-Level Documentation
 
-Use `@file` to add file-level documentation that appears before the targets list:
+Use `!file` to add file-level documentation that appears before the targets list:
 
 ```makefile
-## @file
+## !file
 ## Project Build System
 ## This Makefile handles building, testing, and deploying the application.
 ```
@@ -205,10 +205,10 @@ The first sentence becomes the summary in the help output.
 
 ### Categories
 
-Group related targets using `@category`. The `@category` directive acts as a **switch** that applies to all subsequent targets until changed:
+Group related targets using `!category`. The `!category` directive acts as a **switch** that applies to all subsequent targets until changed:
 
 ```makefile
-## @category Build
+## !category Build
 ## Build the project
 build:                    # category: Build
 	@echo "Building..."
@@ -217,7 +217,7 @@ build:                    # category: Build
 compile:                  # category: Build (inherited)
 	@echo "Compiling..."
 
-## @category Test
+## !category Test
 ## Run unit tests
 test:                     # category: Test
 	@echo "Testing..."
@@ -228,19 +228,19 @@ integration:              # category: Test (inherited)
 ```
 
 **Key Behaviors:**
-- **Sticky directive**: Once set, `@category` applies to all subsequent targets until another `@category` is encountered
-- **Reset to uncategorized**: Use `@category _` to reset the category to uncategorized (nil)
+- **Sticky directive**: Once set, `!category` applies to all subsequent targets until another `!category` is encountered
+- **Reset to uncategorized**: Use `!category _` to reset the category to uncategorized (nil)
 - **Mixed categorization**: If you use categories, all documented targets must be categorized. Use `--default-category` to assign uncategorized targets to a default category
 
 **Example with reset:**
 
 ```makefile
-## @category Build
+## !category Build
 ## Build the project
 build:                    # category: Build
 	@echo "Building..."
 
-## @category _
+## !category _
 ## This target is uncategorized
 standalone:               # category: (none) - will error without --default-category
 	@echo "Standalone task..."
@@ -248,10 +248,10 @@ standalone:               # category: (none) - will error without --default-cate
 
 ### Aliases
 
-Provide alternative names for targets using `@alias`:
+Provide alternative names for targets using `!alias`:
 
 ```makefile
-## @alias b, build-all
+## !alias b, build-all
 ## Build the project
 build:
 	@echo "Building..."
@@ -261,11 +261,11 @@ Now users can run `make b` or `make build-all` instead of `make build`.
 
 ### Environment Variables
 
-Document required environment variables using `@var`:
+Document required environment variables using `!var`:
 
 ```makefile
-## @var DATABASE_URL Database connection string
-## @var LOG_LEVEL Logging verbosity (debug, info, warn, error)
+## !var DATABASE_URL Database connection string
+## !var LOG_LEVEL Logging verbosity (debug, info, warn, error)
 ## Start the application server
 server:
 	./bin/server
@@ -281,29 +281,29 @@ Variables appear in the help output under the target:
 ### Complete Example
 
 ```makefile
-## @file
+## !file
 ## MyApp Build System
 ## Targets for building, testing, and deploying MyApp.
 
-## @category Build
-## @alias b
-## @var CC C compiler to use
-## @var CFLAGS Compiler flags
+## !category Build
+## !alias b
+## !var CC C compiler to use
+## !var CFLAGS Compiler flags
 ## Build the entire project.
 ## This compiles all sources and links the final binary.
 build:
 	$(CC) $(CFLAGS) -o myapp main.c
 
-## @category Test
-## @alias t
-## @var TEST_FILTER Filter for test names
+## !category Test
+## !alias t
+## !var TEST_FILTER Filter for test names
 ## Run all tests.
 ## Uses the native test framework.
 test:
 	./scripts/test.sh $(TEST_FILTER)
 
-## @category Deploy
-## @var ENV Target environment (dev, staging, prod)
+## !category Deploy
+## !var ENV Target environment (dev, staging, prod)
 ## Deploy to specified environment
 deploy:
 	./scripts/deploy.sh $(ENV)
@@ -403,7 +403,7 @@ The helper script installs the make-help binary to the project root's `.bin/` di
 
 ### uncategorized-targets
 
-Simple flat target list without categories. Demonstrates basic documentation with `@var` and `@alias` directives.
+Simple flat target list without categories. Demonstrates basic documentation with `!var` and `!alias` directives.
 
 ```bash
 # Generate help file
@@ -416,7 +416,7 @@ make-help --show-help --makefile-path examples/uncategorized-targets/Makefile
 
 ### categorized-project
 
-Uses `@category` to organize targets into logical groups (Build, Test, Development, Maintenance).
+Uses `!category` to organize targets into logical groups (Build, Test, Development, Maintenance).
 
 ```bash
 # Generate help file
@@ -430,10 +430,10 @@ make-help --show-help --makefile-path examples/categorized-project/Makefile
 ### full-featured
 
 Comprehensive example using all directives:
-- `@file` for project-level documentation
-- `@category` for target organization
-- `@var` for environment variable documentation
-- `@alias` for target shortcuts
+- `!file` for project-level documentation
+- `!category` for target organization
+- `!var` for environment variable documentation
+- `!alias` for target shortcuts
 - Multi-line documentation with paragraph breaks
 
 ```bash
@@ -545,7 +545,7 @@ When colors are enabled:
 # Main Makefile
 include make/*.mk
 
-## @category Core
+## !category Core
 ## Build everything
 all: build test deploy
 	@echo "Done!"
@@ -553,7 +553,7 @@ all: build test deploy
 
 ```makefile
 # make/build.mk
-## @category Build
+## !category Build
 ## Build the project
 build:
 	go build ./...
@@ -567,7 +567,7 @@ You can define the same category in multiple files. Targets are merged together:
 
 ```makefile
 # Makefile
-## @category Build
+## !category Build
 ## Build the application
 build:
 	go build ./...
@@ -575,7 +575,7 @@ build:
 
 ```makefile
 # make/build.mk
-## @category Build
+## !category Build
 ## Build documentation
 docs:
 	go doc ./...

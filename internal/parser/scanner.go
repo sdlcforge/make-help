@@ -11,7 +11,7 @@ import (
 // that will be associated with the next target.
 type Scanner struct {
 	currentFile     string      // Current file being scanned
-	currentCategory string      // Current category from @category directive
+	currentCategory string      // Current category from !category directive
 	pendingDocs     []Directive // Documentation lines awaiting target association
 }
 
@@ -58,7 +58,7 @@ func (s *Scanner) ScanContent(content string, path string) (*ParsedFile, error) 
 		if IsDocumentationLine(line) {
 			directive := s.parseDirective(line, lineNumber)
 
-			// @file directives are added immediately and not queued
+			// !file directives are added immediately and not queued
 			if directive.Type == DirectiveFile {
 				result.Directives = append(result.Directives, directive)
 			} else {
@@ -94,7 +94,7 @@ func (s *Scanner) ScanContent(content string, path string) (*ParsedFile, error) 
 }
 
 // parseDirective detects and parses a documentation directive.
-// It identifies the directive type (@file, @category, @var, @alias, or regular doc)
+// It identifies the directive type (!file, !category, !var, !alias, or regular doc)
 // and extracts the directive value.
 func (s *Scanner) parseDirective(line string, lineNum int) Directive {
 	// Remove the "## " prefix, or handle bare "##" for empty doc lines
@@ -112,25 +112,25 @@ func (s *Scanner) parseDirective(line string, lineNum int) Directive {
 
 	// Detect directive type and extract value
 	switch {
-	case strings.HasPrefix(content, "@file"):
+	case strings.HasPrefix(content, "!file"):
 		directive.Type = DirectiveFile
-		// Extract value after "@file" (could be empty or have description)
-		value := strings.TrimPrefix(content, "@file")
+		// Extract value after "!file" (could be empty or have description)
+		value := strings.TrimPrefix(content, "!file")
 		directive.Value = strings.TrimSpace(value)
 
-	case strings.HasPrefix(content, "@category "):
+	case strings.HasPrefix(content, "!category "):
 		directive.Type = DirectiveCategory
-		directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "@category "))
+		directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!category "))
 		// Update current category state
 		s.currentCategory = directive.Value
 
-	case strings.HasPrefix(content, "@var "):
+	case strings.HasPrefix(content, "!var "):
 		directive.Type = DirectiveVar
-		directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "@var "))
+		directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!var "))
 
-	case strings.HasPrefix(content, "@alias "):
+	case strings.HasPrefix(content, "!alias "):
 		directive.Type = DirectiveAlias
-		directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "@alias "))
+		directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!alias "))
 
 	default:
 		// Regular documentation line

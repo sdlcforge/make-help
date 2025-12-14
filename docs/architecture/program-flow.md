@@ -35,7 +35,7 @@ Step-by-step flows for each operation mode in make-help.
    ├─> For each Makefile in discovery order:
    │   ├─> Scan line-by-line
    │   ├─> Detect ## documentation lines
-   │   ├─> Parse directives (@file, @category, @var, @alias)
+   │   ├─> Parse directives (!file, !category, !var, !alias)
    │   ├─> Detect target definitions (lines with :)
    │   └─> Associate pending docs with targets
    └─> Result: []*ParsedFile
