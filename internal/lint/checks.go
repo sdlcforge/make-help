@@ -30,6 +30,11 @@ func CheckUndocumentedPhony(ctx *CheckContext) []Warning {
 			continue
 		}
 
+		// Skip if target is a generated help target
+		if ctx.GeneratedHelpTargets[targetName] {
+			continue
+		}
+
 		// This is an undocumented phony target
 		undocumentedTargets = append(undocumentedTargets, targetName)
 	}

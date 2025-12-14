@@ -93,6 +93,39 @@ func TestCheckUndocumentedPhony_ImplicitAliases(t *testing.T) {
 	}
 }
 
+func TestCheckUndocumentedPhony_GeneratedHelpTargets(t *testing.T) {
+	ctx := &CheckContext{
+		HelpModel: &model.HelpModel{},
+		PhonyTargets: map[string]bool{
+			"build":      true,
+			"help":       true, // generated
+			"update-help": true, // generated
+			"help-build": true, // generated for documented target
+			"help-random": true, // NOT generated (user-created)
+		},
+		DocumentedTargets: map[string]bool{
+			"build": true,
+		},
+		Aliases: map[string]bool{},
+		GeneratedHelpTargets: map[string]bool{
+			"help":       true,
+			"update-help": true,
+			"help-build": true,
+			// help-random is NOT in this list
+		},
+	}
+
+	warnings := CheckUndocumentedPhony(ctx)
+	// Should only warn about help-random (user-created, not generated)
+	if len(warnings) != 1 {
+		t.Errorf("Expected 1 warning (for help-random), got %d", len(warnings))
+	}
+
+	if len(warnings) > 0 && warnings[0].Message != "undocumented phony target 'help-random'" {
+		t.Errorf("Expected warning for 'help-random', got: %s", warnings[0].Message)
+	}
+}
+
 func TestCheckSummaryPunctuation_AllValid(t *testing.T) {
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{

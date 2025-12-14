@@ -113,10 +113,17 @@ func runLint(config *Config) error {
 	// Step 7: Build CheckContext
 	documentedTargets := make(map[string]bool)
 	aliases := make(map[string]bool)
+	generatedHelpTargets := make(map[string]bool)
+
+	// Add the standard generated help targets
+	generatedHelpTargets["help"] = true
+	generatedHelpTargets["update-help"] = true
 
 	for _, category := range helpModel.Categories {
 		for _, target := range category.Targets {
 			documentedTargets[target.Name] = true
+			// Add help-<target> as a generated target
+			generatedHelpTargets["help-"+target.Name] = true
 			for _, alias := range target.Aliases {
 				aliases[alias] = true
 			}
@@ -124,13 +131,14 @@ func runLint(config *Config) error {
 	}
 
 	checkCtx := &lint.CheckContext{
-		HelpModel:         helpModel,
-		MakefilePath:      makefilePath,
-		PhonyTargets:      targetsResult.IsPhony,
-		Dependencies:      targetsResult.Dependencies,
-		HasRecipe:         targetsResult.HasRecipe,
-		DocumentedTargets: documentedTargets,
-		Aliases:           aliases,
+		HelpModel:            helpModel,
+		MakefilePath:         makefilePath,
+		PhonyTargets:         targetsResult.IsPhony,
+		Dependencies:         targetsResult.Dependencies,
+		HasRecipe:            targetsResult.HasRecipe,
+		DocumentedTargets:    documentedTargets,
+		Aliases:              aliases,
+		GeneratedHelpTargets: generatedHelpTargets,
 	}
 
 	// Step 8: Run all lint checks
