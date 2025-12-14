@@ -62,10 +62,10 @@ test:
 	assert.Contains(t, output, "--- end ---")
 
 	// Verify no files were actually created
-	// Check that help.mk was NOT created (should append to Makefile in dry-run)
-	helpMkPath := filepath.Join(tmpDir, "help.mk")
+	// Check that make/help.mk was NOT created (should create make/help.mk in dry-run)
+	helpMkPath := filepath.Join(tmpDir, "make", "help.mk")
 	_, err = os.Stat(helpMkPath)
-	assert.True(t, os.IsNotExist(err), "help.mk should not be created in dry-run mode")
+	assert.True(t, os.IsNotExist(err), "make/help.mk should not be created in dry-run mode")
 
 	// Verify Makefile was NOT modified
 	content, err := os.ReadFile(makefilePath)
@@ -169,8 +169,8 @@ build:
 	// Verify dry-run message
 	assert.Contains(t, output, "Dry run mode - no files will be modified")
 
-	// Verify it shows make/01-help.mk would be created
-	assert.Contains(t, output, "make/01-help.mk")
+	// Verify it shows make/help.mk would be created (no numbered files, so no prefix)
+	assert.Contains(t, output, "make/help.mk")
 
 	// Should NOT show "Would append to" since it uses the include pattern
 	assert.NotContains(t, output, "Would append to:")
@@ -180,10 +180,10 @@ build:
 	_, err = os.Stat(makeDir)
 	assert.True(t, os.IsNotExist(err), "make directory should not be created in dry-run mode")
 
-	// Verify 01-help.mk was NOT created
-	helpFile := filepath.Join(makeDir, "01-help.mk")
+	// Verify help.mk was NOT created
+	helpFile := filepath.Join(makeDir, "help.mk")
 	_, err = os.Stat(helpFile)
-	assert.True(t, os.IsNotExist(err), "01-help.mk should not be created in dry-run mode")
+	assert.True(t, os.IsNotExist(err), "help.mk should not be created in dry-run mode")
 }
 
 func TestCreateHelpTarget_DryRunWithOptions(t *testing.T) {

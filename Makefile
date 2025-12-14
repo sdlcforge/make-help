@@ -67,4 +67,4 @@ default: all
 all: build
 .PHONY: all
 
--include $(dir $(lastword $(MAKEFILE_LIST)))help.mk
+-include make/*.mk

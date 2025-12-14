@@ -2,7 +2,7 @@
 # Regenerate with: make-help
 
 MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile $(MAKE_HELP_DIR)help.mk
+MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile $(MAKE_HELP_DIR)make/05-constant.mk
 
 ## !category Help
 .PHONY: help
@@ -21,13 +21,9 @@ help:
 	@printf '%b\n' "  - \033[1;32mbuild\033[0m \033[0;33mall\033[0m: \033[0;37mBuilds the make-help binary.\033[0m"
 	@printf '%b\n' "  - \033[1;32mclean\033[0m: \033[0;37mDeletes all built artifacts.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "\033[1;36mHelp:\033[0m"
-	@printf '%b\n' "  - \033[1;32mhelp\033[0m: \033[0;37mDisplays help for available targets.\033[0m"
-	@printf '%b\n' "  - \033[1;32mupdate-help\033[0m: \033[0;37mRegenerates help.mk from source Makefiles.\033[0m"
-	@printf '%b\n' ""
 	@printf '%b\n' "\033[1;36mQuality:\033[0m"
 	@printf '%b\n' "  - \033[1;32mlint\033[0m: \033[0;37mRun golangci-lint\033[0m"
-	@printf '%b\n' "  - \033[1;32mlint-fix\033[0m: \033[0;37mRun golangci-lint with auto-fix\033[0m"
+	@printf '%b\n' "  - \033[1;32mlint-fix\033[0m: \033[0;37mRun golangci-lint with auto-fix.\033[0m"
 	@printf '%b\n' "  - \033[1;32mqa\033[0m: \033[0;37mRun all quality checks (test.all + lint).\033[0m"
 	@printf '%b\n' ""
 	@printf '%b\n' "\033[1;36mTest:\033[0m"
@@ -39,53 +35,37 @@ help:
 help-build:
 	@printf '%b\n' "\033[1;32mTarget: build\033[0m"
 	@printf '%b\n' "\033[0;33mAliases: all\033[0m"
-	@printf '%b\n' "\033[0;37m\033[0m"
 	@printf '%b\n' "\033[0;37mBuilds the make-help binary.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:10"
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:11"
 
 .PHONY: help-clean
 help-clean:
 	@printf '%b\n' "\033[1;32mTarget: clean\033[0m"
 	@printf '%b\n' "\033[0;37mDeletes all built artifacts.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:17"
-
-.PHONY: help-help
-help-help:
-	@printf '%b\n' "\033[1;32mTarget: help\033[0m"
-	@printf '%b\n' "\033[0;37mDisplays help for available targets.\033[0m"
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/help.mk:10"
-
-.PHONY: help-update-help
-help-update-help:
-	@printf '%b\n' "\033[1;32mTarget: update-help\033[0m"
-	@printf '%b\n' "\033[0;37mRegenerates help.mk from source Makefiles.\033[0m"
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/help.mk:117"
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:18"
 
 .PHONY: help-lint
 help-lint:
 	@printf '%b\n' "\033[1;32mTarget: lint\033[0m"
-	@printf '%b\n' "\033[0;37m\033[0m"
 	@printf '%b\n' "\033[0;37mRun golangci-lint\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:49"
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:48"
 
 .PHONY: help-lint-fix
 help-lint-fix:
 	@printf '%b\n' "\033[1;32mTarget: lint-fix\033[0m"
-	@printf '%b\n' "\033[0;37mRun golangci-lint with auto-fix\033[0m"
+	@printf '%b\n' "\033[0;37mRun golangci-lint with auto-fix.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:54"
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:53"
 
 .PHONY: help-qa
 help-qa:
 	@printf '%b\n' "\033[1;32mTarget: qa\033[0m"
 	@printf '%b\n' "\033[0;37mRun all quality checks (test.all + lint).\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:59"
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:58"
 
 .PHONY: help-test.all
 help-test.all:
@@ -105,7 +85,6 @@ help-test.integration:
 help-test.unit:
 	@printf '%b\n' "\033[1;32mTarget: test.unit\033[0m"
 	@printf '%b\n' "\033[0;33mAliases: test\033[0m"
-	@printf '%b\n' "\033[0;37m\033[0m"
 	@printf '%b\n' "\033[0;37mRun unit tests. Use 'test.all' to run all tests.\033[0m"
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:24"

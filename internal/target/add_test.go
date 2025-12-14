@@ -72,8 +72,8 @@ test:
 	err = service.AddTarget()
 	require.NoError(t, err)
 
-	// Verify help.mk was created
-	helpMkPath := filepath.Join(tmpDir, "help.mk")
+	// Verify make/help.mk was created
+	helpMkPath := filepath.Join(tmpDir, "make", "help.mk")
 	content, err := os.ReadFile(helpMkPath)
 	require.NoError(t, err)
 
@@ -85,10 +85,10 @@ test:
 	assert.Contains(t, contentStr, "MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))")
 	assert.Contains(t, contentStr, "This is a placeholder")
 
-	// Verify include directive was added to Makefile
+	// Verify include directive was added to Makefile (pattern include)
 	makefileContentAfter, err := os.ReadFile(makefilePath)
 	require.NoError(t, err)
-	assert.Contains(t, string(makefileContentAfter), "-include $(dir $(lastword $(MAKEFILE_LIST)))help.mk")
+	assert.Contains(t, string(makefileContentAfter), "-include make/*.mk")
 }
 
 func TestAddService_AddTarget_CreateMakeDirectory(t *testing.T) {
@@ -127,8 +127,8 @@ all:
 	require.NoError(t, err)
 	assert.True(t, info.IsDir())
 
-	// Verify 01-help.mk was created
-	helpFile := filepath.Join(makeDir, "01-help.mk")
+	// Verify help.mk was created (no numbered files exist, so no prefix)
+	helpFile := filepath.Join(makeDir, "help.mk")
 	content, err := os.ReadFile(helpFile)
 	require.NoError(t, err)
 
@@ -330,11 +330,11 @@ func TestAddService_DetermineTargetFileReadError(t *testing.T) {
 
 func TestDetermineTargetFile(t *testing.T) {
 	tests := []struct {
-		name             string
-		makefileContent  string
+		name              string
+		makefileContent   string
 		targetFileRelPath string
-		wantFile         string // relative to tmpDir or "Makefile" for append
-		wantInclude      bool
+		wantFile          string // relative to tmpDir or "Makefile" for append
+		wantInclude       bool
 	}{
 		{
 			name:              "explicit relative target file",
@@ -354,21 +354,21 @@ func TestDetermineTargetFile(t *testing.T) {
 			name:              "include make/*.mk pattern",
 			makefileContent:   "include make/*.mk\n\nall:\n\t@echo test\n",
 			targetFileRelPath: "",
-			wantFile:          "make/01-help.mk",
+			wantFile:          "make/help.mk",
 			wantInclude:       false,
 		},
 		{
 			name:              "-include make/*.mk pattern (optional include)",
 			makefileContent:   "-include make/*.mk\n\nall:\n\t@echo test\n",
 			targetFileRelPath: "",
-			wantFile:          "make/01-help.mk",
+			wantFile:          "make/help.mk",
 			wantInclude:       false,
 		},
 		{
-			name:              "no pattern - create help.mk",
+			name:              "no pattern - create make/help.mk",
 			makefileContent:   "all:\n\t@echo test\n",
 			targetFileRelPath: "",
-			wantFile:          "help.mk",
+			wantFile:          "make/help.mk",
 			wantInclude:       true,
 		},
 	}
@@ -397,6 +397,104 @@ func TestDetermineTargetFile(t *testing.T) {
 			expectedFile := filepath.Join(tmpDir, tt.wantFile)
 			assert.Equal(t, expectedFile, gotFile)
 			assert.Equal(t, tt.wantInclude, gotInclude)
+		})
+	}
+}
+
+func TestDetermineTargetFile_NumberedFiles(t *testing.T) {
+	tests := []struct {
+		name            string
+		makefileContent string
+		setupFiles      []string // Files to create in make/ directory
+		wantFile        string   // Expected filename (relative to make/)
+		wantInclude     bool
+	}{
+		{
+			name:            "numbered file exists - 10-constants.mk",
+			makefileContent: "include make/*.mk\n\nall:\n\t@echo test\n",
+			setupFiles:      []string{"10-constants.mk"},
+			wantFile:        "make/00-help.mk", // 2 digits, so 00- prefix
+			wantInclude:     false,
+		},
+		{
+			name:            "numbered file exists - 1-setup.mk",
+			makefileContent: "include make/*.mk\n\nall:\n\t@echo test\n",
+			setupFiles:      []string{"1-setup.mk"},
+			wantFile:        "make/0-help.mk", // 1 digit, so 0- prefix
+			wantInclude:     false,
+		},
+		{
+			name:            "numbered file exists - 100-utils.mk",
+			makefileContent: "include make/*.mk\n\nall:\n\t@echo test\n",
+			setupFiles:      []string{"100-utils.mk"},
+			wantFile:        "make/000-help.mk", // 3 digits, so 000- prefix
+			wantInclude:     false,
+		},
+		{
+			name:            "multiple numbered files - use max digits",
+			makefileContent: "include make/*.mk\n\nall:\n\t@echo test\n",
+			setupFiles:      []string{"1-setup.mk", "10-constants.mk", "100-utils.mk"},
+			wantFile:        "make/000-help.mk", // Max is 3 digits
+			wantInclude:     false,
+		},
+		{
+			name:            "non-numbered files don't affect prefix",
+			makefileContent: "include make/*.mk\n\nall:\n\t@echo test\n",
+			setupFiles:      []string{"constants.mk", "utils.mk"},
+			wantFile:        "make/help.mk", // No numbered files, no prefix
+			wantInclude:     false,
+		},
+		{
+			name:            "numbered files with different suffix ignored",
+			makefileContent: "include make/*.mk\n\nall:\n\t@echo test\n",
+			setupFiles:      []string{"10-constants.txt"}, // Different suffix
+			wantFile:        "make/help.mk",               // Doesn't match .mk pattern
+			wantInclude:     false,
+		},
+		{
+			name:            "no pattern - numbered files still create prefix",
+			makefileContent: "all:\n\t@echo test\n",
+			setupFiles:      []string{"10-constants.mk"},
+			wantFile:        "make/00-help.mk",
+			wantInclude:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			makefilePath := filepath.Join(tmpDir, "Makefile")
+			makeDir := filepath.Join(tmpDir, "make")
+
+			// Create Makefile
+			err := os.WriteFile(makefilePath, []byte(tt.makefileContent), 0644)
+			require.NoError(t, err)
+
+			// Create make directory and setup files
+			err = os.MkdirAll(makeDir, 0755)
+			require.NoError(t, err)
+			for _, filename := range tt.setupFiles {
+				filePath := filepath.Join(makeDir, filename)
+				err = os.WriteFile(filePath, []byte("# test file\n"), 0644)
+				require.NoError(t, err)
+			}
+
+			config := &Config{
+				MakefilePath:      makefilePath,
+				TargetFileRelPath: "",
+			}
+
+			service := &AddService{
+				config: config,
+			}
+
+			gotFile, gotInclude, err := service.determineTargetFile(makefilePath)
+			require.NoError(t, err)
+
+			// Normalize paths for comparison - all returned paths are absolute
+			expectedFile := filepath.Join(tmpDir, tt.wantFile)
+			assert.Equal(t, expectedFile, gotFile, "File path mismatch")
+			assert.Equal(t, tt.wantInclude, gotInclude, "Include directive requirement mismatch")
 		})
 	}
 }
