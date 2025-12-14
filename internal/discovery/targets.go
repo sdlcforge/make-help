@@ -25,8 +25,10 @@ func (s *Service) discoverTargets(makefilePath string) (*DiscoverTargetsResult, 
 	defer cancel()
 
 	// Use -s and --no-print-directory to prevent make from adding
-	// extra output when running from within another make
-	stdout, stderr, err := s.executor.ExecuteContext(ctx, "make", "-s", "--no-print-directory", "-f", makefilePath, "-p", "-r")
+	// extra output when running from within another make.
+	// Pass MAKE_HELP_GENERATING=1 to prevent auto-regeneration of help.mk
+	// which would cause infinite recursion (make-help -> make -> make-help -> ...)
+	stdout, stderr, err := s.executor.ExecuteContext(ctx, "make", "-s", "--no-print-directory", "-f", makefilePath, "-p", "-r", "MAKE_HELP_GENERATING=1")
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
 			return nil, fmt.Errorf("make command timed out after 30s")

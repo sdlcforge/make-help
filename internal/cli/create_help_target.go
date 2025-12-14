@@ -212,7 +212,7 @@ func printDryRunOutput(makefilePath, targetFile string, needsInclude bool, conte
 			relPath = filepath.Base(targetFile)
 		}
 
-		includeDirective := fmt.Sprintf("\ninclude $(dir $(lastword $(MAKEFILE_LIST)))%s\n", relPath)
+		includeDirective := fmt.Sprintf("\n-include $(dir $(lastword $(MAKEFILE_LIST)))%s\n", relPath)
 
 		fmt.Println()
 		fmt.Printf("--- Append to %s ---\n", makefilePath)

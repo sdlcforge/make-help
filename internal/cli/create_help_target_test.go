@@ -116,7 +116,7 @@ build:
 	// Verify it would append include directive
 	assert.Contains(t, output, "Would append to:")
 	assert.Contains(t, output, "Append to")
-	assert.Contains(t, output, "include $(dir $(lastword $(MAKEFILE_LIST)))custom-help.mk")
+	assert.Contains(t, output, "-include $(dir $(lastword $(MAKEFILE_LIST)))custom-help.mk")
 
 	// Verify no files were actually created
 	customHelpPath := filepath.Join(tmpDir, "custom-help.mk")
@@ -265,7 +265,7 @@ build:
 	// Verify Makefile was modified with include directive
 	content, err := os.ReadFile(makefilePath)
 	require.NoError(t, err)
-	assert.Contains(t, string(content), "include $(dir $(lastword $(MAKEFILE_LIST)))help.mk")
+	assert.Contains(t, string(content), "-include $(dir $(lastword $(MAKEFILE_LIST)))help.mk")
 }
 
 func TestPrintDryRunOutput(t *testing.T) {
@@ -316,7 +316,7 @@ func TestPrintDryRunOutput(t *testing.T) {
 			if tt.wantAppend {
 				assert.Contains(t, output, "Would append to:")
 				assert.Contains(t, output, "Append to")
-				assert.Contains(t, output, "include $(dir $(lastword $(MAKEFILE_LIST)))")
+				assert.Contains(t, output, "-include $(dir $(lastword $(MAKEFILE_LIST)))")
 			} else {
 				assert.NotContains(t, output, "Would append to:")
 			}

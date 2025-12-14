@@ -10,7 +10,7 @@ SRC_FILES:=$(shell find cmd internal -name "*.go" -not -name "*_test.go")
 build: $(MAKE_HELP_BIN)
 .PHONY: build
 
-make-help:go.mod go.sum $(SRC_FILES)
+$(MAKE_HELP_BIN):go.mod go.sum $(SRC_FILES)
 	go build -o make-help cmd/make-help/main.go
 
 ## Deletes all built artifacts.

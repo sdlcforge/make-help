@@ -6,7 +6,12 @@ MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile
 
 .PHONY: help
 ## Displays help for available targets.
-help: $(MAKE_HELP_DIR)help.mk
+help:
+	@for f in $(MAKE_HELP_MAKEFILES); do \
+	  if [ "$$f" -nt "$(MAKE_HELP_DIR)help.mk" ]; then \
+	    printf 'Warning: %s is newer than help.mk. Run make update-help to refresh.\n' "$$f"; \
+	  fi; \
+	done
 	@printf '%b\n' "Usage: make [<target>...] [<ENV_VAR>=<value>...]"
 	@printf '%b\n' ""
 	@printf '%b\n' "Targets:"
@@ -27,7 +32,7 @@ help: $(MAKE_HELP_DIR)help.mk
 	@printf '%b\n' "  - test.unit: Run unit tests (excludes integration tests)"
 
 .PHONY: help-build
-help-build: $(MAKE_HELP_DIR)help.mk
+help-build:
 	@printf '%b\n' "Target: build"
 	@printf '%b\n' ""
 	@printf '%b\n' "Documentation:"
@@ -37,7 +42,7 @@ help-build: $(MAKE_HELP_DIR)help.mk
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:10"
 
 .PHONY: help-clean
-help-clean: $(MAKE_HELP_DIR)help.mk
+help-clean:
 	@printf '%b\n' "Target: clean"
 	@printf '%b\n' ""
 	@printf '%b\n' "Documentation:"
@@ -46,7 +51,7 @@ help-clean: $(MAKE_HELP_DIR)help.mk
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:17"
 
 .PHONY: help-lint
-help-lint: $(MAKE_HELP_DIR)help.mk
+help-lint:
 	@printf '%b\n' "Target: lint"
 	@printf '%b\n' ""
 	@printf '%b\n' "Documentation:"
@@ -56,7 +61,7 @@ help-lint: $(MAKE_HELP_DIR)help.mk
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:49"
 
 .PHONY: help-lint-fix
-help-lint-fix: $(MAKE_HELP_DIR)help.mk
+help-lint-fix:
 	@printf '%b\n' "Target: lint-fix"
 	@printf '%b\n' ""
 	@printf '%b\n' "Documentation:"
@@ -65,7 +70,7 @@ help-lint-fix: $(MAKE_HELP_DIR)help.mk
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:54"
 
 .PHONY: help-qa
-help-qa: $(MAKE_HELP_DIR)help.mk
+help-qa:
 	@printf '%b\n' "Target: qa"
 	@printf '%b\n' ""
 	@printf '%b\n' "Documentation:"
@@ -74,7 +79,7 @@ help-qa: $(MAKE_HELP_DIR)help.mk
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:59"
 
 .PHONY: help-test
-help-test: $(MAKE_HELP_DIR)help.mk
+help-test:
 	@printf '%b\n' "Target: test"
 	@printf '%b\n' "Aliases: t"
 	@printf '%b\n' ""
@@ -85,7 +90,7 @@ help-test: $(MAKE_HELP_DIR)help.mk
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:31"
 
 .PHONY: help-test.all
-help-test.all: $(MAKE_HELP_DIR)help.mk
+help-test.all:
 	@printf '%b\n' "Target: test.all"
 	@printf '%b\n' ""
 	@printf '%b\n' "Documentation:"
@@ -94,7 +99,7 @@ help-test.all: $(MAKE_HELP_DIR)help.mk
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:43"
 
 .PHONY: help-test.integration
-help-test.integration: $(MAKE_HELP_DIR)help.mk
+help-test.integration:
 	@printf '%b\n' "Target: test.integration"
 	@printf '%b\n' ""
 	@printf '%b\n' "Documentation:"
@@ -103,7 +108,7 @@ help-test.integration: $(MAKE_HELP_DIR)help.mk
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:38"
 
 .PHONY: help-test.unit
-help-test.unit: $(MAKE_HELP_DIR)help.mk
+help-test.unit:
 	@printf '%b\n' "Target: test.unit"
 	@printf '%b\n' ""
 	@printf '%b\n' "Documentation:"
@@ -112,8 +117,9 @@ help-test.unit: $(MAKE_HELP_DIR)help.mk
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:24"
 
-# Auto-regenerate help when source Makefiles change
-$(MAKE_HELP_DIR)help.mk: $(MAKE_HELP_MAKEFILES)
+# Explicit target to regenerate help.mk
+.PHONY: update-help
+update-help:
 	@make-help --makefile-path $(MAKE_HELP_DIR)Makefile --no-color || \
 	 npx make-help --makefile-path $(MAKE_HELP_DIR)Makefile --no-color || \
 	 echo "make-help not found; install with 'go install github.com/sdlcforge/make-help/cmd/make-help@latest' or 'npm install -g make-help'"

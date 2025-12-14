@@ -62,7 +62,18 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	// Main help target with static content
 	buf.WriteString(".PHONY: help\n")
 	buf.WriteString("## Displays help for available targets.\n")
-	buf.WriteString("help: $(MAKE_HELP_DIR)help.mk\n")
+	buf.WriteString("help:\n")
+
+	// Add timestamp check to warn if help.mk may be stale
+	buf.WriteString("\t@for f in $(MAKE_HELP_MAKEFILES); do \\\n")
+	buf.WriteString("\t  if [ \"$$f\" -nt \"$(MAKE_HELP_DIR)help.mk\" ]; then \\\n")
+	if config.UseColor {
+		buf.WriteString("\t    printf '\\033[0;33mWarning: %s is newer than help.mk. Run make update-help to refresh.\\033[0m\\n' \"$$f\"; \\\n")
+	} else {
+		buf.WriteString("\t    printf 'Warning: %s is newer than help.mk. Run make update-help to refresh.\\n' \"$$f\"; \\\n")
+	}
+	buf.WriteString("\t  fi; \\\n")
+	buf.WriteString("\tdone\n")
 
 	// Render help content
 	helpLines, err := renderer.RenderForMakefile(config.HelpModel)
@@ -79,7 +90,7 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 		for _, target := range category.Targets {
 			buf.WriteString("\n")
 			buf.WriteString(fmt.Sprintf(".PHONY: help-%s\n", target.Name))
-			buf.WriteString(fmt.Sprintf("help-%s: $(MAKE_HELP_DIR)help.mk\n", target.Name))
+			buf.WriteString(fmt.Sprintf("help-%s:\n", target.Name))
 
 			detailedLines := renderer.RenderDetailedForMakefile(&target)
 			for _, line := range detailedLines {
@@ -141,16 +152,17 @@ func buildRegenerateFlags(config *GeneratorConfig) string {
 	return " " + strings.Join(flags, " ")
 }
 
-// generateRegenerationTarget creates the auto-regeneration target.
-// This target rebuilds the help file when source Makefiles change.
+// generateRegenerationTarget creates the update-help target.
+// This is an explicit target users can run to regenerate help.mk.
 func generateRegenerationTarget(config *GeneratorConfig) string {
 	var buf strings.Builder
 
 	// Build flags to pass to regeneration command (same flags used for original generation)
 	flags := buildRegenerateFlags(config)
 
-	buf.WriteString("# Auto-regenerate help when source Makefiles change\n")
-	buf.WriteString("$(MAKE_HELP_DIR)help.mk: $(MAKE_HELP_MAKEFILES)\n")
+	buf.WriteString("# Explicit target to regenerate help.mk\n")
+	buf.WriteString(".PHONY: update-help\n")
+	buf.WriteString("update-help:\n")
 	buf.WriteString(fmt.Sprintf("\t@make-help --makefile-path $(MAKE_HELP_DIR)Makefile%s || \\\n", flags))
 	buf.WriteString(fmt.Sprintf("\t npx make-help --makefile-path $(MAKE_HELP_DIR)Makefile%s || \\\n", flags))
 	buf.WriteString("\t echo \"make-help not found; install with 'go install github.com/sdlcforge/make-help/cmd/make-help@latest' or 'npm install -g make-help'\"\n")

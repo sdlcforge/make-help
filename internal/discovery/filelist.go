@@ -56,8 +56,10 @@ func (s *Service) discoverMakefileList(mainPath string) ([]string, error) {
 
 	// Use -s (silent) and --no-print-directory to prevent make from adding
 	// extra output like job server info or directory messages that could
-	// corrupt the MAKEFILE_LIST output when running from within another make
-	stdout, stderr, err := s.executor.ExecuteContext(ctx, "make", "-s", "--no-print-directory", "-f", tmpName, "_list_makefiles")
+	// corrupt the MAKEFILE_LIST output when running from within another make.
+	// Pass MAKE_HELP_GENERATING=1 to prevent auto-regeneration of help.mk
+	// which would cause infinite recursion (make-help -> make -> make-help -> ...)
+	stdout, stderr, err := s.executor.ExecuteContext(ctx, "make", "-s", "--no-print-directory", "-f", tmpName, "MAKE_HELP_GENERATING=1", "_list_makefiles")
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
 			return nil, fmt.Errorf("make command timed out after 30s")

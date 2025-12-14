@@ -88,7 +88,7 @@ test:
 	// Verify include directive was added to Makefile
 	makefileContentAfter, err := os.ReadFile(makefilePath)
 	require.NoError(t, err)
-	assert.Contains(t, string(makefileContentAfter), "include $(dir $(lastword $(MAKEFILE_LIST)))help.mk")
+	assert.Contains(t, string(makefileContentAfter), "-include $(dir $(lastword $(MAKEFILE_LIST)))help.mk")
 }
 
 func TestAddService_AddTarget_CreateMakeDirectory(t *testing.T) {
@@ -185,7 +185,7 @@ func TestAddService_AddTarget_ExplicitTargetFile(t *testing.T) {
 	// Verify include directive was added to Makefile with self-referential pattern
 	makefileContentAfter, err := os.ReadFile(makefilePath)
 	require.NoError(t, err)
-	assert.Contains(t, string(makefileContentAfter), "include $(dir $(lastword $(MAKEFILE_LIST)))custom-help.mk")
+	assert.Contains(t, string(makefileContentAfter), "-include $(dir $(lastword $(MAKEFILE_LIST)))custom-help.mk")
 }
 
 func TestAddService_AddTarget_FlagPassThrough(t *testing.T) {

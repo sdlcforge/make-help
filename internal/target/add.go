@@ -174,6 +174,8 @@ func (s *AddService) addIncludeDirective(makefilePath, targetFile string) error 
 // the include works regardless of the working directory when make is invoked.
 // targetFile should be an absolute path; this function computes the relative path
 // from the Makefile directory.
+// If an include directive for this file already exists (either include or -include),
+// no changes are made.
 func AddIncludeDirective(makefilePath, targetFile string) error {
 	content, err := os.ReadFile(makefilePath)
 	if err != nil {
@@ -188,8 +190,21 @@ func AddIncludeDirective(makefilePath, targetFile string) error {
 		relPath = filepath.Base(targetFile)
 	}
 
+	// Check if an include directive already exists for this file (include or -include)
+	// Match patterns like:
+	// - include help.mk / -include help.mk
+	// - include $(dir $(lastword $(MAKEFILE_LIST)))help.mk / -include ...
+	escapedRelPath := regexp.QuoteMeta(relPath)
+	includePattern := fmt.Sprintf(`(?m)^-?include\s+(\$\(dir \$\(lastword \$\(MAKEFILE_LIST\)\)\))?%s\s*$`, escapedRelPath)
+	existingIncludeRegex := regexp.MustCompile(includePattern)
+	if existingIncludeRegex.Match(content) {
+		// Include directive already exists, nothing to do
+		return nil
+	}
+
 	// Use self-referential include pattern that works from any directory
-	includeDirective := fmt.Sprintf("\ninclude $(dir $(lastword $(MAKEFILE_LIST)))%s\n", relPath)
+	// Using -include (optional include) allows users to delete help.mk and regenerate via make
+	includeDirective := fmt.Sprintf("\n-include $(dir $(lastword $(MAKEFILE_LIST)))%s\n", relPath)
 
 	// Append to end of file
 	newContent := append(content, []byte(includeDirective)...)

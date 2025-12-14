@@ -60,8 +60,8 @@ func TestGenerateHelpFile_Basic(t *testing.T) {
 	if !strings.Contains(result, "## Displays help for available targets.") {
 		t.Error("Missing help documentation comment")
 	}
-	if !strings.Contains(result, "help: $(MAKE_HELP_DIR)help.mk") {
-		t.Error("help target should depend on help.mk")
+	if !strings.Contains(result, "help:\n") {
+		t.Error("help target should have no dependencies")
 	}
 
 	// Check for @printf statements (static content)
@@ -73,22 +73,27 @@ func TestGenerateHelpFile_Basic(t *testing.T) {
 	if !strings.Contains(result, ".PHONY: help-build") {
 		t.Error("help-build should be .PHONY")
 	}
-	if !strings.Contains(result, "help-build: $(MAKE_HELP_DIR)help.mk") {
-		t.Error("help-build should depend on help.mk")
+	if !strings.Contains(result, "help-build:\n") {
+		t.Error("help-build target should have no dependencies")
 	}
 
-	// Check auto-regeneration target
-	if !strings.Contains(result, "# Auto-regenerate help when source Makefiles change") {
-		t.Error("Missing auto-regeneration comment")
+	// Check timestamp warning in help target
+	if !strings.Contains(result, "if [ \"$$f\" -nt \"$(MAKE_HELP_DIR)help.mk\" ]") {
+		t.Error("Missing timestamp check in help target")
 	}
-	if !strings.Contains(result, "$(MAKE_HELP_DIR)help.mk: $(MAKE_HELP_MAKEFILES)") {
-		t.Error("Missing regeneration target")
+	if !strings.Contains(result, "Run make update-help to refresh") {
+		t.Error("Missing update-help suggestion in warning")
+	}
+
+	// Check update-help target (replaces auto-regeneration)
+	if !strings.Contains(result, ".PHONY: update-help") {
+		t.Error("Missing update-help target")
 	}
 	if !strings.Contains(result, "@make-help --makefile-path $(MAKE_HELP_DIR)Makefile") {
-		t.Error("Missing make-help command in regeneration target")
+		t.Error("Missing make-help command in help-update target")
 	}
 	if !strings.Contains(result, "npx make-help --makefile-path $(MAKE_HELP_DIR)Makefile") {
-		t.Error("Missing npx fallback in regeneration target")
+		t.Error("Missing npx fallback in help-update target")
 	}
 }
 
@@ -261,7 +266,7 @@ func TestGenerateHelpFile_MultipleTargets(t *testing.T) {
 	expectedTargets := []string{"build", "test", "deploy"}
 	for _, target := range expectedTargets {
 		phonyDecl := ".PHONY: help-" + target
-		targetDecl := "help-" + target + ": $(MAKE_HELP_DIR)help.mk"
+		targetDecl := "help-" + target + ":\n"
 
 		if !strings.Contains(result, phonyDecl) {
 			t.Errorf("Missing .PHONY declaration for help-%s", target)
@@ -575,12 +580,15 @@ func TestGenerateRegenerationTarget(t *testing.T) {
 
 	result := generateRegenerationTarget(config)
 
-	// Check structure
-	if !strings.Contains(result, "# Auto-regenerate help when source Makefiles change") {
+	// Check structure - now generates update-help target instead of file rule
+	if !strings.Contains(result, "# Explicit target to regenerate help.mk") {
 		t.Error("Missing comment")
 	}
-	if !strings.Contains(result, "$(MAKE_HELP_DIR)help.mk: $(MAKE_HELP_MAKEFILES)") {
-		t.Error("Missing target declaration")
+	if !strings.Contains(result, ".PHONY: update-help") {
+		t.Error("Missing update-help phony declaration")
+	}
+	if !strings.Contains(result, "update-help:\n") {
+		t.Error("Missing update-help target")
 	}
 	if !strings.Contains(result, "@make-help --makefile-path $(MAKE_HELP_DIR)Makefile --no-color") {
 		t.Error("Missing make-help command with --no-color flag")
