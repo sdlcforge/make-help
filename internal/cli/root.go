@@ -8,6 +8,13 @@ import (
 	"github.com/spf13/pflag"
 )
 
+const (
+	modeGroupLabel   = "Mode"
+	inputGroupLabel  = "Input"
+	outputGroupLabel = "Output/formatting"
+	miscGroupLabel   = "Misc"
+)
+
 func init() {
 	// Register custom template function for flag grouping
 	cobra.AddTemplateFunc("flagGroups", flagGroupsFunc)
@@ -116,7 +123,7 @@ Documentation directives (in ## comments):
 	rootCmd.Flags().StringVar(&config.HelpFileRelPath,
 		"help-file-rel-path", "", "Relative path for generated help target file (e.g., help.mk or make/help.mk)")
 
-	// Output flags
+	// Output/formatting flags
 	rootCmd.PersistentFlags().BoolVar(&forceColor,
 		"color", false, "Force colored output")
 	rootCmd.PersistentFlags().BoolVar(&noColor,
@@ -141,25 +148,25 @@ Documentation directives (in ## comments):
 		"verbose", "v", false, "Enable verbose output for debugging")
 
 	// Annotate flags with their groups for custom help display
-	annotateFlag(rootCmd, "show-help", "Mode")
-	annotateFlag(rootCmd, "remove-help", "Mode")
-	annotateFlag(rootCmd, "dry-run", "Mode")
-	annotateFlag(rootCmd, "target", "Mode")
+	annotateFlag(rootCmd, "show-help", modeGroupLabel)
+	annotateFlag(rootCmd, "remove-help", modeGroupLabel)
+	annotateFlag(rootCmd, "dry-run", modeGroupLabel)
+	annotateFlag(rootCmd, "target", modeGroupLabel)
 
-	annotateFlag(rootCmd, "makefile-path", "Input")
-	annotateFlag(rootCmd, "help-file-rel-path", "Input")
+	annotateFlag(rootCmd, "makefile-path", inputGroupLabel)
+	annotateFlag(rootCmd, "help-file-rel-path", inputGroupLabel)
 
-	annotateFlag(rootCmd, "color", "Output")
-	annotateFlag(rootCmd, "no-color", "Output")
-	annotateFlag(rootCmd, "include-target", "Output")
-	annotateFlag(rootCmd, "include-all-phony", "Output")
-	annotateFlag(rootCmd, "keep-order-categories", "Output")
-	annotateFlag(rootCmd, "keep-order-targets", "Output")
-	annotateFlag(rootCmd, "keep-order-all", "Output")
-	annotateFlag(rootCmd, "category-order", "Output")
-	annotateFlag(rootCmd, "default-category", "Output")
+	annotateFlag(rootCmd, "color", outputGroupLabel)
+	annotateFlag(rootCmd, "no-color", outputGroupLabel)
+	annotateFlag(rootCmd, "include-target", outputGroupLabel)
+	annotateFlag(rootCmd, "include-all-phony", outputGroupLabel)
+	annotateFlag(rootCmd, "keep-order-categories", outputGroupLabel)
+	annotateFlag(rootCmd, "keep-order-targets", outputGroupLabel)
+	annotateFlag(rootCmd, "keep-order-all", outputGroupLabel)
+	annotateFlag(rootCmd, "category-order", outputGroupLabel)
+	annotateFlag(rootCmd, "default-category", outputGroupLabel)
 
-	annotateFlag(rootCmd, "verbose", "Misc")
+	annotateFlag(rootCmd, "verbose", miscGroupLabel)
 
 	// Set custom usage template
 	rootCmd.SetUsageTemplate(usageTemplate)
@@ -275,7 +282,7 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 // flagGroupsFunc generates grouped flag output for the custom usage template.
 func flagGroupsFunc(cmd *cobra.Command) string {
 	// Define the order of groups
-	groupOrder := []string{"Mode", "Input", "Output", "Misc"}
+	groupOrder := []string{modeGroupLabel, inputGroupLabel, outputGroupLabel, miscGroupLabel}
 
 	// Collect flags by group
 	flagsByGroup := make(map[string][]string)
@@ -294,7 +301,7 @@ func flagGroupsFunc(cmd *cobra.Command) string {
 			}
 			seenFlags[flag.Name] = true
 
-			group := "Misc" // default group
+			group := miscGroupLabel // default group
 			if flag.Annotations != nil {
 				if groups, ok := flag.Annotations["group"]; ok && len(groups) > 0 {
 					group = groups[0]
