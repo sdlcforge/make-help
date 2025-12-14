@@ -2,7 +2,7 @@
 ## A basic make setup. Any generated artifacts will be deleted by default on failure.
 
 MAKE_HELP_BIN:=make-help
-SRC_FILES:=$(shell find cmd internal -name "*.go")
+SRC_FILES:=$(shell find cmd internal -name "*.go" -not -name "*_test.go")
 
 ## !category Build
 ##
@@ -68,4 +68,4 @@ default: all
 all: build
 .PHONY: all
 
-include $(dir $(lastword $(MAKEFILE_LIST)))help.mk
+-include $(dir $(lastword $(MAKEFILE_LIST)))help.mk
