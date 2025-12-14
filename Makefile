@@ -20,26 +20,26 @@ clean:
 
 ## !category Test
 ##
-## Run unit tests (excludes integration tests)
+## Run unit tests. Use 'test.all' to run all tests.
 test.unit:
 	go test ./...
 .PHONY: test.unit
 
 ## !alias t
 ##
-## Run unit tests
+## Run unit tests.
 test: test.unit
 .PHONY: test
 
 t: test
 .PHONY: t
 
-## Run integration tests only
+## Run integration tests. Use 'test.all' to run all tests.
 test.integration:
 	go test -tags=integration ./test/integration/...
 .PHONY: test.integration
 
-## Run all tests (unit + integration)
+## Run all tests (unit + integration).
 test.all: test.unit test.integration
 .PHONY: test.all
 
@@ -55,7 +55,7 @@ lint-fix:
 	golangci-lint run --fix
 .PHONY: lint-fix
 
-## Run all quality checks (tests + lint)
+## Run all quality checks (test.all + lint).
 qa: test.all lint
 .PHONY: qa
 

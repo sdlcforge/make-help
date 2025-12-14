@@ -28,13 +28,13 @@ help:
 	@printf '%b\n' "\033[1;36mQuality:\033[0m"
 	@printf '%b\n' "  - \033[1;32mlint\033[0m: \033[0;37mRun golangci-lint\033[0m"
 	@printf '%b\n' "  - \033[1;32mlint-fix\033[0m: \033[0;37mRun golangci-lint with auto-fix\033[0m"
-	@printf '%b\n' "  - \033[1;32mqa\033[0m: \033[0;37mRun all quality checks (tests + lint)\033[0m"
+	@printf '%b\n' "  - \033[1;32mqa\033[0m: \033[0;37mRun all quality checks (test.all + lint).\033[0m"
 	@printf '%b\n' ""
 	@printf '%b\n' "\033[1;36mTest:\033[0m"
 	@printf '%b\n' "  - \033[1;32mtest\033[0m \033[0;33mt\033[0m: \033[0;37mRun unit tests\033[0m"
 	@printf '%b\n' "  - \033[1;32mtest.all\033[0m: \033[0;37mRun all tests (unit + integration)\033[0m"
 	@printf '%b\n' "  - \033[1;32mtest.integration\033[0m: \033[0;37mRun integration tests only\033[0m"
-	@printf '%b\n' "  - \033[1;32mtest.unit\033[0m: \033[0;37mRun unit tests (excludes integration tests)\033[0m"
+	@printf '%b\n' "  - \033[1;32mtest.unit\033[0m: \033[0;37mRun unit tests.\033[0m"
 
 .PHONY: help-build
 help-build:
@@ -97,7 +97,7 @@ help-qa:
 	@printf '%b\n' "\033[1;32mTarget: qa\033[0m"
 	@printf '%b\n' ""
 	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
-	@printf '%b\n' "  Run all quality checks (tests + lint)"
+	@printf '%b\n' "  Run all quality checks (test.all + lint)."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:59"
 
@@ -136,7 +136,7 @@ help-test.unit:
 	@printf '%b\n' ""
 	@printf '%b\n' "\033[0;37mDocumentation:\033[0m"
 	@printf '%b\n' "  "
-	@printf '%b\n' "  Run unit tests (excludes integration tests)"
+	@printf '%b\n' "  Run unit tests. Use 'test.all' to run all tests."
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:24"
 
