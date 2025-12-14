@@ -26,6 +26,8 @@ This document consolidates outstanding findings from three parallel reviews:
   - Tests: Comprehensive coverage in `create_help_target_test.go`
   - Docs: Updated README.md, components.md, developer-brief.md
 
+- [ ] **Move 'help.mk' to 'make/00-help.mk' by default**
+
 ### Documentation
 
 - [ ] **Add migration guide**
