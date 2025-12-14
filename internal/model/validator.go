@@ -1,6 +1,9 @@
 package model
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/sdlcforge/make-help/internal/errors"
 )
 
@@ -13,24 +16,28 @@ func ValidateCategorization(model *HelpModel, defaultCategory string) error {
 		return nil
 	}
 
-	// Count categorized and uncategorized targets
+	// Count categorized and uncategorized targets, and collect uncategorized names
 	categorizedCount := 0
-	uncategorizedCount := 0
+	var uncategorizedTargets []string
 
 	for _, cat := range model.Categories {
 		if cat.Name == "" {
-			uncategorizedCount += len(cat.Targets)
+			for _, t := range cat.Targets {
+				uncategorizedTargets = append(uncategorizedTargets, t.Name)
+			}
 		} else {
 			categorizedCount += len(cat.Targets)
 		}
 	}
 
 	// Check for mixed categorization
-	if categorizedCount > 0 && uncategorizedCount > 0 {
+	if categorizedCount > 0 && len(uncategorizedTargets) > 0 {
 		if defaultCategory == "" {
-			return errors.NewMixedCategorizationError(
-				"found both categorized and uncategorized targets; use --default-category to resolve",
+			msg := fmt.Sprintf(
+				"found both categorized and uncategorized targets\nUncategorized targets: %s",
+				strings.Join(uncategorizedTargets, ", "),
 			)
+			return errors.NewMixedCategorizationError(msg)
 		}
 	}
 
