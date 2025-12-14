@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sdlcforge/make-help/internal/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -33,8 +34,9 @@ func NewRootCmd() *cobra.Command {
 	var keepOrderAll bool
 
 	rootCmd := &cobra.Command{
-		Use:   "make-help",
-		Short: "Dynamic help generation for Makefiles",
+		Use:     "make-help",
+		Short:   "Dynamic help generation for Makefiles",
+		Version: version.Version,
 		Long: `make-help generates formatted help output from Makefile documentation.
 
 Default behavior generates help file. Use flags for other operations:

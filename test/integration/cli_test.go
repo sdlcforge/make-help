@@ -290,6 +290,18 @@ func TestHelpFlag(t *testing.T) {
 	assert.Contains(t, stdout, "--verbose")
 }
 
+func TestVersionFlag(t *testing.T) {
+	binary := buildBinary(t)
+
+	stdout, _, err := runMakeHelp(t, binary, "--version")
+	require.NoError(t, err)
+
+	// Should contain "make-help version" and some version string
+	assert.Contains(t, stdout, "make-help version")
+	// Version should be either a semver or "dev"
+	assert.Regexp(t, `make-help version (dev|\d+\.\d+\.\d+.*)`, stdout)
+}
+
 // TestAddTargetCommand tests the old add-target subcommand.
 // DEPRECATED: This test is for the old subcommand interface that was replaced
 // with --create-help-target flag in Stage 1. This test is disabled.

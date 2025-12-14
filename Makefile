@@ -3,14 +3,16 @@
 
 MAKE_HELP_BIN:=make-help
 SRC_FILES:=$(shell find cmd internal -name "*.go" -not -name "*_test.go")
+VERSION:=$(shell node -p "require('./package.json').version")
+LDFLAGS:=-ldflags "-X github.com/sdlcforge/make-help/internal/version.Version=$(VERSION)"
 
 ## !category Build
 ## Builds the make-help binary.
 build: $(MAKE_HELP_BIN)
 .PHONY: build
 
-$(MAKE_HELP_BIN):go.mod go.sum $(SRC_FILES)
-	go build -o make-help cmd/make-help/main.go
+$(MAKE_HELP_BIN): go.mod go.sum $(SRC_FILES) package.json
+	go build $(LDFLAGS) -o make-help cmd/make-help/main.go
 
 ## Deletes all built artifacts.
 clean:
