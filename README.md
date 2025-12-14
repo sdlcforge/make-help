@@ -171,6 +171,7 @@ make-help --remove-help                # Remove generated help files
 | `--dry-run` | Preview what files would be created/modified without making changes |
 | `--help-file-rel-path` | Override relative path for generated help file (e.g., `help.mk` or `make/help.mk`). Must be a relative path. |
 | `--default-category` | Default category for uncategorized targets |
+| `--help-category` | Category name for generated help targets (`help`, `update-help`). Default: `Help` |
 | `--keep-order-categories` | Preserve category discovery order |
 | `--keep-order-targets` | Preserve target discovery order |
 | `--category-order` | Explicit category order (comma-separated) |

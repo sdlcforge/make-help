@@ -136,6 +136,7 @@ func runCreateHelpTarget(config *Config) error {
 		KeepOrderTargets:    config.KeepOrderTargets,
 		CategoryOrder:       config.CategoryOrder,
 		DefaultCategory:     config.DefaultCategory,
+		HelpCategory:        config.HelpCategory,
 		IncludeTargets:      parseIncludeTargets(config.IncludeTargets),
 		IncludeAllPhony:     config.IncludeAllPhony,
 	}

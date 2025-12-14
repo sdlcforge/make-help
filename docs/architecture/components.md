@@ -101,6 +101,8 @@ Documentation directives (in ## comments):
         "category-order", []string{}, "Explicit category order (comma-separated)")
     rootCmd.Flags().StringVar(&config.DefaultCategory,
         "default-category", "", "Default category for uncategorized targets")
+    rootCmd.Flags().StringVar(&config.HelpCategory,
+        "help-category", "Help", "Category name for generated help targets (help, update-help)")
 
     // Help file generation flags
     rootCmd.Flags().StringVar(&config.HelpFileRelPath,

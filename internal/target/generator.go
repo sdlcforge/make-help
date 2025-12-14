@@ -22,6 +22,10 @@ type GeneratorConfig struct {
 	// UseColor controls whether ANSI color codes are embedded in the output
 	UseColor bool
 
+	// HelpCategory is the category name for generated help targets (help, update-help).
+	// Defaults to "Help" if empty.
+	HelpCategory string
+
 	// Makefiles is the list of discovered Makefiles for dependency tracking
 	Makefiles []string
 
@@ -62,7 +66,11 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	// Main help target with static content
 	// If source Makefiles use categories, add category directive for consistency
 	if config.HelpModel.HasCategories {
-		buf.WriteString("## !category Help\n")
+		helpCategory := config.HelpCategory
+		if helpCategory == "" {
+			helpCategory = "Help"
+		}
+		buf.WriteString(fmt.Sprintf("## !category %s\n", helpCategory))
 	}
 	buf.WriteString(".PHONY: help\n")
 	buf.WriteString("## Displays help for available targets.\n")
@@ -150,6 +158,11 @@ func buildRegenerateFlags(config *GeneratorConfig) string {
 		flags = append(flags, "--include-all-phony")
 	}
 
+	// Add help category if not default
+	if config.HelpCategory != "" && config.HelpCategory != "Help" {
+		flags = append(flags, fmt.Sprintf("--help-category %s", config.HelpCategory))
+	}
+
 	if len(flags) == 0 {
 		return ""
 	}
@@ -166,9 +179,13 @@ func generateRegenerationTarget(config *GeneratorConfig) string {
 
 	buf.WriteString("# Explicit target to regenerate help.mk\n")
 	// If source Makefiles use categories, add category directive for consistency
-	// (uses same "Help" category as the help target)
+	// (uses same category as the help target)
 	if config.HelpModel.HasCategories {
-		buf.WriteString("## !category Help\n")
+		helpCategory := config.HelpCategory
+		if helpCategory == "" {
+			helpCategory = "Help"
+		}
+		buf.WriteString(fmt.Sprintf("## !category %s\n", helpCategory))
 	}
 	buf.WriteString(".PHONY: update-help\n")
 	buf.WriteString("## Regenerates help.mk from source Makefiles.\n")

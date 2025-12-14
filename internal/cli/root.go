@@ -142,6 +142,8 @@ Documentation directives (in ## comments):
 		"category-order", []string{}, "Explicit category order (comma-separated)")
 	rootCmd.Flags().StringVar(&config.DefaultCategory,
 		"default-category", "", "Default category for uncategorized targets")
+	rootCmd.Flags().StringVar(&config.HelpCategory,
+		"help-category", "Help", "Category name for generated help targets (help, update-help)")
 
 	// Misc flags
 	rootCmd.PersistentFlags().BoolVarP(&config.Verbose,
@@ -165,6 +167,7 @@ Documentation directives (in ## comments):
 	annotateFlag(rootCmd, "keep-order-all", outputGroupLabel)
 	annotateFlag(rootCmd, "category-order", outputGroupLabel)
 	annotateFlag(rootCmd, "default-category", outputGroupLabel)
+	annotateFlag(rootCmd, "help-category", outputGroupLabel)
 
 	annotateFlag(rootCmd, "verbose", miscGroupLabel)
 

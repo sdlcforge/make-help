@@ -58,6 +58,10 @@ type Config struct {
 	// Required when mixing categorized and uncategorized targets.
 	DefaultCategory string
 
+	// HelpCategory is the category name for generated help targets (help, update-help).
+	// Defaults to "Help" if not specified.
+	HelpCategory string
+
 	// Add-target options
 
 	// HelpFileRelPath specifies a relative path for the generated help target file.
@@ -95,5 +99,6 @@ func NewConfig() *Config {
 	return &Config{
 		ColorMode:     ColorAuto,
 		CategoryOrder: []string{},
+		HelpCategory:  "Help",
 	}
 }

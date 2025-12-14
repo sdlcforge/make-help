@@ -178,9 +178,11 @@ func TestGenerateHelpFile_AllOptions(t *testing.T) {
 		DefaultCategory:     "Misc",
 		IncludeTargets:      []string{"lint", "fmt"},
 		IncludeAllPhony:     true,
+		HelpCategory:        "Utilities",
 		Makefiles:           []string{"/path/to/Makefile", "/path/to/make/build.mk"},
 		MakefileDir:         "/path/to",
 		HelpModel: &model.HelpModel{
+			HasCategories: true,
 			Categories: []model.Category{
 				{
 					Name: "Build",
@@ -221,6 +223,13 @@ func TestGenerateHelpFile_AllOptions(t *testing.T) {
 	}
 	if !strings.Contains(result, "--include-all-phony") {
 		t.Error("Missing --include-all-phony")
+	}
+	if !strings.Contains(result, "--help-category Utilities") {
+		t.Error("Missing --help-category")
+	}
+	// Check category directive is applied to help targets
+	if !strings.Contains(result, "## !category Utilities") {
+		t.Error("Missing category directive for help targets")
 	}
 }
 
@@ -547,6 +556,22 @@ func TestBuildRegenerateFlags(t *testing.T) {
 				IncludeAllPhony: true,
 			},
 			expected: " --include-all-phony",
+		},
+		{
+			name: "help category non-default",
+			config: &GeneratorConfig{
+				UseColor:     true,
+				HelpCategory: "Utilities",
+			},
+			expected: " --help-category Utilities",
+		},
+		{
+			name: "help category default value",
+			config: &GeneratorConfig{
+				UseColor:     true,
+				HelpCategory: "Help",
+			},
+			expected: "", // default "Help" should not be in flags
 		},
 		{
 			name: "multiple options",

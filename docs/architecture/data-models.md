@@ -83,6 +83,7 @@ type Config struct {
     KeepOrderTargets    bool          // Preserve target discovery order
     CategoryOrder       []string      // Explicit category order
     DefaultCategory     string        // Default category name
+    HelpCategory        string        // Category for generated help targets (default: "Help")
 
     // Add-target options
     HelpFileRelPath string            // Relative path for generated help target file
