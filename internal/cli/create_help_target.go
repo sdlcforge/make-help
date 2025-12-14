@@ -80,6 +80,8 @@ func runCreateHelpTarget(config *Config) error {
 		IncludeTargets:  parseIncludeTargets(config.IncludeTargets),
 		IncludeAllPhony: config.IncludeAllPhony,
 		PhonyTargets:    targetsResult.IsPhony,
+		Dependencies:    targetsResult.Dependencies,
+		HasRecipe:       targetsResult.HasRecipe,
 	}
 	builder := model.NewBuilder(builderConfig)
 	helpModel, err := builder.Build(parsedFiles)

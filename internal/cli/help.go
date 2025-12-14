@@ -84,6 +84,8 @@ func runHelp(config *Config) error {
 		IncludeTargets:  includeTargets,
 		IncludeAllPhony: config.IncludeAllPhony,
 		PhonyTargets:    targetsResult.IsPhony,
+		Dependencies:    targetsResult.Dependencies,
+		HasRecipe:       targetsResult.HasRecipe,
 	}
 	builder := model.NewBuilder(builderConfig)
 	helpModel, err := builder.Build(parsedFiles)
@@ -188,6 +190,8 @@ func runDetailedHelp(config *Config) error {
 		DefaultCategory: config.DefaultCategory,
 		IncludeTargets:  includeTargets,
 		PhonyTargets:    targetsResult.IsPhony,
+		Dependencies:    targetsResult.Dependencies,
+		HasRecipe:       targetsResult.HasRecipe,
 	}
 	builder := model.NewBuilder(builderConfig)
 	helpModel, err := builder.Build(parsedFiles)

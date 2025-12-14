@@ -15,6 +15,12 @@ type DiscoverTargetsResult struct {
 
 	// IsPhony maps target names to their .PHONY status.
 	IsPhony map[string]bool
+
+	// Dependencies maps target names to their prerequisite targets.
+	Dependencies map[string][]string
+
+	// HasRecipe maps target names to whether they have a recipe (commands).
+	HasRecipe map[string]bool
 }
 
 // discoverTargets extracts all targets from make -p output.
@@ -52,17 +58,25 @@ func (s *Service) discoverTargets(makefilePath string) (*DiscoverTargetsResult, 
 	return result, nil
 }
 
-// parseTargetsFromDatabase extracts target names and .PHONY status from make -p output.
+// parseTargetsFromDatabase extracts target names, .PHONY status, dependencies,
+// and recipe presence from make -p output.
 // It filters out comments, whitespace-prefixed lines, and built-in targets.
 func parseTargetsFromDatabase(output string) *DiscoverTargetsResult {
 	var targets []string
 	seen := make(map[string]bool)
 	isPhony := make(map[string]bool)
+	dependencies := make(map[string][]string)
+	hasRecipe := make(map[string]bool)
 
-	// Match target definitions: <target>: or <target>::
-	targetRegex := regexp.MustCompile(`^([a-zA-Z0-9_/.@%+-][a-zA-Z0-9_/.@%+-]*)\s*:`)
+	// Match target definitions: <target>: [deps...] or <target>:: [deps...]
+	// Captures: 1=target name, 2=everything after the colon(s)
+	targetRegex := regexp.MustCompile(`^([a-zA-Z0-9_/.@%+-][a-zA-Z0-9_/.@%+-]*)\s*::?\s*(.*)$`)
 
-	for _, line := range strings.Split(output, "\n") {
+	// Track current target for recipe detection
+	var currentTarget string
+
+	lines := strings.Split(output, "\n")
+	for i, line := range lines {
 		// Parse .PHONY declarations
 		if strings.HasPrefix(line, ".PHONY:") {
 			// Extract all targets from .PHONY line
@@ -74,7 +88,13 @@ func parseTargetsFromDatabase(output string) *DiscoverTargetsResult {
 			continue
 		}
 
-		// Skip comments
+		// Check for "recipe to execute" indicator for the current target
+		if currentTarget != "" && strings.Contains(line, "recipe to execute") {
+			hasRecipe[currentTarget] = true
+			continue
+		}
+
+		// Skip comments (but we already checked for recipe indicator)
 		if strings.HasPrefix(line, "#") {
 			continue
 		}
@@ -84,14 +104,19 @@ func parseTargetsFromDatabase(output string) *DiscoverTargetsResult {
 			continue
 		}
 
-		// Extract target name
+		// Extract target name and dependencies
 		if matches := targetRegex.FindStringSubmatch(line); matches != nil {
 			targetName := matches[1]
+			depsStr := strings.TrimSpace(matches[2])
 
 			// Skip special/built-in targets
 			if isSpecialTarget(targetName) {
+				currentTarget = ""
 				continue
 			}
+
+			// Update current target for recipe detection
+			currentTarget = targetName
 
 			// Skip if already seen (avoid duplicates)
 			if seen[targetName] {
@@ -100,12 +125,34 @@ func parseTargetsFromDatabase(output string) *DiscoverTargetsResult {
 
 			targets = append(targets, targetName)
 			seen[targetName] = true
+
+			// Parse dependencies (space-separated)
+			if depsStr != "" {
+				deps := strings.Fields(depsStr)
+				// Filter out special targets from dependencies
+				var filteredDeps []string
+				for _, dep := range deps {
+					if !isSpecialTarget(dep) {
+						filteredDeps = append(filteredDeps, dep)
+					}
+				}
+				if len(filteredDeps) > 0 {
+					dependencies[targetName] = filteredDeps
+				}
+			}
+		} else {
+			// Non-target line, but check if we're still in a target block
+			// Empty line or other content might indicate end of target block
+			// We keep currentTarget set to continue looking for recipe indicator
+			_ = i // suppress unused warning
 		}
 	}
 
 	return &DiscoverTargetsResult{
-		Targets: targets,
-		IsPhony: isPhony,
+		Targets:      targets,
+		IsPhony:      isPhony,
+		Dependencies: dependencies,
+		HasRecipe:    hasRecipe,
 	}
 }
 

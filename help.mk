@@ -18,7 +18,7 @@ help:
 	@printf '%b\n' "Targets:"
 	@printf '%b\n' ""
 	@printf '%b\n' "\033[1;36mBuild:\033[0m"
-	@printf '%b\n' "  - \033[1;32mbuild\033[0m: \033[0;37mBuilds the make-help binary.\033[0m"
+	@printf '%b\n' "  - \033[1;32mbuild\033[0m \033[0;33mall\033[0m: \033[0;37mBuilds the make-help binary.\033[0m"
 	@printf '%b\n' "  - \033[1;32mclean\033[0m: \033[0;37mDeletes all built artifacts.\033[0m"
 	@printf '%b\n' ""
 	@printf '%b\n' "\033[1;36mHelp:\033[0m"
@@ -31,14 +31,14 @@ help:
 	@printf '%b\n' "  - \033[1;32mqa\033[0m: \033[0;37mRun all quality checks (test.all + lint).\033[0m"
 	@printf '%b\n' ""
 	@printf '%b\n' "\033[1;36mTest:\033[0m"
-	@printf '%b\n' "  - \033[1;32mtest\033[0m \033[0;33mt\033[0m: \033[0;37mRun unit tests.\033[0m"
 	@printf '%b\n' "  - \033[1;32mtest.all\033[0m: \033[0;37mRun all tests (unit + integration).\033[0m"
 	@printf '%b\n' "  - \033[1;32mtest.integration\033[0m: \033[0;37mRun integration tests.\033[0m"
-	@printf '%b\n' "  - \033[1;32mtest.unit\033[0m: \033[0;37mRun unit tests.\033[0m"
+	@printf '%b\n' "  - \033[1;32mtest.unit\033[0m \033[0;33mtest\033[0m: \033[0;37mRun unit tests.\033[0m"
 
 .PHONY: help-build
 help-build:
 	@printf '%b\n' "\033[1;32mTarget: build\033[0m"
+	@printf '%b\n' "\033[0;33mAliases: all\033[0m"
 	@printf '%b\n' ""
 	@printf '%b\n' "Builds the make-help binary."
 	@printf '%b\n' ""
@@ -63,7 +63,7 @@ help-update-help:
 	@printf '%b\n' "\033[1;32mTarget: update-help\033[0m"
 	@printf '%b\n' "Regenerates help.mk from source Makefiles."
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/help.mk:136"
+	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/help.mk:125"
 
 .PHONY: help-lint
 help-lint:
@@ -87,15 +87,6 @@ help-qa:
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:59"
 
-.PHONY: help-test
-help-test:
-	@printf '%b\n' "\033[1;32mTarget: test\033[0m"
-	@printf '%b\n' "\033[0;33mAliases: t\033[0m"
-	@printf '%b\n' ""
-	@printf '%b\n' "Run unit tests."
-	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:31"
-
 .PHONY: help-test.all
 help-test.all:
 	@printf '%b\n' "\033[1;32mTarget: test.all\033[0m"
@@ -113,6 +104,7 @@ help-test.integration:
 .PHONY: help-test.unit
 help-test.unit:
 	@printf '%b\n' "\033[1;32mTarget: test.unit\033[0m"
+	@printf '%b\n' "\033[0;33mAliases: test\033[0m"
 	@printf '%b\n' ""
 	@printf '%b\n' "Run unit tests. Use 'test.all' to run all tests."
 	@printf '%b\n' ""

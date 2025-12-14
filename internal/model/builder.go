@@ -21,6 +21,14 @@ type BuilderConfig struct {
 
 	// PhonyTargets maps target names to their .PHONY status.
 	PhonyTargets map[string]bool
+
+	// Dependencies maps target names to their prerequisite targets.
+	// Used for detecting implicit aliases (phony target with single phony dep, no recipe).
+	Dependencies map[string][]string
+
+	// HasRecipe maps target names to whether they have a recipe.
+	// Used for detecting implicit aliases.
+	HasRecipe map[string]bool
 }
 
 // Builder constructs a HelpModel from parsed Makefile directives.
@@ -38,6 +46,12 @@ func NewBuilder(config *BuilderConfig) *Builder {
 	}
 	if config.PhonyTargets == nil {
 		config.PhonyTargets = make(map[string]bool)
+	}
+	if config.Dependencies == nil {
+		config.Dependencies = make(map[string][]string)
+	}
+	if config.HasRecipe == nil {
+		config.HasRecipe = make(map[string]bool)
 	}
 	return &Builder{
 		config:    config,
@@ -65,12 +79,27 @@ func (b *Builder) Build(parsedFiles []*parser.ParsedFile) (*HelpModel, error) {
 		b.processFile(file, model, categoryMap, targetMap, targetToCategory, &categoryOrder, &targetOrder)
 	}
 
+	// Detect implicit aliases: phony targets with single phony dependency and no recipe
+	implicitAliases := b.detectImplicitAliases(targetMap)
+
 	// Assign targets to categories with filtering
 	for targetName, target := range targetMap {
+		// Skip if this target is an implicit alias of another target
+		if _, isAlias := implicitAliases[targetName]; isAlias {
+			continue
+		}
+
 		// Apply filtering logic
 		shouldInclude := b.shouldIncludeTarget(target)
 		if !shouldInclude {
 			continue
+		}
+
+		// Add implicit aliases to this target
+		for aliasName, depName := range implicitAliases {
+			if depName == targetName {
+				target.Aliases = append(target.Aliases, aliasName)
+			}
 		}
 
 		// Set phony status
@@ -138,6 +167,48 @@ func (b *Builder) shouldIncludeTarget(target *Target) bool {
 	}
 
 	return false
+}
+
+// detectImplicitAliases finds targets that are implicit aliases of other targets.
+// A target is an implicit alias if:
+//   - It is .PHONY
+//   - It has exactly one dependency
+//   - That dependency is also .PHONY
+//   - It has no recipe (no commands)
+//
+// Returns a map from alias target name to the target it aliases.
+func (b *Builder) detectImplicitAliases(targetMap map[string]*Target) map[string]string {
+	aliases := make(map[string]string)
+
+	for targetName := range targetMap {
+		// Check conditions for implicit alias:
+		// 1. Target is .PHONY
+		if !b.config.PhonyTargets[targetName] {
+			continue
+		}
+
+		// 2. Target has exactly one dependency
+		deps := b.config.Dependencies[targetName]
+		if len(deps) != 1 {
+			continue
+		}
+
+		// 3. The dependency is also .PHONY
+		depName := deps[0]
+		if !b.config.PhonyTargets[depName] {
+			continue
+		}
+
+		// 4. Target has no recipe
+		if b.config.HasRecipe[targetName] {
+			continue
+		}
+
+		// This target is an implicit alias of its dependency
+		aliases[targetName] = depName
+	}
+
+	return aliases
 }
 
 // processFile handles directives and targets from a single parsed file.
