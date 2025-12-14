@@ -409,28 +409,10 @@ func (s *Scanner) parseTarget(line string) string {
 ```
 
 **Key Design Decisions:**
-- **Stateful scanning to track current category**: The scanner maintains `currentCategory` state that applies to all subsequent targets until explicitly changed
-- **Sticky category behavior**: `@category` acts as a switch - once set, it applies to all following targets until another `@category` directive is encountered
-- **Category reset**: `@category _` (underscore) resets the category to uncategorized (nil/empty string)
+- **Stateful scanning to track current category**: `@category` sets the current category that applies to all following targents until another `@category` directive is encountered
 - **Pending documentation queue**: Documentation lines are queued and associated with the next target definition
 - **Simple regex-free parsing for robustness**: Target parsing uses string operations instead of complex regex
 - **Target name extraction handles grouped and variable targets**: Supports `foo:`, `foo&:`, and `$(VAR):` patterns
-
-**Category State Machine:**
-```
-Initial State: currentCategory = "" (uncategorized)
-
-## @category Build     →  currentCategory = "Build"
-build:                 →  target gets category "Build"
-compile:               →  target gets category "Build" (inherited)
-
-## @category Test      →  currentCategory = "Test"
-test:                  →  target gets category "Test"
-integration:           →  target gets category "Test" (inherited)
-
-## @category _         →  currentCategory = "" (reset to uncategorized)
-standalone:            →  target gets category "" (uncategorized)
-```
 
 **Error Handling:**
 - Invalid directive syntax (log warning, skip)
