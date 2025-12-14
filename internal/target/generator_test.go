@@ -64,9 +64,9 @@ func TestGenerateHelpFile_Basic(t *testing.T) {
 		t.Error("help target should depend on help.mk")
 	}
 
-	// Check for @echo statements (static content)
-	if !strings.Contains(result, "@echo") {
-		t.Error("Should contain @echo statements for static help")
+	// Check for @printf statements (static content)
+	if !strings.Contains(result, "@printf") {
+		t.Error("Should contain @printf statements for static help")
 	}
 
 	// Check help-<target> target

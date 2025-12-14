@@ -58,7 +58,7 @@ test:
 
 	// Verify content preview is shown (new static format)
 	assert.Contains(t, output, ".PHONY: help")
-	assert.Contains(t, output, "@echo") // New static format uses echo statements
+	assert.Contains(t, output, "@printf") // New static format uses printf statements
 	assert.Contains(t, output, "--- end ---")
 
 	// Verify no files were actually created

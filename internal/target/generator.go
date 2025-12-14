@@ -71,7 +71,7 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	}
 
 	for _, line := range helpLines {
-		buf.WriteString(fmt.Sprintf("\t@echo \"%s\"\n", line))
+		buf.WriteString(fmt.Sprintf("\t@printf '%%b\\n' \"%s\"\n", line))
 	}
 
 	// Generate help-<target> targets for each documented target
@@ -83,7 +83,7 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 
 			detailedLines := renderer.RenderDetailedForMakefile(&target)
 			for _, line := range detailedLines {
-				buf.WriteString(fmt.Sprintf("\t@echo \"%s\"\n", line))
+				buf.WriteString(fmt.Sprintf("\t@printf '%%b\\n' \"%s\"\n", line))
 			}
 		}
 	}
