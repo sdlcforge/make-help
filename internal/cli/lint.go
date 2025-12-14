@@ -115,6 +115,17 @@ func runLint(config *Config) error {
 	documentedTargets := make(map[string]bool)
 	aliases := make(map[string]bool)
 	generatedHelpTargets := make(map[string]bool)
+	targetLocations := make(map[string]lint.TargetLocation)
+
+	// Build target locations from parsed files
+	for _, pf := range parsedFiles {
+		for targetName, lineNum := range pf.TargetMap {
+			targetLocations[targetName] = lint.TargetLocation{
+				File: pf.Path,
+				Line: lineNum,
+			}
+		}
+	}
 
 	// Add the standard generated help targets
 	generatedHelpTargets["help"] = true
@@ -140,6 +151,7 @@ func runLint(config *Config) error {
 		DocumentedTargets:    documentedTargets,
 		Aliases:              aliases,
 		GeneratedHelpTargets: generatedHelpTargets,
+		TargetLocations:      targetLocations,
 	}
 
 	// Step 8: Run all lint checks

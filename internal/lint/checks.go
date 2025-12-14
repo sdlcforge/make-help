@@ -44,9 +44,17 @@ func CheckUndocumentedPhony(ctx *CheckContext) []Warning {
 
 	// Create warnings in sorted order
 	for _, targetName := range undocumentedTargets {
+		// Look up location from parsed files if available
+		file := ctx.MakefilePath
+		line := 0
+		if loc, ok := ctx.TargetLocations[targetName]; ok {
+			file = loc.File
+			line = loc.Line
+		}
+
 		warnings = append(warnings, Warning{
-			File:      ctx.MakefilePath,
-			Line:      0, // Line number not available from discovery
+			File:      file,
+			Line:      line,
 			Severity:  SeverityWarning,
 			CheckName: "undocumented-phony",
 			Message:   fmt.Sprintf("undocumented phony target '%s'", targetName),

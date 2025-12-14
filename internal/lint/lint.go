@@ -37,6 +37,12 @@ type Warning struct {
 	Context string
 }
 
+// TargetLocation holds the source file and line number where a target is defined.
+type TargetLocation struct {
+	File string
+	Line int
+}
+
 // CheckContext provides all data needed by lint checks.
 type CheckContext struct {
 	// HelpModel contains the parsed and built help model.
@@ -64,6 +70,11 @@ type CheckContext struct {
 	// These are excluded from undocumented phony warnings.
 	// Includes: "help", "update-help", and "help-<target>" for each documented target.
 	GeneratedHelpTargets map[string]bool
+
+	// TargetLocations maps target names to their source file and line number.
+	// This is populated from parsed Makefiles and used to provide line numbers
+	// in warnings for targets discovered via make but not in the help model.
+	TargetLocations map[string]TargetLocation
 }
 
 // CheckFunc is a function that performs a specific lint check.
