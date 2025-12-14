@@ -171,7 +171,9 @@ func (r *Renderer) RenderDetailedTarget(target *model.Target) string {
 			buf.WriteString("\n")
 		}
 		for _, line := range target.Documentation {
+			buf.WriteString(r.colors.Documentation)
 			buf.WriteString(line)
+			buf.WriteString(r.colors.Reset)
 			buf.WriteString("\n")
 		}
 	}
@@ -354,7 +356,8 @@ func (r *Renderer) RenderDetailedForMakefile(target *model.Target) []string {
 			lines = append(lines, escapeForMakefileEcho(""))
 		}
 		for _, line := range target.Documentation {
-			lines = append(lines, escapeForMakefileEcho(line))
+			docLine := r.colors.Documentation + line + r.colors.Reset
+			lines = append(lines, escapeForMakefileEcho(docLine))
 		}
 	}
 
