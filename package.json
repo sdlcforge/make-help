@@ -22,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/sdlcforge/make-help/issues"
   },
-  "homepage": "https://github.com/sdlcforge/make-help#readme"
+  "homepage": "https://github.com/sdlcforge/make-help#readme",
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.12.0"
+  }
 }

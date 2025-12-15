@@ -69,7 +69,7 @@ diagrams: $(SVG_FILES)
 .PHONY: diagrams
 
 $(SVG_FILES): $(DIAGRAM_DIR)/%.svg: $(DIAGRAM_DIR)/%.mmd
-	mmdc -i $< -o $@
+	npx mmdc -i $< -o $@
 
 ## Remove generated diagram SVG files.
 clean.diagrams:

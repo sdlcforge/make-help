@@ -2,35 +2,34 @@
 %% Shows how the scanner maintains state while processing directives
 
 stateDiagram-v2
-    [*] --> Idle: Start scanning file
+    [*] --> Idle: Start scanning
 
-    Idle --> Idle: Non-doc line<br/>(clears pending)
+    Idle --> Idle: Non-doc line
     Idle --> CollectingDocs: ## directive
 
-    CollectingDocs --> CollectingDocs: ## doc line<br/>(append to pending)
-    CollectingDocs --> CollectingDocs: ## !var<br/>(add to pendingVars)
-    CollectingDocs --> CollectingDocs: ## !alias<br/>(set pendingAliases)
-    CollectingDocs --> CategorySet: ## !category X
+    CollectingDocs --> CollectingDocs: ## doc line
+    CollectingDocs --> CollectingDocs: ## !var
+    CollectingDocs --> CollectingDocs: ## !alias
+    CollectingDocs --> CategorySet: ## !category
     CollectingDocs --> FileDoc: ## !file
-    CollectingDocs --> Idle: target:<br/>(emit target with pending)
+    CollectingDocs --> Idle: target line
 
     CategorySet --> CollectingDocs: ## doc line
-    CategorySet --> CategorySet: ## !category Y<br/>(update current)
-    CategorySet --> Idle: target:<br/>(emit with category)
+    CategorySet --> CategorySet: ## !category
+    CategorySet --> Idle: target line
 
-    FileDoc --> Idle: ## !file content<br/>(emit file directive)
+    FileDoc --> Idle: content line
     FileDoc --> CollectingDocs: ## doc line
 
     note right of CollectingDocs
-        Pending state:
-        - pendingDocs[]
-        - pendingVars[]
-        - pendingAliases
-        - currentCategory (sticky)
+        Pending state includes
+        pendingDocs, pendingVars,
+        pendingAliases, and
+        currentCategory (sticky)
     end note
 
     note right of CategorySet
-        Category is STICKY:
+        Category is STICKY and
         applies to all subsequent
         targets until changed
     end note
