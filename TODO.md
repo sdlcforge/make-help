@@ -51,7 +51,7 @@ This document consolidates outstanding findings from three parallel reviews:
 
 ### Code Quality
 
-- [ ] **Remove unused extractor from Renderer**
+- [x] **Remove unused extractor from Renderer**
   - Location: `internal/format/renderer.go:14, 22`
   - Issue: Renderer embeds `summary.Extractor` but summaries are extracted during model building
   - Action: Remove field (minor memory overhead)

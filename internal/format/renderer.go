@@ -5,21 +5,18 @@ import (
 	"strings"
 
 	"github.com/sdlcforge/make-help/internal/model"
-	"github.com/sdlcforge/make-help/internal/summary"
 )
 
 // Renderer handles the formatting and rendering of help output.
 type Renderer struct {
-	colors    *ColorScheme
-	extractor *summary.Extractor
+	colors *ColorScheme
 }
 
 // NewRenderer creates a new Renderer with the given color mode.
 // The color scheme is determined by the useColor setting.
 func NewRenderer(useColor bool) *Renderer {
 	return &Renderer{
-		colors:    NewColorScheme(useColor),
-		extractor: summary.NewExtractor(),
+		colors: NewColorScheme(useColor),
 	}
 }
 
@@ -98,12 +95,11 @@ func (r *Renderer) renderTarget(buf *strings.Builder, target *model.Target) {
 		buf.WriteString(r.colors.Reset)
 	}
 
-	// Summary (extract first sentence from documentation)
-	summary := r.extractor.Extract(target.Documentation)
-	if summary != "" {
+	// Summary (pre-computed during model building)
+	if target.Summary != "" {
 		buf.WriteString(": ")
 		buf.WriteString(r.colors.Documentation)
-		buf.WriteString(summary)
+		buf.WriteString(target.Summary)
 		buf.WriteString(r.colors.Reset)
 	}
 
@@ -286,12 +282,11 @@ func (r *Renderer) renderTargetForMakefile(target *model.Target) []string {
 		buf.WriteString(r.colors.Reset)
 	}
 
-	// Summary (extract first sentence from documentation)
-	summary := r.extractor.Extract(target.Documentation)
-	if summary != "" {
+	// Summary (pre-computed during model building)
+	if target.Summary != "" {
 		buf.WriteString(": ")
 		buf.WriteString(r.colors.Documentation)
-		buf.WriteString(summary)
+		buf.WriteString(target.Summary)
 		buf.WriteString(r.colors.Reset)
 	}
 
