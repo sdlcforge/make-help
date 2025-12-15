@@ -19,6 +19,8 @@ Core algorithms and their implementations in make-help.
 
 ![Makefile Discovery Sequence](diagrams/makefile-discovery.svg)
 
+<!-- AI readable version of SVG diagram: diagrams/makefile-discovery.mmd -->
+
 **Algorithm:**
 ```
 Input: makefilePath (path to main Makefile)
@@ -75,6 +77,8 @@ is created in the same directory as the Makefile to ensure relative includes wor
 ### 2 Documentation Parsing and Directive Handling
 
 ![Parser State Machine](diagrams/parser-state-machine.svg)
+
+<!-- AI readable version of SVG diagram: diagrams/parser-state-machine.mmd -->
 
 **Algorithm:**
 ```
