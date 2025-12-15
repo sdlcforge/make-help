@@ -274,7 +274,7 @@ Now users can run `make b` or `make build-all` instead of `make build`.
 
 ### Environment Variables
 
-Document required environment variables using `!var`:
+Document behavior affecting environment variables using `!var`:
 
 ```makefile
 ## !var DATABASE_URL Database connection string
@@ -448,7 +448,7 @@ make-help --show-help --makefile-path examples/categorized-project/Makefile
 Comprehensive example using all directives:
 - `!file` for project-level documentation
 - `!category` for target organization
-- `!var` for environment variable documentation
+- `!var` for variables affecting target behavior
 - `!alias` for target shortcuts
 - Multi-line documentation with paragraph breaks
 
