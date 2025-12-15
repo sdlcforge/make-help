@@ -57,14 +57,18 @@ qa: test.all lint
 ## !category Documentation
 DIAGRAM_DIR:=docs/architecture/diagrams
 MMD_FILES:=$(wildcard $(DIAGRAM_DIR)/*.mmd)
-SVG_FILES:=$(MMD_FILES:.mmd=.svg)
+SVG_FILES:=$(patsubst $(DIAGRAM_DIR)/%.mmd,$(DIAGRAM_DIR)/%.svg,$(MMD_FILES))
+
+foo:
+	@echo $(MMD_FILES)
+	@echo $(SVG_FILES)
 
 ## Generate SVG diagrams from Mermaid files.
 ## Requires mermaid-cli: npm install -g @mermaid-js/mermaid-cli
 diagrams: $(SVG_FILES)
 .PHONY: diagrams
 
-$(DIAGRAM_DIR)/%.svg: $(DIAGRAM_DIR)/%.mmd
+$(SVG_FILES): $(DIAGRAM_DIR)/%.svg: $(DIAGRAM_DIR)/%.mmd
 	mmdc -i $< -o $@
 
 ## Remove generated diagram SVG files.
@@ -74,16 +78,16 @@ clean.diagrams:
 
 ## !category Build
 ## Builds the make-help binary.
-build: $(MAKE_HELP_BIN) $(SVG_FILES)
+build: $(MAKE_HELP_BIN)
 .PHONY: build
 
 .DELETE_ON_ERROR:
 
 SHELL:=bash
 
-default: all
+.DEFAULT_GOAL:=all
 
-all: build
+all: build diagrams
 .PHONY: all
 
 -include make/*.mk
