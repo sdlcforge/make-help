@@ -24,106 +24,43 @@ Detailed specifications for each major component in the make-help system.
 
 **Design:** Use spf13/cobra with flag-based commands (no subcommands)
 
-```go
-// Root command setup
-func NewRootCmd() *cobra.Command {
-    config := NewConfig()
+**Pseudocode:**
+```
+function NewRootCmd():
+    config = create default configuration
 
-    rootCmd := &cobra.Command{
-        Use:   "make-help",
-        Short: "Static help generation for Makefiles",
-        Long: `make-help generates static help files from Makefile documentation.
+    rootCmd = create Cobra command with:
+        - usage information
+        - flag registration (mode, input, output, misc)
+        - RunE handler that:
+            1. validates flag combinations
+            2. resolves color mode
+            3. dispatches to appropriate handler based on flags
 
-Default behavior generates help.mk with embedded help text. Use flags for other operations:
-  --show-help           Display help dynamically (don't generate file)
-  --show-help --target <name>  Show detailed help for a target
-  --remove-help         Remove generated help files
+    register flags organized by category:
+        - Mode: --show-help, --remove-help, --dry-run, --lint, --target
+        - Input: --makefile-path, --help-file-rel-path
+        - Output: --color, --no-color, --include-target, ordering flags
+        - Misc: --verbose
 
-Documentation directives (in ## comments):
-  !file         File-level documentation
-  !category     Group targets into categories
-  !var          Document environment variables
-  !alias        Define target aliases`,
-        RunE: func(cmd *cobra.Command, args []string) error {
-            // Normalize IncludeTargets from comma-separated + repeatable flags
-            config.IncludeTargets = parseIncludeTargets(config.IncludeTargets)
-
-            // Resolve color mode
-            config.UseColor = ResolveColorMode(config)
-
-            // Dispatch to appropriate handler
-            if config.RemoveHelp {
-                return runRemoveHelp(config)
-            } else if config.ShowHelp {
-                if config.Target != "" {
-                    return runDetailedHelp(config)
-                } else {
-                    return runShowHelp(config)
-                }
-            } else {
-                return runGenerateHelpFile(config)
-            }
-        },
-    }
-
-    // Global flags
-    rootCmd.PersistentFlags().StringVar(&config.MakefilePath,
-        "makefile-path", "", "Path to Makefile")
-    rootCmd.PersistentFlags().BoolVar(&noColor,
-        "no-color", false, "Disable colored output")
-    rootCmd.PersistentFlags().BoolVar(&forceColor,
-        "color", false, "Force colored output")
-    rootCmd.PersistentFlags().BoolVarP(&config.Verbose,
-        "verbose", "v", false, "Enable verbose output for debugging")
-
-    // Mode flags
-    rootCmd.Flags().BoolVar(&config.ShowHelp,
-        "show-help", false, "Display help dynamically instead of generating file")
-    rootCmd.Flags().BoolVar(&config.RemoveHelp,
-        "remove-help", false, "Remove generated help files")
-    rootCmd.Flags().StringVar(&config.Target,
-        "target", "", "Show detailed help for a specific target (requires --show-help)")
-    rootCmd.Flags().BoolVar(&config.DryRun,
-        "dry-run", false, "Preview what files would be created/modified without making changes")
-
-    // Target filtering flags
-    rootCmd.Flags().StringSliceVar(&config.IncludeTargets,
-        "include-target", []string{}, "Include undocumented target (repeatable, comma-separated)")
-    rootCmd.Flags().BoolVar(&config.IncludeAllPhony,
-        "include-all-phony", false, "Include all .PHONY targets in help output")
-
-    // Ordering flags
-    rootCmd.Flags().BoolVar(&config.KeepOrderCategories,
-        "keep-order-categories", false, "Preserve category discovery order")
-    rootCmd.Flags().BoolVar(&config.KeepOrderTargets,
-        "keep-order-targets", false, "Preserve target discovery order")
-    rootCmd.Flags().StringSliceVar(&config.CategoryOrder,
-        "category-order", []string{}, "Explicit category order (comma-separated)")
-    rootCmd.Flags().StringVar(&config.DefaultCategory,
-        "default-category", "", "Default category for uncategorized targets")
-    rootCmd.Flags().StringVar(&config.HelpCategory,
-        "help-category", "Help", "Category name for generated help targets (help, update-help)")
-
-    // Help file generation flags
-    rootCmd.Flags().StringVar(&config.HelpFileRelPath,
-        "help-file-rel-path", "", "Explicit relative path for generated help file")
-
-    return rootCmd
-}
+    return configured command
 ```
 
+[View source: NewRootCmd](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/cli/root.go#L26-L146)
+
 **Responsibilities:**
-- Parse command-line arguments
-- Validate flag combinations
-- Detect terminal capabilities (isatty)
-- Resolve color mode
+- Parse command-line arguments and validate flag combinations
+- Detect terminal capabilities (isatty) and resolve color mode
 - Delegate to appropriate service based on mode flags
 
 **Mode Flags:**
-1. **Default (no flags)**: Generate static help file via `runGenerateHelpFile()`
-2. **`--show-help`**: Display help dynamically via `runShowHelp()`
+1. **Default (no flags)**: Generate static help file via `runCreateHelpTarget()`
+2. **`--show-help`**: Display help dynamically via `runHelp()`
 3. **`--show-help --target <name>`**: Display detailed help for single target via `runDetailedHelp()`
-4. **`--remove-help`**: Remove generated help files via `runRemoveHelp()`
+4. **`--remove-help`**: Remove generated help files via `runRemoveHelpTarget()`
+5. **`--lint`**: Run lint checks (with optional `--fix` and `--dry-run`)
+
+[View source: runHelp orchestration](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/cli/help.go#L24-L130)
 
 **Target Filtering:**
 - **`--include-target`**: Include specific undocumented targets (repeatable, comma-separated)
@@ -140,9 +77,9 @@ When generating a help file (default mode), creates a Makefile include with:
 
 **Error Handling:**
 - Invalid flag combinations (e.g., `--target` without `--show-help`)
-- File path validation
+- File path validation via `ResolveMakefilePath()` and `ValidateMakefileExists()`
 - Conflicting color flags (`--color` + `--no-color`)
-- Mode flag restrictions
+- Mode flag restrictions (enforced in PreRunE validation)
 
 ### 2 Discovery Service
 
@@ -150,130 +87,41 @@ When generating a help file (default mode), creates a Makefile include with:
 
 **Design:** Execute make commands and parse output
 
-```go
-type Service struct {
-    executor CommandExecutor  // Interface for testability
-    verbose  bool             // Enable verbose output
-}
-
-type CommandExecutor interface {
-    Execute(cmd string, args ...string) (stdout, stderr string, err error)
-    ExecuteContext(ctx context.Context, cmd string, args ...string) (stdout, stderr string, err error)
-}
-
-// DiscoverMakefiles finds all Makefiles using MAKEFILE_LIST
-// SECURITY: Uses temporary physical file instead of bash process substitution
-// to prevent command injection vulnerabilities.
-func (s *Service) DiscoverMakefiles(mainPath string) ([]string, error) {
-    // Read main Makefile content
-    mainContent, err := os.ReadFile(mainPath)
-    if err != nil {
-        return nil, fmt.Errorf("failed to read Makefile: %w", err)
-    }
-
-    // Create temporary file with appended _list_makefiles target
-    tmpFile, err := os.CreateTemp("", "makefile-discovery-*.mk")
-    if err != nil {
-        return nil, fmt.Errorf("failed to create temp file: %w", err)
-    }
-    defer os.Remove(tmpFile.Name())
-
-    // Write main content + discovery target
-    discoveryTarget := "\n\n.PHONY: _list_makefiles\n_list_makefiles:\n\t@echo $(MAKEFILE_LIST)\n"
-    if _, err := tmpFile.Write(mainContent); err != nil {
-        tmpFile.Close()
-        return nil, fmt.Errorf("failed to write temp file: %w", err)
-    }
-    if _, err := tmpFile.WriteString(discoveryTarget); err != nil {
-        tmpFile.Close()
-        return nil, fmt.Errorf("failed to write temp file: %w", err)
-    }
-    tmpFile.Close()
-
-    // Execute make with timeout to prevent indefinite hangs
-    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-    defer cancel()
-
-    stdout, stderr, err := s.executor.ExecuteContext(ctx, "make", "-f", tmpFile.Name(), "_list_makefiles")
-    if err != nil {
-        if ctx.Err() == context.DeadlineExceeded {
-            return nil, fmt.Errorf("make command timed out after 30s")
-        }
-        return nil, fmt.Errorf("failed to discover makefiles: %w\nstderr: %s", err, stderr)
-    }
-
-    // Parse space-separated file list
-    files := strings.Fields(stdout)
-
-    // Resolve to absolute paths
-    resolved, err := resolveAbsolutePaths(files, filepath.Dir(mainPath))
-    if err != nil {
-        return nil, err
-    }
-
-    if s.verbose {
-        fmt.Printf("Discovered %d Makefiles:\n", len(resolved))
-        for i, f := range resolved {
-            fmt.Printf("  %d. %s\n", i+1, f)
-        }
-    }
-
-    return resolved, nil
-}
-
-// DiscoverTargets extracts all targets from make -p output
-func (s *Service) DiscoverTargets(makefilePath string) ([]string, error) {
-    // Execute make with timeout to prevent indefinite hangs
-    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-    defer cancel()
-
-    stdout, stderr, err := s.executor.ExecuteContext(ctx, "make", "-f", makefilePath, "-p", "-r")
-    if err != nil {
-        if ctx.Err() == context.DeadlineExceeded {
-            return nil, fmt.Errorf("make command timed out after 30s")
-        }
-        return nil, fmt.Errorf("failed to discover targets: %w\nstderr: %s", err, stderr)
-    }
-
-    targets := parseTargetsFromDatabase(stdout)
-
-    if s.verbose {
-        fmt.Printf("Discovered %d targets from make database\n", len(targets))
-    }
-
-    return targets, nil
-}
-
-// parseTargetsFromDatabase extracts target names from make -p output
-func parseTargetsFromDatabase(output string) []string {
-    var targets []string
-    targetRegex := regexp.MustCompile(`^([a-zA-Z0-9_.-]+):`)
-
-    for _, line := range strings.Split(output, "\n") {
-        // Skip comments and whitespace-prefixed lines
-        if strings.HasPrefix(line, "#") || strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
-            continue
-        }
-
-        if matches := targetRegex.FindStringSubmatch(line); matches != nil {
-            targets = append(targets, matches[1])
-        }
-    }
-
-    return targets
-}
+**Pseudocode:**
 ```
+function DiscoverMakefiles(mainPath):
+    // SECURITY: Uses temporary physical file to prevent command injection
+    1. read main Makefile content
+    2. create temporary file with appended _list_makefiles target
+    3. execute make with 30s timeout: make -f tmpFile _list_makefiles
+    4. parse space-separated output (MAKEFILE_LIST variable)
+    5. resolve to absolute paths
+    6. cleanup temporary file
+    return list of absolute Makefile paths
+
+function DiscoverTargets(makefilePath):
+    1. execute make with 30s timeout: make -f makefilePath -p -r
+    2. parse make database output using regex
+    3. filter out special targets, pattern rules, built-ins
+    4. extract .PHONY status, dependencies, and recipe status
+    return DiscoverTargetsResult with targets and metadata
+```
+
+[View source: Service.DiscoverMakefiles](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/discovery/service.go#L22-L33)
+[View source: Service.DiscoverTargets](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/discovery/service.go#L40-L46)
 
 **Key Algorithms:**
 - MAKEFILE_LIST discovery via temporary target injection
 - Target extraction via regex from `make -p` database output
 - Absolute path resolution for included files
+- 30-second timeout on all make command executions
 
 **Error Handling:**
-- Make command execution failures
-- Makefile not found
-- Invalid Makefile syntax (caught by make)
-- Shell command injection prevention (use exec.Command, not shell)
+- Make command execution failures with stderr capture
+- Makefile not found errors
+- Invalid Makefile syntax (caught by make during execution)
+- Timeout detection (context.DeadlineExceeded)
+- Shell command injection prevention (uses exec.Command, not shell)
 
 ### 3 Parser Service
 
@@ -281,328 +129,119 @@ func parseTargetsFromDatabase(output string) []string {
 
 **Design:** Stateful scanner with directive detection
 
-```go
-type Scanner struct {
-    currentFile     string
-    currentCategory string
-    pendingDocs     []Directive  // Documentation lines awaiting target
-}
+**Pseudocode:**
+```
+type Scanner with state:
+    currentFile     - file being scanned
+    currentCategory - sticky category from !category directive
+    pendingDocs     - documentation awaiting target association
 
-// ScanFile parses a single Makefile and extracts directives
-func (s *Scanner) ScanFile(path string) (*ParsedFile, error) {
-    content, err := os.ReadFile(path)
-    if err != nil {
-        return nil, fmt.Errorf("failed to read %s: %w", path, err)
-    }
+function ScanFile(path):
+    1. read file content
+    2. reset scanner state
+    3. for each line:
+        if line starts with "##":
+            parse directive (!file, !category, !var, !alias, or doc)
+            if !file: add immediately to result
+            else: queue in pendingDocs
+        else if line is target definition:
+            record target name and line number
+            attach pendingDocs to this target
+            clear pendingDocs
+        else:
+            clear pendingDocs (breaks association)
+    return ParsedFile with directives and target map
 
-    s.currentFile = path
-    s.currentCategory = ""
-    s.pendingDocs = nil
-
-    result := &ParsedFile{
-        Path:       path,
-        Directives: []Directive{},
-        TargetMap:  make(map[string]int),
-    }
-
-    lines := strings.Split(string(content), "\n")
-
-    for lineNum, line := range lines {
-        // Check for documentation line
-        if strings.HasPrefix(line, "## ") {
-            directive := s.parseDirective(line, lineNum+1)
-            result.Directives = append(result.Directives, directive)
-            continue
-        }
-
-        // Check for target definition
-        if target := s.parseTarget(line); target != "" {
-            result.TargetMap[target] = lineNum + 1
-
-            // Associate pending docs with target
-            if len(s.pendingDocs) > 0 {
-                result.Directives = append(result.Directives, s.pendingDocs...)
-                s.pendingDocs = nil
-            }
-        } else {
-            // Non-doc, non-target line clears pending docs
-            s.pendingDocs = nil
-        }
-    }
-
-    return result, nil
-}
-
-// parseDirective detects and parses a documentation directive
-func (s *Scanner) parseDirective(line string, lineNum int) Directive {
-    content := strings.TrimPrefix(line, "## ")
-
-    directive := Directive{
-        SourceFile: s.currentFile,
-        LineNumber: lineNum,
-    }
-
-    switch {
-    case strings.HasPrefix(content, "!file"):
-        directive.Type = DirectiveFile
-        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!file"))
-
-    case strings.HasPrefix(content, "!category "):
-        directive.Type = DirectiveCategory
-        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!category "))
-        // SWITCH BEHAVIOR: Category is "sticky" - applies to all subsequent targets
-        // until changed. Use "!category _" to reset to uncategorized (nil).
-        s.currentCategory = directive.Value
-
-    case strings.HasPrefix(content, "!var "):
-        directive.Type = DirectiveVar
-        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!var "))
-
-    case strings.HasPrefix(content, "!alias "):
-        directive.Type = DirectiveAlias
-        directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!alias "))
-
-    default:
-        directive.Type = DirectiveDoc
-        directive.Value = content
-    }
-
-    // Queue for association with next target
-    if directive.Type != DirectiveFile {
-        s.pendingDocs = append(s.pendingDocs, directive)
-    }
-
-    return directive
-}
-
-// parseTarget extracts target name from a target definition line
-func (s *Scanner) parseTarget(line string) string {
-    // Match: <target>: or <target>&:
-    // Handle grouped targets: foo bar baz:
-    // Handle variable targets: $(VAR):
-
-    colonIdx := strings.Index(line, ":")
-    if colonIdx == -1 {
-        return ""
-    }
-
-    // Check for &: (grouped target)
-    beforeColon := line[:colonIdx]
-    if strings.HasSuffix(beforeColon, "&") {
-        beforeColon = strings.TrimSuffix(beforeColon, "&")
-    }
-
-    // Extract first word/token as target name
-    targetPart := strings.TrimSpace(beforeColon)
-
-    // Handle whitespace-prefixed (recipe lines)
-    if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
-        return ""
-    }
-
-    // Extract first token
-    fields := strings.Fields(targetPart)
-    if len(fields) > 0 {
-        return fields[0]
-    }
-
-    return ""
-}
+function parseDirective(line):
+    1. strip "## " prefix
+    2. detect directive type by prefix:
+        !file -> DirectiveFile
+        !category -> DirectiveCategory (updates currentCategory state)
+        !var -> DirectiveVar
+        !alias -> DirectiveAlias
+        default -> DirectiveDoc
+    3. extract value after directive keyword
+    return Directive object
 ```
 
+[View source: Scanner.ScanFile](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/parser/scanner.go#L28-L94)
+[View source: Scanner.parseDirective](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/parser/scanner.go#L99-L142)
+
 **Key Design Decisions:**
-- **Stateful scanning to track current category**: `!category` sets the current category that applies to all following targents until another `!category` directive is encountered
+- **Stateful scanning to track current category**: `!category` sets the current category that applies to all following targets until another `!category` directive is encountered
+- **Sticky category behavior**: Once set, category applies to subsequent targets until changed or reset with `!category _`
 - **Pending documentation queue**: Documentation lines are queued and associated with the next target definition
 - **Simple regex-free parsing for robustness**: Target parsing uses string operations instead of complex regex
 - **Target name extraction handles grouped and variable targets**: Supports `foo:`, `foo&:`, and `$(VAR):` patterns
 
 **Error Handling:**
-- Invalid directive syntax (log warning, skip)
-- Malformed !var or !alias (log warning, skip)
+- File read failures return errors
+- Invalid directive syntax is handled gracefully with best-effort parsing
+- Malformed !var or !alias directives parse what they can
 
 ### 4 Model Builder
 
 **Package:** `internal/model`
 
-**Design:** Aggregate directives into structured model
+**Design:** Aggregate directives into structured model using two-pointer line-order merge algorithm
 
-```go
-type Builder struct {
-    config *cli.Config
-}
+**Pseudocode:**
+```
+function Build(parsedFiles):
+    1. initialize model, categoryMap, targetMap, targetToCategory
+    2. for each file:
+        processFile(file, ...)  // uses two-pointer merge algorithm
+    3. detect implicit aliases (phony targets with single phony dep, no recipe)
+    4. for each target:
+        - skip if implicit alias of another target
+        - apply filtering (shouldIncludeTarget)
+        - add implicit aliases to target.Aliases
+        - compute summary from documentation
+        - assign to category
+    5. validate categorization (no mixed categorized/uncategorized)
+    6. apply default category if needed
+    return HelpModel
 
-// Build constructs HelpModel from parsed files
-func (b *Builder) Build(parsedFiles []*parser.ParsedFile) (*HelpModel, error) {
-    model := &HelpModel{
-        FileDocs:   []string{},
-        Categories: []Category{},
-    }
+function processFile(file, ...):
+    // Two-pointer algorithm to merge directives and targets in line order
+    1. sort targets by line number
+    2. maintain state: currentCategory, pendingDocs, pendingVars, pendingAliases
+    3. advance through directives and targets by line number:
+        if directive comes first:
+            handle !file, !category, !var, !alias, !doc
+        if target comes first:
+            create Target with pending directives
+            assign to currentCategory
+            clear pending state
 
-    categoryMap := make(map[string]*Category)  // Name -> Category
-    targetMap := make(map[string]*Target)       // Name -> Target
+function shouldIncludeTarget(target):
+    return target has documentation
+        OR target in IncludeTargets list
+        OR (target is .PHONY AND IncludeAllPhony is true)
 
-    discoveryOrder := 0
-
-    for _, file := range parsedFiles {
-        var currentCategory *Category
-        var currentTarget *Target
-
-        for _, directive := range file.Directives {
-            switch directive.Type {
-            case parser.DirectiveFile:
-                if directive.Value != "" {
-                    model.FileDocs = append(model.FileDocs, directive.Value)
-                }
-
-            case parser.DirectiveCategory:
-                model.HasCategories = true
-
-                // Find or create category
-                cat, exists := categoryMap[directive.Value]
-                if !exists {
-                    cat = &Category{
-                        Name:           directive.Value,
-                        Targets:        []Target{},
-                        DiscoveryOrder: discoveryOrder,
-                    }
-                    discoveryOrder++
-                    categoryMap[directive.Value] = cat
-                }
-                currentCategory = cat
-
-            case parser.DirectiveDoc:
-                if currentTarget != nil {
-                    currentTarget.Documentation = append(
-                        currentTarget.Documentation,
-                        directive.Value,
-                    )
-                }
-
-            case parser.DirectiveVar:
-                if currentTarget != nil {
-                    varData := b.parseVarDirective(directive.Value)
-                    currentTarget.Variables = append(currentTarget.Variables, varData)
-                }
-
-            case parser.DirectiveAlias:
-                if currentTarget != nil {
-                    aliases := b.parseAliasDirective(directive.Value)
-                    currentTarget.Aliases = append(currentTarget.Aliases, aliases...)
-                }
-            }
-        }
-
-        // Associate targets with categories
-        for targetName, lineNum := range file.TargetMap {
-            target, exists := targetMap[targetName]
-            if !exists {
-                target = &Target{
-                    Name:           targetName,
-                    DiscoveryOrder: discoveryOrder,
-                    SourceFile:     file.Path,
-                    LineNumber:     lineNum,
-                }
-                discoveryOrder++
-                targetMap[targetName] = target
-            }
-
-            if currentCategory != nil {
-                currentCategory.Targets = append(currentCategory.Targets, *target)
-            }
-        }
-    }
-
-    // Validate mixed categorization
-    if err := b.validateCategorization(model, targetMap); err != nil {
-        return nil, err
-    }
-
-    // Apply default category if needed
-    if model.HasCategories && b.config.DefaultCategory != "" {
-        b.applyDefaultCategory(model, targetMap, categoryMap)
-    }
-
-    // Convert map to slice
-    for _, cat := range categoryMap {
-        model.Categories = append(model.Categories, *cat)
-    }
-
-    return model, nil
-}
-
-// validateCategorization ensures no mixing of categorized and uncategorized targets
-func (b *Builder) validateCategorization(model *HelpModel, targetMap map[string]*Target) error {
-    if !model.HasCategories {
-        return nil  // No categories, all targets uncategorized - OK
-    }
-
-    categorizedTargets := 0
-    uncategorizedTargets := 0
-
-    for _, target := range targetMap {
-        hasCategory := false
-        for _, cat := range model.Categories {
-            for _, catTarget := range cat.Targets {
-                if catTarget.Name == target.Name {
-                    hasCategory = true
-                    break
-                }
-            }
-        }
-
-        if hasCategory {
-            categorizedTargets++
-        } else {
-            uncategorizedTargets++
-        }
-    }
-
-    if categorizedTargets > 0 && uncategorizedTargets > 0 {
-        if b.config.DefaultCategory == "" {
-            return errors.NewMixedCategorizationError(
-                "found both categorized and uncategorized targets; use --default-category to resolve",
-            )
-        }
-    }
-
-    return nil
-}
-
-// parseVarDirective parses !var directive: <NAME> - <description>
-func (b *Builder) parseVarDirective(value string) Variable {
-    parts := strings.SplitN(value, " - ", 2)
-    if len(parts) != 2 {
-        return Variable{Name: value, Description: ""}
-    }
-    return Variable{
-        Name:        strings.TrimSpace(parts[0]),
-        Description: strings.TrimSpace(parts[1]),
-    }
-}
-
-// parseAliasDirective parses !alias directive: <name>[, <name>...]
-func (b *Builder) parseAliasDirective(value string) []string {
-    parts := strings.Split(value, ",")
-    aliases := make([]string, 0, len(parts))
-    for _, part := range parts {
-        if alias := strings.TrimSpace(part); alias != "" {
-            aliases = append(aliases, alias)
-        }
-    }
-    return aliases
-}
+function detectImplicitAliases(targetMap):
+    for each target:
+        if .PHONY AND has 1 dependency AND dep is .PHONY AND no recipe:
+            mark as implicit alias of dependency
 ```
 
+[View source: Builder.Build](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/model/builder.go#L70-L149)
+[View source: Builder.processFile (two-pointer merge)](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/model/builder.go#L268-L390)
+[View source: Builder.shouldIncludeTarget](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/model/builder.go#L156-L175)
+[View source: Builder.detectImplicitAliases](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/model/builder.go#L185-L217)
+
 **Key Design Decisions:**
-- Builder pattern for complex construction
-- Discovery order tracking via counter
-- Validation of categorization rules
-- Default category application
+- **Builder pattern** for complex construction with immutable result
+- **Two-pointer line-order merge**: Ensures directives associate with correct targets by processing in source line order
+- **Discovery order tracking** via counter for `--keep-order` flags
+- **Implicit alias detection**: Automatically detects phony targets that alias other targets
+- **Target filtering**: Three inclusion criteria (documented, explicitly included, or all phony)
+- **Validation of categorization rules**: Prevents mixing categorized and uncategorized targets
 
 **Error Handling:**
-- Mixed categorization without default category (CRITICAL)
-- Duplicate category definitions (merge targets)
-- Invalid directive format (log warning, best-effort parse)
+- Mixed categorization without default category returns `MixedCategorizationError`
+- Duplicate target definitions: first definition wins, subsequent ignored
+- Invalid directive format handled with best-effort parsing
 
 ### 5 Ordering Service
 
@@ -610,405 +249,143 @@ func (b *Builder) parseAliasDirective(value string) []string {
 
 **Design:** Strategy pattern for flexible ordering
 
-```go
-type Service struct {
-    config *cli.Config
-}
+**Pseudocode:**
+```
+function ApplyOrdering(model):
+    1. orderCategories(model)
+    2. for each category in model:
+        orderTargets(category)
 
-// ApplyOrdering sorts categories and targets based on config
-func (s *Service) ApplyOrdering(model *HelpModel) error {
-    // Apply category ordering
-    if err := s.orderCategories(model); err != nil {
-        return err
-    }
+function orderCategories(model):
+    if explicit --category-order provided:
+        1. place specified categories in given order
+        2. append remaining categories alphabetically
+        3. error if specified category not found
+    else if --keep-order-categories:
+        sort by discovery order
+    else:
+        sort alphabetically (default)
 
-    // Apply target ordering within each category
-    for i := range model.Categories {
-        s.orderTargets(&model.Categories[i])
-    }
-
-    return nil
-}
-
-// orderCategories applies category ordering rules
-func (s *Service) orderCategories(model *HelpModel) error {
-    if len(s.config.CategoryOrder) > 0 {
-        return s.applyExplicitCategoryOrder(model)
-    }
-
-    if s.config.KeepOrderCategories {
-        s.sortByDiscoveryOrder(model.Categories)
-    } else {
-        s.sortAlphabetically(model.Categories)
-    }
-
-    return nil
-}
-
-// applyExplicitCategoryOrder uses --category-order flag
-func (s *Service) applyExplicitCategoryOrder(model *HelpModel) error {
-    categoryMap := make(map[string]*Category)
-    for i := range model.Categories {
-        categoryMap[model.Categories[i].Name] = &model.Categories[i]
-    }
-
-    ordered := make([]Category, 0, len(model.Categories))
-    remaining := make(map[string]*Category)
-    for k, v := range categoryMap {
-        remaining[k] = v
-    }
-
-    // Add categories in specified order
-    for _, name := range s.config.CategoryOrder {
-        cat, exists := categoryMap[name]
-        if !exists {
-            return fmt.Errorf("category %q specified in --category-order not found", name)
-        }
-        ordered = append(ordered, *cat)
-        delete(remaining, name)
-    }
-
-    // Append remaining categories alphabetically
-    remainingSlice := make([]Category, 0, len(remaining))
-    for _, cat := range remaining {
-        remainingSlice = append(remainingSlice, *cat)
-    }
-    s.sortAlphabetically(remainingSlice)
-    ordered = append(ordered, remainingSlice...)
-
-    model.Categories = ordered
-    return nil
-}
-
-// orderTargets applies target ordering rules
-func (s *Service) orderTargets(category *Category) {
-    if s.config.KeepOrderTargets {
-        s.sortTargetsByDiscoveryOrder(category.Targets)
-    } else {
-        s.sortTargetsAlphabetically(category.Targets)
-    }
-}
-
-// sortAlphabetically sorts categories by name
-func (s *Service) sortAlphabetically(categories []Category) {
-    sort.Slice(categories, func(i, j int) bool {
-        return categories[i].Name < categories[j].Name
-    })
-}
-
-// sortByDiscoveryOrder sorts categories by first appearance
-func (s *Service) sortByDiscoveryOrder(categories []Category) {
-    sort.Slice(categories, func(i, j int) bool {
-        return categories[i].DiscoveryOrder < categories[j].DiscoveryOrder
-    })
-}
-
-// sortTargetsAlphabetically sorts targets by name
-func (s *Service) sortTargetsAlphabetically(targets []Target) {
-    sort.Slice(targets, func(i, j int) bool {
-        return targets[i].Name < targets[j].Name
-    })
-}
-
-// sortTargetsByDiscoveryOrder sorts targets by first appearance
-func (s *Service) sortTargetsByDiscoveryOrder(targets []Target) {
-    sort.Slice(targets, func(i, j int) bool {
-        return targets[i].DiscoveryOrder < targets[j].DiscoveryOrder
-    })
-}
+function orderTargets(category):
+    if --keep-order-targets:
+        sort by discovery order
+    else:
+        sort alphabetically (default)
 ```
 
+[View source: Service.ApplyOrdering](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/ordering/service.go#L25-L36)
+[View source: Service.orderCategories](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/ordering/service.go#L39-L54)
+
 **Key Design Decisions:**
-- Clear separation of category vs target ordering
-- Explicit category order with alphabetical fallback
-- Error on unknown category in explicit order
+- **Clear separation** of category vs target ordering (independent strategies)
+- **Explicit category order with alphabetical fallback** for unspecified categories
+- **Error on unknown category** in `--category-order` to catch typos early
 
 **Error Handling:**
-- Unknown category in `--category-order` (CRITICAL)
-- Validate all specified categories exist before applying
+- Unknown category in `--category-order` returns error before applying any sorting
+- All sorting operations modify model in-place
 
 ### 6 Summary Extractor
 
 **Package:** `internal/summary`
 
-**Design:** Port of extract-topic algorithm
+**Design:** Port of extract-topic algorithm with pre-compiled regex patterns
 
-```go
-// Extractor pre-compiles all regex patterns at construction time for performance.
-// This avoids repeated regex compilation when processing many targets.
-type Extractor struct {
-    sentenceRegex    *regexp.Regexp
-    headerRegex      *regexp.Regexp
-    boldRegex        *regexp.Regexp
-    italicRegex      *regexp.Regexp
-    boldUnderRegex   *regexp.Regexp
-    italicUnderRegex *regexp.Regexp
-    codeRegex        *regexp.Regexp
-    linkRegex        *regexp.Regexp
-    htmlTagRegex     *regexp.Regexp
-    whitespaceRegex  *regexp.Regexp
-}
+**Pseudocode:**
+```
+type Extractor:
+    // Pre-compiled regex patterns for performance
+    sentenceRegex, headerRegex, boldRegex, italicRegex,
+    boldUnderRegex, italicUnderRegex, codeRegex, linkRegex,
+    htmlTagRegex, whitespaceRegex
 
-func NewExtractor() *Extractor {
-    return &Extractor{
-        // Regex from extract-topic: first sentence ending in .!?
-        // Handles: ellipsis (...), IPs (127.0.0.1.), abbreviations
-        sentenceRegex:    regexp.MustCompile(`^((?:[^.!?]|\.\.\.|\.[^\s])+[.?!])(\s|$)`),
-        headerRegex:      regexp.MustCompile(`(?m)^#+\s+`),
-        boldRegex:        regexp.MustCompile(`\*\*([^*]+)\*\*`),
-        italicRegex:      regexp.MustCompile(`\*([^*]+)\*`),
-        boldUnderRegex:   regexp.MustCompile(`__([^_]+)__`),
-        italicUnderRegex: regexp.MustCompile(`_([^_]+)_`),
-        codeRegex:        regexp.MustCompile("`([^`]+)`"),
-        linkRegex:        regexp.MustCompile(`\[([^\]]+)\]\([^)]+\)`),
-        htmlTagRegex:     regexp.MustCompile(`<[^>]+>`),
-        whitespaceRegex:  regexp.MustCompile(`\s+`),
-    }
-}
+function Extract(documentation):
+    if empty: return ""
 
-// Extract generates summary from full documentation
-func (e *Extractor) Extract(documentation []string) string {
-    if len(documentation) == 0 {
-        return ""
-    }
-
-    // Join all documentation lines
-    fullText := strings.Join(documentation, " ")
-
-    // Strip markdown headers
-    fullText = e.stripMarkdownHeaders(fullText)
-
-    // Strip markdown formatting
-    fullText = e.stripMarkdownFormatting(fullText)
-
-    // Strip HTML tags
-    fullText = e.stripHTMLTags(fullText)
-
-    // Normalize whitespace
-    fullText = e.normalizeWhitespace(fullText)
-
-    // Extract first sentence
-    return e.extractFirstSentence(fullText)
-}
-
-// stripMarkdownHeaders removes # headers (uses pre-compiled regex)
-func (e *Extractor) stripMarkdownHeaders(text string) string {
-    return e.headerRegex.ReplaceAllString(text, "")
-}
-
-// stripMarkdownFormatting removes **bold**, *italic*, `code`, [links]
-// All regexes are pre-compiled for performance
-func (e *Extractor) stripMarkdownFormatting(text string) string {
-    // Remove bold/italic (order matters: ** before *, __ before _)
-    text = e.boldRegex.ReplaceAllString(text, "$1")
-    text = e.italicRegex.ReplaceAllString(text, "$1")
-    text = e.boldUnderRegex.ReplaceAllString(text, "$1")
-    text = e.italicUnderRegex.ReplaceAllString(text, "$1")
-
-    // Remove inline code
-    text = e.codeRegex.ReplaceAllString(text, "$1")
-
-    // Remove links [text](url) -> text
-    text = e.linkRegex.ReplaceAllString(text, "$1")
-
-    return text
-}
-
-// stripHTMLTags removes HTML tags (uses pre-compiled regex)
-func (e *Extractor) stripHTMLTags(text string) string {
-    return e.htmlTagRegex.ReplaceAllString(text, "")
-}
-
-// normalizeWhitespace collapses multiple spaces and newlines (uses pre-compiled regex)
-func (e *Extractor) normalizeWhitespace(text string) string {
-    // Replace newlines with spaces
-    text = strings.ReplaceAll(text, "\n", " ")
-
-    // Collapse multiple spaces
-    text = e.whitespaceRegex.ReplaceAllString(text, " ")
-
-    return strings.TrimSpace(text)
-}
-
-// extractFirstSentence uses regex to extract first sentence
-func (e *Extractor) extractFirstSentence(text string) string {
-    matches := e.sentenceRegex.FindStringSubmatch(text)
-    if len(matches) > 1 {
-        return strings.TrimSpace(matches[1])
-    }
-
-    // No sentence ending found, return full text
-    return text
-}
+    1. join all documentation lines into single string
+    2. strip markdown headers (## Title -> Title)
+    3. strip markdown formatting (**bold**, *italic*, `code`, [links])
+    4. strip HTML tags (<tag>)
+    5. normalize whitespace (collapse multiple spaces/newlines)
+    6. extract first sentence using regex:
+        - handles ellipsis (...)
+        - handles IP addresses (127.0.0.1.)
+        - matches sentence ending with .!?
+    7. if no sentence ending found, return full text
+    return first sentence
 ```
 
+[View source: Extractor struct](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/summary/extractor.go#L10-L21)
+[View source: NewExtractor (pre-compiles regex)](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/summary/extractor.go#L24-L40)
+[View source: Extract method](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/summary/extractor.go#L44-L64)
+
 **Key Design Decisions:**
-- Faithful port of extract-topic algorithm
-- Regex handles edge cases (ellipsis, IPs)
-- Fallback to full text if no sentence boundary found
+- **Faithful port of extract-topic algorithm** from the Node.js ecosystem
+- **Pre-compiled regex patterns** for performance (avoids recompilation per target)
+- **Regex handles edge cases**: ellipsis (...), IP addresses (127.0.0.1.), abbreviations
+- **Fallback to full text** if no sentence boundary found
+- **Order-sensitive stripping**: Removes markdown formatting before extracting sentence
 
 **Testing:** Critical to unit test with:
-- Standard sentences
-- Ellipsis handling
-- IP address handling
-- Markdown formatting
-- HTML tags
-- Multiple sentences (ensure only first extracted)
+- Standard sentences, ellipsis handling, IP address handling
+- Markdown formatting (**bold**, *italic*, `code`, [links])
+- HTML tags, multiple sentences (ensure only first extracted)
 
 ### 7 Formatter Service
 
 **Package:** `internal/format`
 
-**Design:** String builder-based rendering with color support
+**Design:** String builder-based rendering with conditional ANSI color support
 
-```go
-type Renderer struct {
-    config *cli.Config
-    colors *ColorScheme
-}
+**Pseudocode:**
+```
+type Renderer:
+    colors - ColorScheme (ANSI codes or empty strings based on useColor)
 
-func NewRenderer(config *cli.Config) *Renderer {
-    return &Renderer{
-        config: config,
-        colors: NewColorScheme(config.UseColor),
-    }
-}
+function Render(model):
+    // Main help output for stdout or static help.mk generation
+    1. write usage line
+    2. if file docs exist: write each doc line
+    3. write "Targets:" header
+    4. for each category:
+        if category has name: write colored category header
+        for each target:
+            write "  - " + colored target name
+            if aliases: write colored aliases
+            write ": " + colored summary
+            if variables: write "Vars: " + variable names
+    return formatted string
 
-// Render generates help output from model
-func (r *Renderer) Render(model *HelpModel) (string, error) {
-    var buf strings.Builder
+function RenderDetailedTarget(target):
+    // Detailed help for single target (--show-help --target <name>)
+    1. write "Target: " + colored target name
+    2. if aliases: write "Aliases: " + aliases
+    3. if variables: write "Variables:" + detailed list
+    4. write full documentation (all lines)
+    5. write source location
+    return formatted string
 
-    // Render usage line
-    buf.WriteString("Usage: make [<target>...] [<ENV_VAR>=<value>...]\n\n")
-
-    // Render file documentation
-    if len(model.FileDocs) > 0 {
-        for _, doc := range model.FileDocs {
-            buf.WriteString(doc)
-            buf.WriteString("\n")
-        }
-        buf.WriteString("\n")
-    }
-
-    // Render targets header
-    buf.WriteString("Targets:\n")
-
-    // Render categories
-    for _, category := range model.Categories {
-        r.renderCategory(&buf, &category)
-    }
-
-    return buf.String(), nil
-}
-
-// renderCategory renders a single category section
-func (r *Renderer) renderCategory(buf *strings.Builder, category *Category) {
-    // Category header (if named)
-    if category.Name != "" {
-        buf.WriteString("\n")
-        buf.WriteString(r.colors.CategoryName)
-        buf.WriteString(category.Name)
-        buf.WriteString(":")
-        buf.WriteString(r.colors.Reset)
-        buf.WriteString("\n")
-    }
-
-    // Render targets
-    for _, target := range category.Targets {
-        r.renderTarget(buf, &target)
-    }
-}
-
-// renderTarget renders a single target entry
-func (r *Renderer) renderTarget(buf *strings.Builder, target *Target) {
-    // Indent
-    buf.WriteString("  - ")
-
-    // Target name
-    buf.WriteString(r.colors.TargetName)
-    buf.WriteString(target.Name)
-    buf.WriteString(r.colors.Reset)
-
-    // Aliases
-    if len(target.Aliases) > 0 {
-        buf.WriteString(" ")
-        buf.WriteString(r.colors.Alias)
-        buf.WriteString(strings.Join(target.Aliases, ", "))
-        buf.WriteString(r.colors.Reset)
-    }
-
-    // Summary
-    if target.Summary != "" {
-        buf.WriteString(": ")
-        buf.WriteString(r.colors.Documentation)
-        buf.WriteString(target.Summary)
-        buf.WriteString(r.colors.Reset)
-    }
-
-    buf.WriteString("\n")
-
-    // Variables
-    if len(target.Variables) > 0 {
-        buf.WriteString("    Vars: ")
-        varNames := make([]string, len(target.Variables))
-        for i, v := range target.Variables {
-            varNames[i] = v.Name
-        }
-        buf.WriteString(r.colors.Variable)
-        buf.WriteString(strings.Join(varNames, ", "))
-        buf.WriteString(r.colors.Reset)
-        buf.WriteString("\n")
-    }
-}
-
-// RenderDetailedTarget renders help-<target> detailed view
-func (r *Renderer) RenderDetailedTarget(target *Target) string {
-    var buf strings.Builder
-
-    // Target name
-    buf.WriteString(r.colors.TargetName)
-    buf.WriteString(target.Name)
-    buf.WriteString(r.colors.Reset)
-    buf.WriteString("\n\n")
-
-    // Full documentation
-    for _, line := range target.Documentation {
-        buf.WriteString(line)
-        buf.WriteString("\n")
-    }
-
-    // Aliases section
-    if len(target.Aliases) > 0 {
-        buf.WriteString("\nAliases: ")
-        buf.WriteString(r.colors.Alias)
-        buf.WriteString(strings.Join(target.Aliases, ", "))
-        buf.WriteString(r.colors.Reset)
-        buf.WriteString("\n")
-    }
-
-    // Variables section
-    if len(target.Variables) > 0 {
-        buf.WriteString("\nVariables:\n")
-        for _, v := range target.Variables {
-            buf.WriteString("  ")
-            buf.WriteString(r.colors.Variable)
-            buf.WriteString(v.Name)
-            buf.WriteString(r.colors.Reset)
-            buf.WriteString(": ")
-            buf.WriteString(v.Description)
-            buf.WriteString("\n")
-        }
-    }
-
-    return buf.String()
-}
+function RenderForMakefile(model):
+    // Generate help as list of strings for @echo embedding
+    1. similar to Render() but return []string
+    2. each string is escaped for Makefile @echo:
+        - $ -> $$
+        - " -> \"
+        - \x1b -> \033 (ANSI escape literal form)
+    return array of escaped lines
 ```
 
+[View source: Renderer.Render](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/format/renderer.go#L30-L55)
+[View source: Renderer.RenderDetailedTarget](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/format/renderer.go#L125-L183)
+[View source: Renderer.RenderForMakefile](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/format/renderer.go#L216-L242)
+[View source: escapeForMakefileEcho](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/format/renderer.go#L378-L403)
+
 **Key Design Decisions:**
-- String builder for efficient concatenation
-- Color codes injected conditionally
-- Separate methods for main help vs detailed target help
-- Structured rendering methods for consistency
+- **String builder for efficient concatenation** (single allocation, minimal copying)
+- **Color codes injected conditionally** via ColorScheme (ANSI codes vs empty strings)
+- **Three rendering modes**: Render (stdout), RenderDetailedTarget (single target), RenderForMakefile (static @echo)
+- **Escape strategy for Makefile generation**: Converts ANSI codes to literal \033 form for @echo compatibility
+- **Structured rendering methods** for consistency across all output modes
 
 ### 8 Static Help File Generator
 
@@ -1016,368 +393,60 @@ func (r *Renderer) RenderDetailedTarget(target *Target) string {
 
 **Design:** Generates static help files with embedded help text and auto-regeneration logic. Includes smart file location detection that supports make/ directory patterns, numbered prefixes, and automatic include directive detection.
 
-```go
-type AddService struct {
-    config   *Config
-    executor discovery.CommandExecutor
-    verbose  bool
-}
-
-// AddTarget generates and injects a help target into the Makefile.
-// It follows a three-tier strategy for target file placement:
-//  1. Use explicit --help-file-rel-path if specified (needs include directive)
-//  2. Create make/NN-help.mk if include make/*.mk pattern found (no include needed)
-//  3. Otherwise create help.mk in same directory as Makefile (needs include directive)
-func (s *AddService) AddTarget() error {
-    makefilePath := s.config.MakefilePath
-
-    // Validate Makefile syntax before modifying
-    if err := s.validateMakefile(makefilePath); err != nil {
-        return fmt.Errorf("Makefile validation failed: %w", err)
-    }
-
-    // Determine target file location
-    targetFile, needsInclude, err := s.determineTargetFile(makefilePath)
-    if err != nil {
-        return err
-    }
-
-    // Generate help target content
-    content := generateHelpTarget(s.config)
-
-    // Write target file using atomic write (write to temp, then rename)
-    if err := AtomicWriteFile(targetFile, []byte(content), 0644); err != nil {
-        return fmt.Errorf("failed to write target file %s: %w", targetFile, err)
-    }
-
-    if s.verbose {
-        fmt.Printf("Created help target file: %s\n", targetFile)
-    }
-
-    // Add include directive if needed
-    if needsInclude {
-        if err := s.addIncludeDirective(makefilePath, targetFile); err != nil {
-            return err
-        }
-        if s.verbose {
-            fmt.Printf("Added include directive to: %s\n", makefilePath)
-        }
-    }
-
-    return nil
-}
-
-// previewDryRun shows what files would be created without making changes
-func (s *AddService) previewDryRun(targetFile, content string, needsInclude bool, makefilePath string) {
-    fmt.Printf("DRY RUN: Preview of files that would be created/modified\n\n")
-
-    // Show target file that would be created
-    fmt.Printf("Would create file: %s\n", targetFile)
-    fmt.Printf("Content preview:\n%s\n", strings.Repeat("-", 70))
-    fmt.Printf("%s\n", content)
-    fmt.Printf("%s\n\n", strings.Repeat("-", 70))
-
-    // Show include directive if needed
-    if needsInclude {
-        relPath, _ := filepath.Rel(filepath.Dir(makefilePath), targetFile)
-        fmt.Printf("Would append to file: %s\n", makefilePath)
-        fmt.Printf("Content to append:\n%s\n", strings.Repeat("-", 70))
-        fmt.Printf("\ninclude %s\n", relPath)
-        fmt.Printf("%s\n", strings.Repeat("-", 70))
-    }
-}
-
-// validateMakefile runs `make -n` to check for syntax errors
-func (s *AddService) validateMakefile(makefilePath string) error {
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
-
-    // Run make -n (dry-run) to check syntax without executing recipes
-    _, stderr, err := s.executor.ExecuteContext(ctx, "make", "-n", "-f", makefilePath)
-    if err != nil {
-        if ctx.Err() == context.DeadlineExceeded {
-            return fmt.Errorf("validation timed out")
-        }
-        return fmt.Errorf("syntax error in Makefile:\n%s", stderr)
-    }
-    return nil
-}
-
-// atomicWriteFile writes data to a file atomically by writing to a temp file
-// first, then renaming. This prevents file corruption if the process crashes.
-func atomicWriteFile(filename string, data []byte, perm os.FileMode) error {
-    // Create temp file in same directory (required for atomic rename)
-    dir := filepath.Dir(filename)
-    tmpFile, err := os.CreateTemp(dir, ".tmp-*")
-    if err != nil {
-        return fmt.Errorf("failed to create temp file: %w", err)
-    }
-    tmpName := tmpFile.Name()
-
-    // Clean up temp file on any error
-    success := false
-    defer func() {
-        if !success {
-            os.Remove(tmpName)
-        }
-    }()
-
-    // Write content
-    if _, err := tmpFile.Write(data); err != nil {
-        tmpFile.Close()
-        return fmt.Errorf("failed to write temp file: %w", err)
-    }
-
-    // Sync to disk
-    if err := tmpFile.Sync(); err != nil {
-        tmpFile.Close()
-        return fmt.Errorf("failed to sync temp file: %w", err)
-    }
-
-    if err := tmpFile.Close(); err != nil {
-        return fmt.Errorf("failed to close temp file: %w", err)
-    }
-
-    // Set permissions
-    if err := os.Chmod(tmpName, perm); err != nil {
-        return fmt.Errorf("failed to set permissions: %w", err)
-    }
-
-    // Atomic rename
-    if err := os.Rename(tmpName, filename); err != nil {
-        return fmt.Errorf("failed to rename temp file: %w", err)
-    }
-
-    success = true
-    return nil
-}
-
-// IncludePattern holds information about a detected include directive pattern.
-type IncludePattern struct {
-    // Suffix is the file extension (e.g., ".mk" or "")
-    Suffix string
-    // FullPattern is the complete include pattern (e.g., "make/*.mk")
-    FullPattern string
-    // PatternPrefix is the prefix part before the wildcard (e.g., "make/" or "./make/")
-    PatternPrefix string
-}
-
-// determineTargetFileImpl decides where to create the help target.
-// Strategy:
-//  1. If explicit --help-file-rel-path is provided, use that (needs include directive)
-//  2. Default to make/help.mk (or make/NN-help.mk if numbered files exist)
-//  3. Scan Makefile for existing include patterns to determine suffix
-//  4. If no include pattern exists, one will be added
-func determineTargetFileImpl(makefilePath, explicitRelPath string, createDirs bool) (string, bool, error) {
-    makefileDir := filepath.Dir(makefilePath)
-
-    // 1. Explicit --help-file-rel-path (always relative)
-    if explicitRelPath != "" {
-        absPath := filepath.Join(makefileDir, explicitRelPath)
-        if createDirs {
-            parentDir := filepath.Dir(absPath)
-            if err := os.MkdirAll(parentDir, 0755); err != nil {
-                return "", false, fmt.Errorf("failed to create directory %s: %w", parentDir, err)
-            }
-        }
-        return absPath, true, nil
-    }
-
-    // 2. Read Makefile to check for include patterns
-    content, err := os.ReadFile(makefilePath)
-    if err != nil {
-        return "", false, fmt.Errorf("failed to read Makefile: %w", err)
-    }
-
-    // 3. Find include pattern for make/* files
-    pattern := findMakeIncludePattern(content)
-
-    // 4. Determine the suffix to use for our file
-    suffix := ".mk" // default
-    if pattern != nil {
-        suffix = pattern.Suffix
-    }
-
-    // 5. Create make/ directory if needed
-    makeDir := filepath.Join(makefileDir, "make")
-    if createDirs {
-        if err := os.MkdirAll(makeDir, 0755); err != nil {
-            return "", false, fmt.Errorf("failed to create make/ directory: %w", err)
-        }
-    }
-
-    // 6. Check for numbered files in make/ directory
-    prefix := determineNumberPrefix(makeDir, suffix, pattern)
-
-    // 7. Construct filename
-    filename := prefix + "help" + suffix
-    targetPath := filepath.Join(makeDir, filename)
-
-    // Need include directive if no existing pattern was found
-    needsInclude := pattern == nil
-
-    return targetPath, needsInclude, nil
-}
-
-// findMakeIncludePattern scans Makefile content for include directives matching make/*
-// Returns nil if no matching pattern found.
-// Matches patterns like: include make/*.mk, -include ./make/*.mk, etc.
-func findMakeIncludePattern(content []byte) *IncludePattern {
-    includeRegex := regexp.MustCompile(`(?m)^-?include\s+(?:\$\([^)]+\))?(\./)?make/\*(\.[a-zA-Z0-9]+)?(?:\s|$)`)
-    matches := includeRegex.FindSubmatch(content)
-    if matches == nil {
-        return nil
-    }
-
-    suffix := ""
-    if len(matches) > 2 && len(matches[2]) > 0 {
-        suffix = string(matches[2])
-    }
-
-    patternPrefix := "make/"
-    if len(matches) > 1 && len(matches[1]) > 0 {
-        patternPrefix = "./make/"
-    }
-
-    return &IncludePattern{
-        Suffix:        suffix,
-        FullPattern:   string(matches[0]),
-        PatternPrefix: patternPrefix,
-    }
-}
-
-// determineNumberPrefix checks if files in the make directory use numeric prefixes.
-// If numbered files exist (e.g., "10-foo.mk"), returns a prefix with matching digit count
-// using zeros (e.g., "00-"). Otherwise returns empty string.
-func determineNumberPrefix(makeDir, suffix string, pattern *IncludePattern) string {
-    entries, err := os.ReadDir(makeDir)
-    if err != nil {
-        return ""
-    }
-
-    numberedFileRegex := regexp.MustCompile(`^(\d+)-.*` + regexp.QuoteMeta(suffix) + `$`)
-
-    maxDigits := 0
-    for _, entry := range entries {
-        if entry.IsDir() {
-            continue
-        }
-        matches := numberedFileRegex.FindStringSubmatch(entry.Name())
-        if matches != nil {
-            digitCount := len(matches[1])
-            if digitCount > maxDigits {
-                maxDigits = digitCount
-            }
-        }
-    }
-
-    if maxDigits == 0 {
-        return ""
-    }
-
-    // Generate prefix with zeros matching the digit count
-    zeros := strings.Repeat("0", maxDigits)
-    return zeros + "-"
-}
-
-// generateStaticHelpFile creates static help file with embedded help text
-func (g *Generator) generateStaticHelpFile() string {
-    var buf strings.Builder
-
-    // Header comment
-    buf.WriteString("# Generated by make-help. DO NOT EDIT.\n")
-    buf.WriteString("# Regenerate with: make-help\n\n")
-
-    // Generate help target with @echo statements
-    buf.WriteString(".PHONY: help\n")
-    buf.WriteString("help:\n")
-
-    // Render help model as @echo statements
-    for _, line := range g.renderHelpAsEcho() {
-        buf.WriteString("\t@echo ")
-        buf.WriteString(escapeForEcho(line))
-        buf.WriteString("\n")
-    }
-
-    buf.WriteString("\n")
-
-    // Generate help-<target> targets for each documented target
-    for _, category := range g.model.Categories {
-        for _, target := range category.Targets {
-            buf.WriteString(fmt.Sprintf(".PHONY: help-%s\n", target.Name))
-            buf.WriteString(fmt.Sprintf("help-%s:\n", target.Name))
-            for _, line := range g.renderTargetHelpAsEcho(target) {
-                buf.WriteString("\t@echo ")
-                buf.WriteString(escapeForEcho(line))
-                buf.WriteString("\n")
-            }
-            buf.WriteString("\n")
-        }
-    }
-
-    // Auto-regeneration target
-    buf.WriteString("# Auto-regenerate help when Makefiles change\n")
-    buf.WriteString("help.mk: Makefile\n")
-    buf.WriteString("\t@command -v make-help >/dev/null 2>&1 || \\\n")
-    buf.WriteString("\tcommand -v npx >/dev/null 2>&1 && npx -y @sdlcforge/make-help || \\\n")
-    buf.WriteString("\t{ echo \"Error: make-help not found. Install via: npm install -g @sdlcforge/make-help\"; exit 1; }\n")
-
-    return buf.String()
-}
-
-// AddIncludeDirective injects an include statement into the Makefile using atomic write.
-// When targetFile is in the make/ directory and no existing include pattern is found,
-// adds a pattern include (-include make/*.mk). Otherwise, uses the self-referential pattern
-// $(dir $(lastword $(MAKEFILE_LIST))) to ensure the include works regardless of the working
-// directory when make is invoked.
-func AddIncludeDirective(makefilePath, targetFile string) error {
-    content, err := os.ReadFile(makefilePath)
-    if err != nil {
-        return err
-    }
-
-    makefileDir := filepath.Dir(makefilePath)
-    relPath, err := filepath.Rel(makefileDir, targetFile)
-    if err != nil {
-        relPath = filepath.Base(targetFile)
-    }
-
-    // Check if target file is in make/ directory
-    isInMakeDir := strings.HasPrefix(relPath, "make"+string(filepath.Separator))
-
-    if isInMakeDir {
-        // Target is in make/ directory - check for existing pattern
-        pattern := findMakeIncludePattern(content)
-        if pattern != nil {
-            return nil // Pattern already exists
-        }
-
-        // Check if pattern include already exists
-        patternIncludeRegex := regexp.MustCompile(`(?m)^-?include\s+(?:\./)?make/\*\.mk\s*$`)
-        if patternIncludeRegex.Match(content) {
-            return nil
-        }
-
-        // No pattern found, add -include make/*.mk
-        includeDirective := "\n-include make/*.mk\n"
-        newContent := append(content, []byte(includeDirective)...)
-        return AtomicWriteFile(makefilePath, newContent, 0644)
-    }
-
-    // Target is not in make/ directory - add specific file include
-    escapedRelPath := regexp.QuoteMeta(relPath)
-    includePattern := fmt.Sprintf(`(?m)^-?include\s+(\$\(dir \$\(lastword \$\(MAKEFILE_LIST\)\)\))?%s\s*$`, escapedRelPath)
-    existingIncludeRegex := regexp.MustCompile(includePattern)
-    if existingIncludeRegex.Match(content) {
-        return nil // Include directive already exists
-    }
-
-    // Use self-referential include pattern that works from any directory
-    includeDirective := fmt.Sprintf("\n-include $(dir $(lastword $(MAKEFILE_LIST)))%s\n", relPath)
-    newContent := append(content, []byte(includeDirective)...)
-    return AtomicWriteFile(makefilePath, newContent, 0644)
-}
+**Pseudocode:**
 ```
+function GenerateHelpFile(config):
+    1. create renderer with color configuration
+    2. write header with metadata:
+        - generated-by: make-help
+        - command: <full command line>
+        - date: <UTC timestamp>
+    3. write variables (MAKE_HELP_DIR, MAKE_HELP_MAKEFILES)
+    4. generate main help target:
+        - if has categories: add !category directive
+        - .PHONY: help
+        - timestamp check (warn if Makefiles newer than help.mk)
+        - render help content as @printf '%b\n' statements
+    5. generate help-<target> targets for each documented target:
+        - .PHONY: help-<target>
+        - render detailed help as @printf '%b\n' statements
+    6. generate update-help target:
+        - tries make-help, npx make-help, then error
+    return complete file content
+
+function determineTargetFile(makefilePath, explicitRelPath):
+    // Smart file location detection
+    if explicitRelPath provided:
+        use it (needs include directive)
+    else:
+        1. scan Makefile for existing include patterns
+        2. determine suffix (.mk or custom)
+        3. create make/ directory if needed
+        4. detect numbered prefix (00-, 10-, etc.)
+        5. construct filename: make/<prefix>help<suffix>
+        6. needs include only if no pattern found
+    return (targetPath, needsInclude)
+
+function addIncludeDirective(makefilePath, targetFile):
+    if targetFile in make/ directory:
+        if no pattern exists: add "-include make/*.mk"
+    else:
+        add self-referential include:
+            -include $(dir $(lastword $(MAKEFILE_LIST)))<relpath>
+    use atomic write (prevents corruption)
+
+function atomicWriteFile(filename, data):
+    1. create temp file in same directory
+    2. write content to temp file
+    3. sync to disk
+    4. set permissions
+    5. atomic rename (temp -> final)
+    cleanup temp file on any error
+```
+
+[View source: GenerateHelpFile](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/generator.go#L48-L129)
+[View source: determineTargetFile logic](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/add.go)
+[View source: atomicWriteFile](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/write.go)
 
 **Key Design Decisions:**
 - **Static generation**: Help text is embedded as `@echo` statements, not generated dynamically
@@ -1402,169 +471,37 @@ func AddIncludeDirective(makefilePath, targetFile string) error {
 
 **Design:** Clean removal of help artifacts
 
-```go
-type RemoveService struct {
-    config   *cli.Config
-    executor CommandExecutor // For Makefile validation
-    verbose  bool            // Enable verbose output
-}
-
-// RemoveTarget removes help target artifacts
-func (s *RemoveService) RemoveTarget() error {
-    makefilePath := s.config.MakefilePath
-
-    // Validate Makefile syntax before modifying
-    if err := s.validateMakefile(makefilePath); err != nil {
-        return fmt.Errorf("Makefile validation failed: %w", err)
-    }
-
-    // Find and remove include directives
-    if err := s.removeIncludeDirectives(makefilePath); err != nil {
-        return err
-    }
-
-    // Find and remove inline help target
-    if err := s.removeInlineHelpTarget(makefilePath); err != nil {
-        return err
-    }
-
-    // Remove help target files (make/01-help.mk or custom)
-    if err := s.removeHelpTargetFiles(makefilePath); err != nil {
-        return err
-    }
-
-    return nil
-}
-
-// validateMakefile runs `make -n` to check for syntax errors
-func (s *RemoveService) validateMakefile(makefilePath string) error {
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
-
-    _, stderr, err := s.executor.ExecuteContext(ctx, "make", "-n", "-f", makefilePath)
-    if err != nil {
-        if ctx.Err() == context.DeadlineExceeded {
-            return fmt.Errorf("validation timed out")
-        }
-        return fmt.Errorf("syntax error in Makefile:\n%s", stderr)
-    }
-    return nil
-}
-
-// removeIncludeDirectives removes include lines for help targets using atomic write
-func (s *RemoveService) removeIncludeDirectives(makefilePath string) error {
-    content, err := os.ReadFile(makefilePath)
-    if err != nil {
-        return err
-    }
-
-    lines := strings.Split(string(content), "\n")
-    filtered := []string{}
-
-    includeRegex := regexp.MustCompile(`^include\s+.*help.*\.mk`)
-    removed := false
-
-    for _, line := range lines {
-        if !includeRegex.MatchString(line) {
-            filtered = append(filtered, line)
-        } else {
-            removed = true
-            if s.verbose {
-                fmt.Printf("Removed include directive: %s\n", line)
-            }
-        }
-    }
-
-    if !removed {
-        return nil // No changes needed
-    }
-
-    newContent := strings.Join(filtered, "\n")
-    return atomicWriteFile(makefilePath, []byte(newContent), 0644)
-}
-
-// removeInlineHelpTarget removes help target from Makefile using atomic write
-func (s *RemoveService) removeInlineHelpTarget(makefilePath string) error {
-    content, err := os.ReadFile(makefilePath)
-    if err != nil {
-        return err
-    }
-
-    lines := strings.Split(string(content), "\n")
-    filtered := []string{}
-
-    inHelpTarget := false
-    removed := false
-
-    for _, line := range lines {
-        // Detect start of help target
-        if strings.HasPrefix(line, "help:") || strings.HasPrefix(line, ".PHONY: help") {
-            inHelpTarget = true
-            removed = true
-            if s.verbose {
-                fmt.Printf("Removing help target starting at: %s\n", line)
-            }
-            continue
-        }
-
-        // Detect end of help target (next target or non-recipe line)
-        if inHelpTarget {
-            if strings.HasPrefix(line, "\t") || strings.HasPrefix(line, "  ") {
-                continue  // Skip recipe lines
-            }
-            inHelpTarget = false
-        }
-
-        filtered = append(filtered, line)
-    }
-
-    if !removed {
-        return nil // No changes needed
-    }
-
-    newContent := strings.Join(filtered, "\n")
-    return atomicWriteFile(makefilePath, []byte(newContent), 0644)
-}
-
-// removeHelpTargetFiles deletes help files (help.mk or make/help.mk)
-func (s *RemoveService) removeHelpTargetFiles(makefilePath string) error {
-    baseDir := filepath.Dir(makefilePath)
-
-    // Check for help.mk in project root
-    helpFile := filepath.Join(baseDir, "help.mk")
-    if _, err := os.Stat(helpFile); err == nil {
-        if err := os.Remove(helpFile); err != nil {
-            return fmt.Errorf("failed to remove %s: %w", helpFile, err)
-        }
-        if s.verbose {
-            fmt.Printf("Removed: %s\n", helpFile)
-        }
-    }
-
-    // Check for make/help.mk
-    makeDir := filepath.Join(baseDir, "make")
-    makeHelpFile := filepath.Join(makeDir, "help.mk")
-    if _, err := os.Stat(makeHelpFile); err == nil {
-        if err := os.Remove(makeHelpFile); err != nil {
-            return fmt.Errorf("failed to remove %s: %w", makeHelpFile, err)
-        }
-        if s.verbose {
-            fmt.Printf("Removed: %s\n", makeHelpFile)
-        }
-    }
-
-    return nil
-}
+**Pseudocode:**
+```
+function RemoveTarget():
+    1. validate Makefile syntax (make -n with 10s timeout)
+    2. removeIncludeDirectives():
+        - filter lines matching regex: ^include\s+.*help.*\.mk
+        - use atomic write if changes made
+    3. removeInlineHelpTarget():
+        - detect help target start (.PHONY: help or help:)
+        - skip recipe lines (tab/space prefixed)
+        - detect end (next target or non-recipe line)
+        - use atomic write if changes made
+    4. removeHelpTargetFiles():
+        - remove help.mk from project root (if exists)
+        - remove make/help.mk (if exists)
+        - file not found is not an error
 ```
 
+[View source: RemoveService](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/remove.go)
+
 **Key Design Decisions:**
-- Multi-step removal (directives, inline target, files)
-- Pattern matching for include directives
-- Recipe detection for inline target removal
+- **Multi-step removal** (include directives, inline targets, help files)
+- **Pattern matching** for include directives using regex
+- **Recipe detection** for inline target removal (tab/space prefix detection)
+- **Atomic writes** for Makefile modifications
+- **Silent success** when files don't exist (idempotent operation)
 
 **Error Handling:**
-- File not found (not an error, already removed)
-- Multiple help targets (remove all)
+- File not found is not an error (already removed, idempotent)
+- Multiple help targets are all removed
+- Makefile syntax validated before any modifications
 
 ### 10 Lint Service
 
@@ -1572,69 +509,42 @@ func (s *RemoveService) removeHelpTargetFiles(makefilePath string) error {
 
 **Design:** Validates documentation quality with optional auto-fix capability
 
-```go
-// Check represents a lint check with optional auto-fix capability.
-type Check struct {
-    Name      string    // Unique identifier (e.g., "summary-punctuation")
-    CheckFunc CheckFunc // Performs the check and returns warnings
-    FixFunc   FixFunc   // Generates fixes (nil if not auto-fixable)
-}
-
-// Fix represents a single file modification to fix a lint warning.
-type Fix struct {
-    File       string       // Absolute path to the file to modify
-    Line       int          // 1-indexed line number to modify
-    Operation  FixOperation // Type of modification (FixReplace or FixDelete)
-    OldContent string       // Expected current content (for validation)
-    NewContent string       // Replacement content (for FixReplace)
-}
-
-type FixOperation int
-
-const (
-    FixReplace FixOperation = iota // Replace the entire line
-    FixDelete                        // Remove the line entirely
-)
-
-// Fixer applies fixes to source files.
-type Fixer struct {
-    DryRun bool // Show what would be fixed without modifying files
-}
-
-// ApplyFixes groups fixes by file and applies them atomically.
-// Fixes are applied in reverse line order to avoid offset invalidation.
-func (f *Fixer) ApplyFixes(fixes []Fix) (*FixResult, error) {
-    // Group fixes by file
-    fileFixes := make(map[string][]Fix)
-    for _, fix := range fixes {
-        fileFixes[fix.File] = append(fileFixes[fix.File], fix)
-    }
-
-    result := &FixResult{
-        FilesModified: make(map[string]int),
-    }
-
-    // Apply fixes file by file
-    for file, fixes := range fileFixes {
-        count, err := f.applyFileFixes(file, fixes)
-        if err != nil {
-            return result, fmt.Errorf("failed to fix %s: %w", file, err)
-        }
-        result.FilesModified[file] = count
-        result.TotalFixed += count
-    }
-
-    return result, nil
-}
+**Pseudocode:**
 ```
+type Check:
+    Name      - unique identifier (e.g., "summary-punctuation")
+    CheckFunc - performs check, returns warnings
+    FixFunc   - generates fixes (nil if not auto-fixable)
+
+type Fix:
+    File       - absolute path to file to modify
+    Line       - 1-indexed line number
+    Operation  - FixReplace or FixDelete
+    OldContent - expected current content (validation)
+    NewContent - replacement content (for FixReplace)
+
+function ApplyFixes(fixes):
+    1. group fixes by file
+    2. for each file:
+        a. sort fixes by line number (descending)
+        b. read file content
+        c. for each fix (bottom-to-top):
+            validate OldContent matches current line
+            apply fix (replace or delete)
+        d. atomically write modified content
+    3. return FixResult with counts
+    all fixes to a file succeed or none do (atomic)
+```
+
+[View source: Lint Service](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/lint)
 
 **Key Design Decisions:**
 - **Check/Fix separation**: Checks can exist without fixes (error-only checks)
-- **Atomic file modifications**: All fixes to a file succeed or none do
+- **Atomic file modifications**: All fixes to a file succeed or none do (transactional)
 - **Reverse line order**: Fixes applied from bottom to top to preserve line numbers
 - **Validation before fixing**: Checks OldContent matches current line to detect file changes
-- **Dry-run support**: Preview fixes without modifying files (--fix --dry-run)
-- **Fix filtering**: Fixed warnings are removed from display output
+- **Dry-run support**: Preview fixes without modifying files (`--fix --dry-run`)
+- **Fix filtering**: Fixed warnings are hidden from output (only unfixed warnings displayed)
 
 **CLI Integration:**
 - `--lint`: Run lint checks and display warnings
@@ -1642,9 +552,10 @@ func (f *Fixer) ApplyFixes(fixes []Fix) (*FixResult, error) {
 - `--lint --fix --dry-run`: Preview fixes without modifying files
 
 **Error Handling:**
-- Line content mismatch (file changed since check)
-- Line number out of range
-- File write failures
+- Line content mismatch returns error (file changed since check)
+- Line number out of range returns error
+- File write failures propagate errors
+- All-or-nothing per file (atomic commits)
 
 ### 11 Version Package
 
@@ -1652,16 +563,14 @@ func (f *Fixer) ApplyFixes(fixes []Fix) (*FixResult, error) {
 
 **Design:** Provides build-time version information via ldflags injection
 
+**Implementation:**
 ```go
-// Version is set at build time via ldflags:
-//   go build -ldflags "-X github.com/sdlcforge/make-help/internal/version.Version=1.0.0"
-// If not set, defaults to "dev".
+// Version is set at build time via ldflags
+// Default: "dev"
 var Version = "dev"
 ```
 
 **Build Integration:**
-Version is injected from package.json during build:
-
 ```makefile
 VERSION := $(shell node -p "require('./package.json').version")
 LDFLAGS := -X github.com/sdlcforge/make-help/internal/version.Version=$(VERSION)
@@ -1670,14 +579,16 @@ build:
     go build -ldflags "$(LDFLAGS)" -o bin/make-help ./cmd/make-help
 ```
 
+[View source: version.go](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/version/version.go)
+
 **CLI Integration:**
 - `--version`: Display version and exit
 
 **Key Design Decisions:**
-- **Single source of truth**: Version comes from package.json
-- **Ldflags injection**: No need to update Go code when version changes
-- **Default fallback**: Shows "dev" for local development builds
-- **Simple implementation**: Just a single exported variable
+- **Single source of truth**: Version comes from package.json (not duplicated in Go code)
+- **Ldflags injection**: Version set at build time, no code changes needed for version bumps
+- **Default fallback**: Shows "dev" for local development builds (when built without ldflags)
+- **Simple implementation**: Single exported variable, minimal code
 
 
 Last reviewed: 2025-12-25T16:43Z

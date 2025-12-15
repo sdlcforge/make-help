@@ -79,9 +79,10 @@ This document consolidates outstanding findings from three parallel reviews:
 - [x] **Add review dates to architecture docs** ✓ DONE
   - Added "Last reviewed: 2025-12-25T16:43Z" to all .md files in the repo
 
-- [ ] **Note that components.md code is illustrative**
-  - Location: `docs/architecture/components.md`
-  - Action: Add disclaimer that code examples are simplified/illustrative
+- [x] **Note that components.md code is illustrative** ✓ DONE
+  - Replaced verbose code examples with concise pseudocode
+  - Added GitHub permalink references to actual source code
+  - Document reduced from ~1,683 lines to ~595 lines
 
 ### Infrastructure
 
