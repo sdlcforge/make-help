@@ -31,7 +31,7 @@ This document consolidates outstanding findings from three parallel reviews:
 
 - [x] **Move 'help.mk' to 'make/00-help.mk' by default**
 
-- [ ] **move the 'make-help' binary into ./bin.**
+- [x] **move the 'make-help' binary into ./bin.**
 
 ### Documentation
 
