@@ -8,6 +8,11 @@ import (
 	"github.com/sdlcforge/make-help/internal/summary"
 )
 
+// maxInt is the maximum value of int on the current platform.
+// On 64-bit systems: 9223372036854775807 (2^63 - 1)
+// On 32-bit systems: 2147483647 (2^31 - 1)
+const maxInt = int(^uint(0) >> 1)
+
 // BuilderConfig holds configuration for the Builder.
 type BuilderConfig struct {
 	// DefaultCategory is used for uncategorized targets when categories are mixed.
@@ -296,8 +301,7 @@ func (b *Builder) processFile(
 
 	for directiveIdx < len(file.Directives) || targetIdx < len(targetLines) {
 		// Determine what comes next by comparing line numbers.
-		// Initialize to max int so exhausted lists sort to the end.
-		const maxInt = int(^uint(0) >> 1)
+		// Initialize to maxInt so exhausted lists sort to the end.
 		var nextDirectiveLine int = maxInt
 		var nextTargetLine int = maxInt
 

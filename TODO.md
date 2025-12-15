@@ -35,10 +35,6 @@ This document consolidates outstanding findings from three parallel reviews:
 
 ### Documentation
 
-- [ ] **Add migration guide**
-  - Issue: No documentation for users with existing `help` target
-  - Action: Document resolution path when conflicts detected
-
 - [ ] **Add "Uninstalling" section**
   - Document: What `--remove-help-target` removes, whether `.bin/` is cleaned, version control considerations
 
@@ -60,7 +56,7 @@ This document consolidates outstanding findings from three parallel reviews:
   - Issue: Renderer embeds `summary.Extractor` but summaries are extracted during model building
   - Action: Remove field (minor memory overhead)
 
-- [ ] **Define max int constant**
+- [x] **Define max int constant**
   - Location: `internal/model/builder.go:182`
   - Issue: `int(^uint(0) >> 1)` is obscure
   - Action: Define `const maxInt = int(^uint(0) >> 1)`
