@@ -23,7 +23,7 @@ A practical guide for contributors and maintainers.
 ### Building and Testing
 
 ```bash
-# Build the binary
+# Build the binary (outputs to ./bin/make-help)
 go build ./cmd/make-help
 
 # Run all tests
@@ -42,7 +42,7 @@ go test ./internal/parser/... -run TestScanFile
 go test ./test/integration/...
 
 # Run the built binary
-./make-help --makefile-path path/to/Makefile
+./bin/make-help --makefile-path path/to/Makefile
 ```
 
 ## Contributing Guidelines
@@ -251,7 +251,7 @@ This shows:
 - Or categorize all targets
 
 **Issue:** Tests failing after parser changes
-- Regenerate fixtures: run `make-help` manually and save new expected output
+- Regenerate fixtures: run `./bin/make-help` manually and save new expected output
 - Update integration test expectations
 - Check for whitespace differences in output
 
@@ -285,16 +285,16 @@ go tool cover -html=coverage.out
 golangci-lint run
 
 # Run make-help lint on examples
-./make-help --lint examples/full-featured/Makefile
+./bin/make-help --lint examples/full-featured/Makefile
 
 # Apply lint fixes
-./make-help --lint --fix examples/full-featured/Makefile
+./bin/make-help --lint --fix examples/full-featured/Makefile
 
 # Preview lint fixes without applying
-./make-help --lint --fix --dry-run examples/full-featured/Makefile
+./bin/make-help --lint --fix --dry-run examples/full-featured/Makefile
 
 # Check version
-./make-help --version
+./bin/make-help --version
 ```
 
 ## Design Document Reference

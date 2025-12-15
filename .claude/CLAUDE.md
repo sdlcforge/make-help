@@ -11,10 +11,10 @@ Quick reference for AI agents working on this codebase. For comprehensive detail
 ```bash
 # Build and run
 go build ./cmd/make-help
-./make-help                            # Generate ./make/help.mk (default)
-./make-help --show-help                # Display help dynamically
-./make-help --show-help --target build # Show detailed target help
-./make-help --version                  # Display version information
+./bin/make-help                            # Generate ./make/help.mk (default)
+./bin/make-help --show-help                # Display help dynamically
+./bin/make-help --show-help --target build # Show detailed target help
+./bin/make-help --version                  # Display version information
 
 # Testing
 go test ./...                          # All tests
@@ -23,8 +23,8 @@ go test ./internal/parser/... -run TestScanFile  # Specific test
 go test ./test/integration/...         # Integration tests only
 
 # Development
-./make-help --verbose                  # Debug mode (generates ./make/help.mk)
-./make-help --show-help --verbose      # Debug dynamic help display
+./bin/make-help --verbose                  # Debug mode (generates ./make/help.mk)
+./bin/make-help --show-help --verbose      # Debug dynamic help display
 ```
 
 ## Key Entry Points

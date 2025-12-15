@@ -10,5 +10,5 @@
 /worktrees
 /*.log
 /*.pid
-/make-help
+/bin/
 

@@ -1,7 +1,7 @@
 ## !file
 ## A basic make setup. Any generated artifacts will be deleted by default on failure.
 
-MAKE_HELP_BIN:=make-help
+MAKE_HELP_BIN:=bin/make-help
 SRC_FILES:=$(shell find cmd internal -name "*.go" -not -name "*_test.go")
 VERSION:=$(shell node -p "require('./package.json').version")
 LDFLAGS:=-ldflags "-X github.com/sdlcforge/make-help/internal/version.Version=$(VERSION)"
@@ -12,7 +12,8 @@ build: $(MAKE_HELP_BIN)
 .PHONY: build
 
 $(MAKE_HELP_BIN): go.mod go.sum $(SRC_FILES) package.json
-	go build $(LDFLAGS) -o make-help cmd/make-help/main.go
+	@mkdir -p $(dir $@)
+	go build $(LDFLAGS) -o $@ cmd/make-help/main.go
 
 ## Deletes all built artifacts.
 clean:

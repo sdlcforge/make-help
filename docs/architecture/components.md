@@ -1667,7 +1667,7 @@ VERSION := $(shell node -p "require('./package.json').version")
 LDFLAGS := -X github.com/sdlcforge/make-help/internal/version.Version=$(VERSION)
 
 build:
-    go build -ldflags "$(LDFLAGS)" ./cmd/make-help
+    go build -ldflags "$(LDFLAGS)" -o bin/make-help ./cmd/make-help
 ```
 
 **CLI Integration:**

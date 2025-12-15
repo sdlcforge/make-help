@@ -42,6 +42,8 @@ Requires Go 1.21 or later:
 go install github.com/sdlcforge/make-help/cmd/make-help@latest
 ```
 
+Note: When building from source, the binary is placed in `./bin/make-help` instead of `./make-help`.
+
 ### Add Help to Your Project
 
 Generate a static help file for your project:

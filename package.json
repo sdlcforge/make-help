@@ -1,9 +1,9 @@
 {
   "name": "@sdlcforge/make-help",
   "version": "1.0.0-alpha.0",
-  "description": "",
+  "description": "Static help generation for Makefiles with rich documentation support.",
   "bin": {
-    "make-help": "make-help"
+    "make-help": "bin/make-help"
   },
   "scripts": {
     "build": "make build",
