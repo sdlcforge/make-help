@@ -306,3 +306,5 @@ For detailed information on:
 - Comprehensive testing approach
 
 See [architecture.md](architecture.md).
+
+Last reviewed: 2025-12-25T16:43Z

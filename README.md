@@ -722,3 +722,5 @@ The summary extraction algorithm is a Go port of the [extract-topic](https://www
 
 - **Issues**: Report bugs and request features via GitHub Issues
 - **Discussions**: Ask questions in GitHub Discussions
+
+Last reviewed: 2025-12-25T16:43Z

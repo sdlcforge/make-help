@@ -76,8 +76,8 @@ This document consolidates outstanding findings from three parallel reviews:
   - Test: Missing Makefile (`TestErrorScenario_MissingMakefile`)
   - Test: Mixed categorization without `--default-category` (`TestErrorScenario_MixedCategorizationWithoutDefault`)
 
-- [ ] **Add review dates to architecture docs**
-  - Action: Add "Last Reviewed: YYYY-MM-DD" to each architecture doc
+- [x] **Add review dates to architecture docs** ✓ DONE
+  - Added "Last reviewed: 2025-12-25T16:43Z" to all .md files in the repo
 
 - [ ] **Note that components.md code is illustrative**
   - Location: `docs/architecture/components.md`
@@ -133,3 +133,5 @@ This document consolidates outstanding findings from three parallel reviews:
 3. **`shouldIncludeTarget` conditions** - Three conditions interact with categorization in non-obvious ways
 4. **Max int calculation** - `int(^uint(0) >> 1)` is a Go idiom that's not immediately obvious
 5. **Empty string as category** - Now clarified via `UncategorizedCategoryName` constant in `model/types.go`
+
+Last reviewed: 2025-12-25T16:43Z

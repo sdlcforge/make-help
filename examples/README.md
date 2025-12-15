@@ -157,3 +157,5 @@ Use multi-line documentation when targets need detailed explanations, prerequisi
 - **Test filtering**: Use the filtering-demo patterns to keep internal/utility targets hidden from regular users
 - **Commit help files**: The generated help.mk files are self-contained and should be committed to your repository
 - **Auto-regeneration**: Help files will automatically regenerate when source Makefiles change (when running `make help`)
+
+Last reviewed: 2025-12-25T16:43Z

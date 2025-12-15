@@ -375,3 +375,5 @@ Based on this research, features other tools have that make-help doesn't:
 - [dwmkerr: Makefile Help Command](https://dwmkerr.com/makefile-help-command/)
 - [FreeCodeCamp: Self-Documenting Makefile](https://www.freecodecamp.org/news/self-documenting-makefile/)
 - [Jiby's Toolbox: Documenting Makefiles](https://jiby.tech/post/make-help-documenting-makefile/)
+
+Last reviewed: 2025-12-25T16:43Z

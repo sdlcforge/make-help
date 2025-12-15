@@ -430,3 +430,5 @@ These design decisions prioritize:
 6. **Distribution**: Static help files enable easy project distribution with self-contained documentation
 
 Each decision involves trade-offs, but the consequences align with the project's goals of being a secure, simple, and reliable tool for Makefile documentation.
+
+Last reviewed: 2025-12-25T16:43Z
