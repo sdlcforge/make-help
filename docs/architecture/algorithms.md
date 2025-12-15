@@ -8,6 +8,8 @@ Core algorithms and their implementations in make-help.
 - [Documentation Parsing](#documentation-parsing)
 - [Ordering Logic](#ordering-logic)
 - [Summary Extraction](#summary-extraction)
+- [Include Pattern Detection](#include-pattern-detection)
+- [Numbered Prefix Determination](#numbered-prefix-determination)
 
 ---
 
@@ -209,4 +211,161 @@ Output: "Bold text and italic formatting"
 Input: "No sentence terminator here"
 Output: "No sentence terminator here"
 ```
+
+### 5 Include Pattern Detection
+
+**Algorithm:**
+```
+Input: content []byte (Makefile content)
+Output: *IncludePattern (pattern details) or nil
+
+1. Define regex to match include directives for make/* pattern:
+   Pattern: (?m)^-?include\s+(?:\$\([^)]+\))?(\./)?make/\*(\.[a-zA-Z0-9]+)?(?:\s|$)
+
+   Matches:
+   - "include make/*.mk"
+   - "-include make/*.mk"
+   - "include ./make/*.mk"
+   - "-include $(dir ...)make/*.mk"
+
+   Capture groups:
+   - Group 1: Optional ./ prefix
+   - Group 2: File extension suffix (e.g., .mk)
+
+2. Execute regex on Makefile content
+   matches := includeRegex.FindSubmatch(content)
+
+3. If no match found:
+   return nil
+
+4. Extract suffix from capture group 2:
+   suffix := ""
+   if len(matches) > 2 && len(matches[2]) > 0:
+       suffix = string(matches[2])
+
+5. Determine pattern prefix from capture group 1:
+   patternPrefix := "make/"
+   if len(matches) > 1 && len(matches[1]) > 0:
+       patternPrefix = "./make/"
+
+6. Return IncludePattern:
+   return &IncludePattern{
+       Suffix:        suffix,
+       FullPattern:   string(matches[0]),
+       PatternPrefix: patternPrefix,
+   }
+```
+
+**Examples:**
+```
+Input: "include make/*.mk"
+Output: &IncludePattern{
+    Suffix:        ".mk",
+    FullPattern:   "include make/*.mk",
+    PatternPrefix: "make/",
+}
+
+Input: "-include ./make/*"
+Output: &IncludePattern{
+    Suffix:        "",
+    FullPattern:   "-include ./make/*",
+    PatternPrefix: "./make/",
+}
+
+Input: "include some/other/*.mk"
+Output: nil
+```
+
+**Usage:**
+This algorithm is used during help file generation to:
+1. Determine if a make/ directory pattern already exists
+2. Extract the file extension convention (.mk vs no extension)
+3. Decide whether to add a new include directive
+
+### 6 Numbered Prefix Determination
+
+**Algorithm:**
+```
+Input:
+  - makeDir string (absolute path to make/ directory)
+  - suffix string (file extension, e.g., ".mk")
+  - pattern *IncludePattern (detected include pattern, may be nil)
+Output: prefix string (e.g., "00-", "000-", or "")
+
+1. Try to read directory entries:
+   entries, err := os.ReadDir(makeDir)
+   if err != nil:
+       return "" // Directory doesn't exist or can't be read
+
+2. Build regex to match numbered files with same suffix:
+   numberedFileRegex := `^(\d+)-.*` + regexp.QuoteMeta(suffix) + `$`
+
+   Examples:
+   - For suffix ".mk": matches "01-foo.mk", "10-bar.mk", "100-baz.mk"
+   - For suffix "": matches "01-foo", "10-bar"
+
+3. Scan directory entries to find max digit count:
+   maxDigits := 0
+   for _, entry := range entries:
+       if entry.IsDir():
+           continue
+
+       matches := numberedFileRegex.FindStringSubmatch(entry.Name())
+       if matches != nil:
+           digitCount := len(matches[1])
+           if digitCount > maxDigits:
+               maxDigits = digitCount
+
+4. If no numbered files found:
+   return ""
+
+5. Generate zero-padded prefix with matching digit count:
+   zeros := ""
+   for i := 0; i < maxDigits; i++:
+       zeros += "0"
+   return zeros + "-"
+```
+
+**Examples:**
+```
+Input:
+  makeDir="/path/to/make"
+  suffix=".mk"
+  Directory contains: ["10-constants.mk", "20-utils.mk"]
+Output: "00-"
+
+Input:
+  makeDir="/path/to/make"
+  suffix=".mk"
+  Directory contains: ["100-constants.mk", "200-utils.mk"]
+Output: "000-"
+
+Input:
+  makeDir="/path/to/make"
+  suffix=".mk"
+  Directory contains: ["foo.mk", "bar.mk"]
+Output: ""
+
+Input:
+  makeDir="/path/to/make"
+  suffix=".mk"
+  Directory contains: ["10-foo.mk", "bar.mk"]
+Output: "00-" (only numbered files are considered)
+```
+
+**Usage:**
+This algorithm ensures the generated help file follows existing numbering conventions:
+- If files use "10-", "20-" format, generates "00-help.mk"
+- If files use "100-", "200-" format, generates "000-help.mk"
+- If no numbered files exist, generates "help.mk" without prefix
+
+**Integration:**
+Combined with include pattern detection, the full file location strategy is:
+1. Use explicit --help-file-rel-path if provided
+2. Otherwise, default to make/ directory:
+   - Detect include pattern to determine suffix
+   - Detect numbered prefix from existing files
+   - Generate filename: `{prefix}help{suffix}`
+   - Example: "00-help.mk" or "help.mk"
+3. Add include directive if no pattern exists
 

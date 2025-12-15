@@ -133,7 +133,9 @@ All code lives in `internal/` because `make-help` is a CLI tool, not a library. 
 | `ordering` | Sort categories and targets | `Service` | None |
 | `summary` | Extract first sentence from docs | `Extractor` | None |
 | `format` | Render help output with colors | `Renderer`, `ColorScheme` | None |
-| `target` | Generate/remove help targets | `GenerateHelpFile`, `AddService` | None |
+| `target` | Generate/remove help targets with smart location detection | `AddService`, `IncludePattern` | None |
+| `lint` | Documentation quality checking and auto-fixing | `Check`, `Fix`, `Fixer` | None |
+| `version` | Build-time version information | `Version` variable | None |
 | `errors` | Custom error types | `MixedCategorizationError`, etc. | None |
 
 **Key insight:** Only `cli` has external dependencies. All other packages use only stdlib.
@@ -207,6 +209,22 @@ test/
 2. **Add test cases** in `internal/ordering/service_test.go`
 3. **Update design.md** algorithm section if significantly changed
 
+### Adding a New Lint Check
+
+1. **Define the check** in `internal/lint/checks.go`:
+   - Create CheckFunc that scans for issues
+   - Optionally create FixFunc that generates fixes
+   - Register check in check registry
+
+2. **Add test cases** in `internal/lint/checks_test.go`:
+   - Test check detection (should find warnings)
+   - Test fix generation (if fixable)
+   - Test fix application
+
+3. **Update documentation**:
+   - Add to lint check list in README.md
+   - Update architecture docs if introducing new concepts
+
 ## Debugging Tips
 
 ### Enable Verbose Output
@@ -237,6 +255,16 @@ This shows:
 - Update integration test expectations
 - Check for whitespace differences in output
 
+**Issue:** Help file created in wrong location
+- Check for existing `include make/*.mk` directive in Makefile
+- Use `--help-file-rel-path` to specify exact location if needed
+- Verify make/ directory is created automatically
+
+**Issue:** Lint fixes not being applied
+- Ensure `--fix` is used with `--lint`
+- Check that warnings are fixable (some are error-only)
+- Use `--fix --dry-run` to preview changes first
+
 ### Useful Development Commands
 
 ```bash
@@ -255,6 +283,18 @@ go tool cover -html=coverage.out
 
 # Lint code (if using golangci-lint)
 golangci-lint run
+
+# Run make-help lint on examples
+./make-help --lint examples/full-featured/Makefile
+
+# Apply lint fixes
+./make-help --lint --fix examples/full-featured/Makefile
+
+# Preview lint fixes without applying
+./make-help --lint --fix --dry-run examples/full-featured/Makefile
+
+# Check version
+./make-help --version
 ```
 
 ## Design Document Reference

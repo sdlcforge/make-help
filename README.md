@@ -13,6 +13,8 @@ Makefiles are powerful but lack a built-in help system. As projects grow, develo
 - **Static Help Generation**: Creates help files with embedded help text (no runtime dependencies)
 - **Auto-Regeneration**: Generated files automatically regenerate when source Makefiles change
 - **Automatic Target Discovery**: Scans your Makefiles (including included files) to find documented targets
+- **Smart File Placement**: Defaults to `./make/help.mk` with automatic directory creation and include directive insertion
+- **Numbered Prefix Support**: Automatically detects and uses numeric prefixes (e.g., `00-help.mk`) when other files use them
 - **Rich Documentation Syntax**: Support for file-level docs, categories, aliases, and environment variables
 - **Target Filtering**: Control which targets appear in help output
 - **Detailed Target Help**: Show full documentation for individual targets via `make help-<target>`
@@ -54,9 +56,13 @@ This creates a help file with:
 - `make help-<target>` - detailed help for each documented target
 - Auto-regeneration when source Makefiles change
 
-The file location is auto-detected:
-- If your Makefile has `include make/*.mk`, creates `make/help.mk`
-- Otherwise, creates `help.mk` in the same directory as the Makefile
+**Default location**: `./make/help.mk` (the `make/` directory is created automatically)
+
+**Smart behaviors**:
+- If no `include make/*.mk` pattern exists in your Makefile, one is automatically added
+- If files in `./make/` use numeric prefixes (e.g., `10-constants.mk`, `20-utils.mk`), the help file uses a matching prefix (e.g., `00-help.mk`) to load first
+- The file suffix matches the detected include pattern (e.g., `.mk` from `include make/*.mk`)
+- Use `--help-file-rel-path` to override the default location
 
 ## Quick Start
 
@@ -92,7 +98,7 @@ deploy:
 make-help
 ```
 
-This generates a help file (e.g., `help.mk`) that you can include in your Makefile.
+This generates `./make/help.mk` (or `./make/00-help.mk` if numbered files exist) and automatically adds `-include make/*.mk` to your Makefile if needed.
 
 ### 3. Use the Help System
 
@@ -123,8 +129,9 @@ Test:
 ### Generate Static Help File (default)
 
 ```bash
-make-help                              # Generate help.mk for ./Makefile
+make-help                              # Generate ./make/help.mk for ./Makefile
 make-help --makefile-path path/to/Makefile
+make-help --help-file-rel-path custom/path.mk  # Override default location
 ```
 
 ### Display Help Dynamically
@@ -169,7 +176,7 @@ make-help --remove-help                # Remove generated help files
 | `--include-all-phony` | Include all .PHONY targets |
 | `--remove-help` | Remove generated help files |
 | `--dry-run` | Preview what files would be created/modified without making changes |
-| `--help-file-rel-path` | Override relative path for generated help file (e.g., `help.mk` or `make/help.mk`). Must be a relative path. |
+| `--help-file-rel-path` | Override relative path for generated help file (default: `make/help.mk`). Must be a relative path. |
 | `--default-category` | Default category for uncategorized targets |
 | `--help-category` | Category name for generated help targets (`help`, `update-help`). Default: `Help` |
 | `--keep-order-categories` | Preserve category discovery order |
@@ -178,6 +185,9 @@ make-help --remove-help                # Remove generated help files
 | `--no-color` | Disable colored output |
 | `--color` | Force colored output |
 | `--verbose` | Enable verbose output |
+| `--version` | Display version information |
+| `--lint` | Check documentation quality and report warnings |
+| `--fix` | Automatically fix lint warnings (requires `--lint`) |
 
 ## Documentation Syntax
 
@@ -315,7 +325,7 @@ deploy:
 ### Basic Usage
 
 ```bash
-# Generate static help file for current directory's Makefile
+# Generate static help file (creates ./make/help.mk by default)
 make-help
 
 # Generate help file for specific Makefile
@@ -324,8 +334,11 @@ make-help --makefile-path path/to/Makefile
 # Preview what would be created without making changes
 make-help --dry-run
 
-# Specify explicit relative path for help file
+# Specify custom location for help file
 make-help --help-file-rel-path custom-help.mk
+
+# Display version information
+make-help --version
 
 # Enable verbose debugging
 make-help --verbose
@@ -485,7 +498,7 @@ The generated help file contains static `@echo` statements with formatted help t
 
 ### How Generated Help Files Work
 
-The generated `help.mk` file contains static help text and auto-regeneration logic:
+The generated file (typically `./make/help.mk`) contains static help text and auto-regeneration logic:
 
 ```makefile
 # Help text embedded as @echo statements
@@ -498,7 +511,7 @@ help:
 	# ... more help text ...
 
 # Auto-regeneration when Makefiles change
-help.mk: Makefile
+make/help.mk: Makefile
 	@command -v make-help >/dev/null 2>&1 || \
 	command -v npx >/dev/null 2>&1 && npx -y @sdlcforge/make-help || \
 	{ echo "Error: make-help not found. Install via: npm install -g @sdlcforge/make-help"; exit 1; }

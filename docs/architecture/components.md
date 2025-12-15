@@ -1014,50 +1014,52 @@ func (r *Renderer) RenderDetailedTarget(target *Target) string {
 
 **Package:** `internal/target`
 
-**Design:** Generates static help files with embedded help text and auto-regeneration logic
+**Design:** Generates static help files with embedded help text and auto-regeneration logic. Includes smart file location detection that supports make/ directory patterns, numbered prefixes, and automatic include directive detection.
 
 ```go
-type Generator struct {
-    config   *cli.Config
-    model    *model.HelpModel
+type AddService struct {
+    config   *Config
+    executor discovery.CommandExecutor
     verbose  bool
 }
 
-// Generate creates static help file with embedded help text
-// If DryRun is true, only previews the changes without writing files
-func (g *Generator) Generate() error {
-    makefilePath := g.config.MakefilePath
+// AddTarget generates and injects a help target into the Makefile.
+// It follows a three-tier strategy for target file placement:
+//  1. Use explicit --help-file-rel-path if specified (needs include directive)
+//  2. Create make/NN-help.mk if include make/*.mk pattern found (no include needed)
+//  3. Otherwise create help.mk in same directory as Makefile (needs include directive)
+func (s *AddService) AddTarget() error {
+    makefilePath := s.config.MakefilePath
+
+    // Validate Makefile syntax before modifying
+    if err := s.validateMakefile(makefilePath); err != nil {
+        return fmt.Errorf("Makefile validation failed: %w", err)
+    }
 
     // Determine target file location
-    targetFile, needsInclude, err := g.determineTargetFile(makefilePath)
+    targetFile, needsInclude, err := s.determineTargetFile(makefilePath)
     if err != nil {
         return err
     }
 
-    // Generate static help file content with @echo statements
-    content := g.generateStaticHelpFile()
-
-    // Dry-run mode: preview what would be created
-    if g.config.DryRun {
-        g.previewDryRun(targetFile, content, needsInclude, makefilePath)
-        return nil
-    }
+    // Generate help target content
+    content := generateHelpTarget(s.config)
 
     // Write target file using atomic write (write to temp, then rename)
-    if err := atomicWriteFile(targetFile, []byte(content), 0644); err != nil {
+    if err := AtomicWriteFile(targetFile, []byte(content), 0644); err != nil {
         return fmt.Errorf("failed to write target file %s: %w", targetFile, err)
     }
 
-    if g.verbose {
-        fmt.Printf("Created help file: %s\n", targetFile)
+    if s.verbose {
+        fmt.Printf("Created help target file: %s\n", targetFile)
     }
 
     // Add include directive if needed
     if needsInclude {
-        if err := g.addIncludeDirective(makefilePath, targetFile); err != nil {
+        if err := s.addIncludeDirective(makefilePath, targetFile); err != nil {
             return err
         }
-        if g.verbose {
+        if s.verbose {
             fmt.Printf("Added include directive to: %s\n", makefilePath)
         }
     }
@@ -1150,31 +1152,132 @@ func atomicWriteFile(filename string, data []byte, perm os.FileMode) error {
     return nil
 }
 
-// determineTargetFile decides where to create help target
-func (s *AddService) determineTargetFile(makefilePath string) (targetFile string, needsInclude bool, err error) {
-    // 1. Explicit --target-file
-    if s.config.TargetFile != "" {
-        return s.config.TargetFile, true, nil
+// IncludePattern holds information about a detected include directive pattern.
+type IncludePattern struct {
+    // Suffix is the file extension (e.g., ".mk" or "")
+    Suffix string
+    // FullPattern is the complete include pattern (e.g., "make/*.mk")
+    FullPattern string
+    // PatternPrefix is the prefix part before the wildcard (e.g., "make/" or "./make/")
+    PatternPrefix string
+}
+
+// determineTargetFileImpl decides where to create the help target.
+// Strategy:
+//  1. If explicit --help-file-rel-path is provided, use that (needs include directive)
+//  2. Default to make/help.mk (or make/NN-help.mk if numbered files exist)
+//  3. Scan Makefile for existing include patterns to determine suffix
+//  4. If no include pattern exists, one will be added
+func determineTargetFileImpl(makefilePath, explicitRelPath string, createDirs bool) (string, bool, error) {
+    makefileDir := filepath.Dir(makefilePath)
+
+    // 1. Explicit --help-file-rel-path (always relative)
+    if explicitRelPath != "" {
+        absPath := filepath.Join(makefileDir, explicitRelPath)
+        if createDirs {
+            parentDir := filepath.Dir(absPath)
+            if err := os.MkdirAll(parentDir, 0755); err != nil {
+                return "", false, fmt.Errorf("failed to create directory %s: %w", parentDir, err)
+            }
+        }
+        return absPath, true, nil
     }
 
-    // 2. Check for include make/*.mk pattern
+    // 2. Read Makefile to check for include patterns
     content, err := os.ReadFile(makefilePath)
     if err != nil {
         return "", false, fmt.Errorf("failed to read Makefile: %w", err)
     }
 
-    includeRegex := regexp.MustCompile(`(?m)^include\s+make/\*\.mk`)
-    if includeRegex.Match(content) {
-        // Create make/01-help.mk
-        makeDir := filepath.Join(filepath.Dir(makefilePath), "make")
+    // 3. Find include pattern for make/* files
+    pattern := findMakeIncludePattern(content)
+
+    // 4. Determine the suffix to use for our file
+    suffix := ".mk" // default
+    if pattern != nil {
+        suffix = pattern.Suffix
+    }
+
+    // 5. Create make/ directory if needed
+    makeDir := filepath.Join(makefileDir, "make")
+    if createDirs {
         if err := os.MkdirAll(makeDir, 0755); err != nil {
             return "", false, fmt.Errorf("failed to create make/ directory: %w", err)
         }
-        return filepath.Join(makeDir, "01-help.mk"), false, nil
     }
 
-    // 3. Append directly to Makefile
-    return makefilePath, false, nil
+    // 6. Check for numbered files in make/ directory
+    prefix := determineNumberPrefix(makeDir, suffix, pattern)
+
+    // 7. Construct filename
+    filename := prefix + "help" + suffix
+    targetPath := filepath.Join(makeDir, filename)
+
+    // Need include directive if no existing pattern was found
+    needsInclude := pattern == nil
+
+    return targetPath, needsInclude, nil
+}
+
+// findMakeIncludePattern scans Makefile content for include directives matching make/*
+// Returns nil if no matching pattern found.
+// Matches patterns like: include make/*.mk, -include ./make/*.mk, etc.
+func findMakeIncludePattern(content []byte) *IncludePattern {
+    includeRegex := regexp.MustCompile(`(?m)^-?include\s+(?:\$\([^)]+\))?(\./)?make/\*(\.[a-zA-Z0-9]+)?(?:\s|$)`)
+    matches := includeRegex.FindSubmatch(content)
+    if matches == nil {
+        return nil
+    }
+
+    suffix := ""
+    if len(matches) > 2 && len(matches[2]) > 0 {
+        suffix = string(matches[2])
+    }
+
+    patternPrefix := "make/"
+    if len(matches) > 1 && len(matches[1]) > 0 {
+        patternPrefix = "./make/"
+    }
+
+    return &IncludePattern{
+        Suffix:        suffix,
+        FullPattern:   string(matches[0]),
+        PatternPrefix: patternPrefix,
+    }
+}
+
+// determineNumberPrefix checks if files in the make directory use numeric prefixes.
+// If numbered files exist (e.g., "10-foo.mk"), returns a prefix with matching digit count
+// using zeros (e.g., "00-"). Otherwise returns empty string.
+func determineNumberPrefix(makeDir, suffix string, pattern *IncludePattern) string {
+    entries, err := os.ReadDir(makeDir)
+    if err != nil {
+        return ""
+    }
+
+    numberedFileRegex := regexp.MustCompile(`^(\d+)-.*` + regexp.QuoteMeta(suffix) + `$`)
+
+    maxDigits := 0
+    for _, entry := range entries {
+        if entry.IsDir() {
+            continue
+        }
+        matches := numberedFileRegex.FindStringSubmatch(entry.Name())
+        if matches != nil {
+            digitCount := len(matches[1])
+            if digitCount > maxDigits {
+                maxDigits = digitCount
+            }
+        }
+    }
+
+    if maxDigits == 0 {
+        return ""
+    }
+
+    // Generate prefix with zeros matching the digit count
+    zeros := strings.Repeat("0", maxDigits)
+    return zeros + "-"
 }
 
 // generateStaticHelpFile creates static help file with embedded help text
@@ -1222,26 +1325,57 @@ func (g *Generator) generateStaticHelpFile() string {
     return buf.String()
 }
 
-// addIncludeDirective injects include statement into Makefile using atomic write
-func (s *AddService) addIncludeDirective(makefilePath, targetFile string) error {
+// AddIncludeDirective injects an include statement into the Makefile using atomic write.
+// When targetFile is in the make/ directory and no existing include pattern is found,
+// adds a pattern include (-include make/*.mk). Otherwise, uses the self-referential pattern
+// $(dir $(lastword $(MAKEFILE_LIST))) to ensure the include works regardless of the working
+// directory when make is invoked.
+func AddIncludeDirective(makefilePath, targetFile string) error {
     content, err := os.ReadFile(makefilePath)
     if err != nil {
         return err
     }
 
-    // Make path relative to Makefile
-    relPath, err := filepath.Rel(filepath.Dir(makefilePath), targetFile)
+    makefileDir := filepath.Dir(makefilePath)
+    relPath, err := filepath.Rel(makefileDir, targetFile)
     if err != nil {
-        return err
+        relPath = filepath.Base(targetFile)
     }
 
-    includeDirective := fmt.Sprintf("\ninclude %s\n", relPath)
+    // Check if target file is in make/ directory
+    isInMakeDir := strings.HasPrefix(relPath, "make"+string(filepath.Separator))
 
-    // Append to end of file
+    if isInMakeDir {
+        // Target is in make/ directory - check for existing pattern
+        pattern := findMakeIncludePattern(content)
+        if pattern != nil {
+            return nil // Pattern already exists
+        }
+
+        // Check if pattern include already exists
+        patternIncludeRegex := regexp.MustCompile(`(?m)^-?include\s+(?:\./)?make/\*\.mk\s*$`)
+        if patternIncludeRegex.Match(content) {
+            return nil
+        }
+
+        // No pattern found, add -include make/*.mk
+        includeDirective := "\n-include make/*.mk\n"
+        newContent := append(content, []byte(includeDirective)...)
+        return AtomicWriteFile(makefilePath, newContent, 0644)
+    }
+
+    // Target is not in make/ directory - add specific file include
+    escapedRelPath := regexp.QuoteMeta(relPath)
+    includePattern := fmt.Sprintf(`(?m)^-?include\s+(\$\(dir \$\(lastword \$\(MAKEFILE_LIST\)\)\))?%s\s*$`, escapedRelPath)
+    existingIncludeRegex := regexp.MustCompile(includePattern)
+    if existingIncludeRegex.Match(content) {
+        return nil // Include directive already exists
+    }
+
+    // Use self-referential include pattern that works from any directory
+    includeDirective := fmt.Sprintf("\n-include $(dir $(lastword $(MAKEFILE_LIST)))%s\n", relPath)
     newContent := append(content, []byte(includeDirective)...)
-
-    // Use atomic write to prevent corruption
-    return atomicWriteFile(makefilePath, newContent, 0644)
+    return AtomicWriteFile(makefilePath, newContent, 0644)
 }
 ```
 
@@ -1249,7 +1383,11 @@ func (s *AddService) addIncludeDirective(makefilePath, targetFile string) error 
 - **Static generation**: Help text is embedded as `@echo` statements, not generated dynamically
 - **Auto-regeneration**: Generated file includes target that regenerates when source Makefiles change
 - **Fallback chain**: Tries `make-help`, then `npx make-help`, then shows error message
-- **Three-tier target file resolution**: Explicit path → make/help.mk pattern → help.mk in same directory
+- **Smart file location**: Defaults to make/ directory (./make/help.mk) instead of root directory
+- **Include pattern detection**: Scans for existing include directives to match project conventions
+- **Numbered prefix support**: Detects numbered files (10-foo.mk) and generates matching prefix (00-help.mk)
+- **Suffix detection**: Matches existing file extensions (.mk, no extension, etc.)
+- **Pattern vs. specific includes**: Uses -include make/*.mk for make/ directory, self-referential $(dir $(lastword $(MAKEFILE_LIST))) for other locations
 - **Include directive injection**: Adds include statement at end of Makefile if needed
 - **Atomic writes**: Prevents file corruption on crashes
 
@@ -1427,4 +1565,117 @@ func (s *RemoveService) removeHelpTargetFiles(makefilePath string) error {
 **Error Handling:**
 - File not found (not an error, already removed)
 - Multiple help targets (remove all)
+
+### 10 Lint Service
+
+**Package:** `internal/lint`
+
+**Design:** Validates documentation quality with optional auto-fix capability
+
+```go
+// Check represents a lint check with optional auto-fix capability.
+type Check struct {
+    Name      string    // Unique identifier (e.g., "summary-punctuation")
+    CheckFunc CheckFunc // Performs the check and returns warnings
+    FixFunc   FixFunc   // Generates fixes (nil if not auto-fixable)
+}
+
+// Fix represents a single file modification to fix a lint warning.
+type Fix struct {
+    File       string       // Absolute path to the file to modify
+    Line       int          // 1-indexed line number to modify
+    Operation  FixOperation // Type of modification (FixReplace or FixDelete)
+    OldContent string       // Expected current content (for validation)
+    NewContent string       // Replacement content (for FixReplace)
+}
+
+type FixOperation int
+
+const (
+    FixReplace FixOperation = iota // Replace the entire line
+    FixDelete                        // Remove the line entirely
+)
+
+// Fixer applies fixes to source files.
+type Fixer struct {
+    DryRun bool // Show what would be fixed without modifying files
+}
+
+// ApplyFixes groups fixes by file and applies them atomically.
+// Fixes are applied in reverse line order to avoid offset invalidation.
+func (f *Fixer) ApplyFixes(fixes []Fix) (*FixResult, error) {
+    // Group fixes by file
+    fileFixes := make(map[string][]Fix)
+    for _, fix := range fixes {
+        fileFixes[fix.File] = append(fileFixes[fix.File], fix)
+    }
+
+    result := &FixResult{
+        FilesModified: make(map[string]int),
+    }
+
+    // Apply fixes file by file
+    for file, fixes := range fileFixes {
+        count, err := f.applyFileFixes(file, fixes)
+        if err != nil {
+            return result, fmt.Errorf("failed to fix %s: %w", file, err)
+        }
+        result.FilesModified[file] = count
+        result.TotalFixed += count
+    }
+
+    return result, nil
+}
+```
+
+**Key Design Decisions:**
+- **Check/Fix separation**: Checks can exist without fixes (error-only checks)
+- **Atomic file modifications**: All fixes to a file succeed or none do
+- **Reverse line order**: Fixes applied from bottom to top to preserve line numbers
+- **Validation before fixing**: Checks OldContent matches current line to detect file changes
+- **Dry-run support**: Preview fixes without modifying files (--fix --dry-run)
+- **Fix filtering**: Fixed warnings are removed from display output
+
+**CLI Integration:**
+- `--lint`: Run lint checks and display warnings
+- `--lint --fix`: Apply auto-fixes for safe issues, display remaining warnings
+- `--lint --fix --dry-run`: Preview fixes without modifying files
+
+**Error Handling:**
+- Line content mismatch (file changed since check)
+- Line number out of range
+- File write failures
+
+### 11 Version Package
+
+**Package:** `internal/version`
+
+**Design:** Provides build-time version information via ldflags injection
+
+```go
+// Version is set at build time via ldflags:
+//   go build -ldflags "-X github.com/sdlcforge/make-help/internal/version.Version=1.0.0"
+// If not set, defaults to "dev".
+var Version = "dev"
+```
+
+**Build Integration:**
+Version is injected from package.json during build:
+
+```makefile
+VERSION := $(shell node -p "require('./package.json').version")
+LDFLAGS := -X github.com/sdlcforge/make-help/internal/version.Version=$(VERSION)
+
+build:
+    go build -ldflags "$(LDFLAGS)" ./cmd/make-help
+```
+
+**CLI Integration:**
+- `--version`: Display version and exit
+
+**Key Design Decisions:**
+- **Single source of truth**: Version comes from package.json
+- **Ldflags injection**: No need to update Go code when version changes
+- **Default fallback**: Shows "dev" for local development builds
+- **Simple implementation**: Just a single exported variable
 

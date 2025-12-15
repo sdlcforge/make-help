@@ -86,11 +86,19 @@ Step-by-step flows for each operation mode in make-help.
 9. File Writing
    ├─> Determine target file location
    │   ├─> If --help-file-rel-path specified: use it
-   │   ├─> Else if Makefile has "include make/*.mk": create make/help.mk
-   │   └─> Else: create help.mk in same directory
+   │   ├─> Else: default to make/ directory
+   │   │   ├─> Scan Makefile for include pattern (include make/*.mk)
+   │   │   ├─> Extract suffix from pattern (e.g., ".mk" or "")
+   │   │   ├─> Scan make/ directory for numbered files (e.g., "10-foo.mk")
+   │   │   ├─> Determine prefix: "00-", "000-", or "" based on existing files
+   │   │   ├─> Generate filename: {prefix}help{suffix}
+   │   │   └─> Example: "make/00-help.mk" or "make/help.mk"
+   │   └─> Create make/ directory if it doesn't exist
    ├─> If --dry-run: preview content and exit
    ├─> Write file atomically (temp file + rename)
    ├─> Add include directive to Makefile if needed
+   │   ├─> For make/ directory: add "-include make/*.mk" if no pattern exists
+   │   └─> For other locations: add "-include $(dir $(lastword $(MAKEFILE_LIST)))path"
    └─> Success message
 ```
 

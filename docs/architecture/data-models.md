@@ -13,7 +13,87 @@ Core data structures used throughout the make-help system.
 
 ## Overview
 
-### 1 Makefile Documentation Model
+### 1 Target Service Models
+
+```go
+// Config holds configuration for target manipulation operations.
+type Config struct {
+    MakefilePath        string
+    TargetFileRelPath   string   // Relative path for help target file
+    KeepOrderCategories bool
+    KeepOrderTargets    bool
+    CategoryOrder       []string
+    DefaultCategory     string
+}
+
+// IncludePattern holds information about a detected include directive pattern.
+type IncludePattern struct {
+    // Suffix is the file extension (e.g., ".mk" or "")
+    Suffix string
+    // FullPattern is the complete include pattern (e.g., "make/*.mk")
+    FullPattern string
+    // PatternPrefix is the prefix part before the wildcard (e.g., "make/" or "./make/")
+    PatternPrefix string
+}
+```
+
+### 2 Lint Service Models
+
+```go
+// Check represents a lint check with optional auto-fix capability.
+type Check struct {
+    // Name is a unique identifier for the check (e.g., "summary-punctuation").
+    Name string
+    // CheckFunc performs the check and returns any warnings found.
+    CheckFunc CheckFunc
+    // FixFunc generates a fix for a warning. May be nil if not auto-fixable.
+    FixFunc FixFunc
+}
+
+// FixFunc generates a fix for a warning.
+// Returns nil if the warning cannot be auto-fixed.
+type FixFunc func(w Warning) *Fix
+
+// Fix represents a single file modification to fix a lint warning.
+type Fix struct {
+    // File is the absolute path to the file to modify.
+    File string
+    // Line is the 1-indexed line number to modify.
+    Line int
+    // Operation specifies the type of modification.
+    Operation FixOperation
+    // OldContent is the expected current content of the line (for validation).
+    OldContent string
+    // NewContent is the replacement content (for FixReplace operation).
+    NewContent string
+}
+
+// FixOperation specifies the type of file modification.
+type FixOperation int
+
+const (
+    // FixReplace replaces the entire line with new content.
+    FixReplace FixOperation = iota
+    // FixDelete removes the line entirely.
+    FixDelete
+)
+
+// Fixer applies fixes to source files.
+type Fixer struct {
+    // DryRun when true shows what would be fixed without modifying files.
+    DryRun bool
+}
+
+// FixResult contains the results of applying fixes.
+type FixResult struct {
+    // TotalFixed is the number of fixes successfully applied.
+    TotalFixed int
+    // FilesModified maps file paths to the number of fixes applied.
+    FilesModified map[string]int
+}
+```
+
+### 3 Makefile Documentation Model
 
 ```go
 // HelpModel represents the complete parsed help documentation
@@ -68,7 +148,7 @@ const (
 )
 ```
 
-### 2 Configuration Model
+### 4 Configuration Model
 
 ```go
 // Config holds all CLI configuration
@@ -107,7 +187,7 @@ const (
 )
 ```
 
-### 3 Discovery Model
+### 5 Discovery Model
 
 ```go
 // MakefileInfo holds discovered Makefile information
@@ -125,7 +205,7 @@ type ParsedFile struct {
 }
 ```
 
-### 4 Rendering Model
+### 6 Rendering Model
 
 ```go
 // RenderContext holds data for template rendering

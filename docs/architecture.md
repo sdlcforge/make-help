@@ -122,8 +122,10 @@ make-help is a CLI tool that generates formatted help output from specially-form
 | Ordering Service | Apply ordering rules to categories and targets | HelpModel + flags | Ordered HelpModel |
 | Summary Extractor | Generate concise summaries from full documentation | Markdown text | Summary text |
 | Formatter Service | Render help output with colors and layout | HelpModel + config | Formatted string |
-| Add-Target Service | Generate and inject help target into Makefile | Makefile, options | Modified files |
+| Add-Target Service | Generate and inject help target into Makefile; supports make/ directory pattern, numbered prefixes, auto-include detection | Makefile, options | Modified files |
 | Remove-Target Service | Remove help target artifacts | Makefile | Modified files |
+| Lint Service | Validate documentation quality and apply auto-fixes | Makefile content | Warnings, fixes |
+| Version Package | Provide build-time version information via ldflags | Build flags | Version string |
 
 ## Package Structure
 
@@ -138,7 +140,9 @@ make-help/
 │   ├── ordering/            # Sorting strategies
 │   ├── summary/             # Summary extraction (extract-topic port)
 │   ├── format/              # Output rendering with colors
-│   ├── target/              # Help file generation/removal
+│   ├── target/              # Help file generation/removal with smart location detection
+│   ├── lint/                # Documentation linting and auto-fixing
+│   ├── version/             # Build-time version information
 │   └── errors/              # Custom error types
 ├── examples/                # Working example projects
 ├── scripts/                 # Helper scripts
@@ -156,7 +160,9 @@ make-help/
 - **`internal/ordering/`**: Strategy pattern for flexible ordering algorithms
 - **`internal/summary/`**: Port of extract-topic; isolated for unit testing
 - **`internal/format/`**: Template-based rendering for flexibility and testability
-- **`internal/target/`**: Help target generation and removal; file manipulation with atomic writes
+- **`internal/target/`**: Help target generation and removal; smart file location detection (make/ directory support, numbered prefixes, include pattern detection); file manipulation with atomic writes
+- **`internal/lint/`**: Documentation quality checking with auto-fix capability; uses Check/Fix/Fixer pattern
+- **`internal/version/`**: Version information injected at build time via ldflags
 - **`internal/errors/`**: Centralized error definitions for consistent handling
 
 ## Key Design Decisions

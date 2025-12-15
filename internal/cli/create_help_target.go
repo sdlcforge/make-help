@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/sdlcforge/make-help/internal/discovery"
 	"github.com/sdlcforge/make-help/internal/model"
@@ -137,6 +138,41 @@ func runCreateHelpTarget(config *Config) error {
 		fmt.Fprintf(os.Stderr, "Target file: %s (needs include: %v)\n", targetFile, needsInclude)
 	}
 
+	// 9.5. Check for existing help.mk file and restore options if no options were provided
+	existingFile, err := target.FindExistingHelpFile(makefilePath, config.HelpFileRelPath)
+	if err != nil {
+		return fmt.Errorf("failed to check for existing help file: %w", err)
+	}
+
+	// If we found an existing file and no options were provided, restore options from it
+	if existingFile != "" && !HasAnyOptions() {
+		cmdLine, err := target.ExtractCommandLineFromHelpFile(existingFile)
+		if err != nil {
+			if config.Verbose {
+				fmt.Fprintf(os.Stderr, "Warning: failed to read command line from %s: %v\n", existingFile, err)
+			}
+		} else if cmdLine != "" && strings.HasPrefix(cmdLine, "make-help") {
+			if config.Verbose {
+				fmt.Fprintf(os.Stderr, "Restoring options from existing help file: %s\n", existingFile)
+				fmt.Fprintf(os.Stderr, "Command line: %s\n", cmdLine)
+			}
+			// Parse and apply the command line options using Cobra
+			if err := ParseCommandLineFromHelpFile(cmdLine, config); err != nil {
+				if config.Verbose {
+					fmt.Fprintf(os.Stderr, "Warning: failed to parse command line from help file: %v\n", err)
+				}
+				// Don't fail the whole operation if we can't restore options
+			}
+		}
+	}
+
+	if existingFile != "" && existingFile != targetFile {
+		if config.Verbose {
+			fmt.Fprintf(os.Stderr, "Found existing help file: %s (will create: %s)\n", existingFile, targetFile)
+		}
+		// Note: We continue anyway - the user may want to move/rename the help file
+	}
+
 	// 10. Generate help file content
 	genConfig := &target.GeneratorConfig{
 		UseColor:            config.UseColor,
@@ -150,6 +186,7 @@ func runCreateHelpTarget(config *Config) error {
 		HelpCategory:        config.HelpCategory,
 		IncludeTargets:      parseIncludeTargets(config.IncludeTargets),
 		IncludeAllPhony:     config.IncludeAllPhony,
+		CommandLine:         BuildCommandLine(config),
 	}
 	content, err := target.GenerateHelpFile(genConfig)
 	if err != nil {
@@ -206,7 +243,19 @@ func printDryRunOutput(makefilePath, targetFile string, needsInclude bool, conte
 			relPath = filepath.Base(targetFile)
 		}
 
-		includeDirective := fmt.Sprintf("\n-include $(dir $(lastword $(MAKEFILE_LIST)))%s\n", relPath)
+		// Determine include directive based on file location
+		var includeDirective string
+		if filepath.Dir(relPath) == "make" {
+			// For files in make/, use pattern include
+			suffix := filepath.Ext(targetFile)
+			if suffix == "" {
+				suffix = ".mk"
+			}
+			includeDirective = fmt.Sprintf("\n-include make/*%s\n", suffix)
+		} else {
+			// For files outside make/, use self-referential include
+			includeDirective = fmt.Sprintf("\n-include $(dir $(lastword $(MAKEFILE_LIST)))%s\n", relPath)
+		}
 
 		fmt.Println()
 		fmt.Printf("--- Append to %s ---\n", makefilePath)

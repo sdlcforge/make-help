@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -51,8 +52,24 @@ func TestProcessColorFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var mode ColorMode
-			err := processColorFlags(&mode, tt.noColor, tt.forceColor)
+			// Create a temporary command to test flag processing
+			cmd := &cobra.Command{Use: "test"}
+			config := &Config{}
+			setupFlags(cmd, config)
+
+			// Set flags using SetArgs to simulate command line parsing
+			args := []string{}
+			if tt.noColor {
+				args = append(args, "--no-color")
+			}
+			if tt.forceColor {
+				args = append(args, "--color")
+			}
+			cmd.SetArgs(args)
+			cmd.Execute() // Parse the flags
+
+			err := processFlagsAfterParse(cmd, config)
+			mode := config.ColorMode
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -665,10 +682,10 @@ func TestMutualExclusivityFlags(t *testing.T) {
 
 func TestRemoveHelpFlagRestrictions(t *testing.T) {
 	tests := []struct {
-		name            string
-		args            []string
-		expectError     bool
-		expectedErrMsg  string
+		name           string
+		args           []string
+		expectError    bool
+		expectedErrMsg string
 	}{
 		{
 			name:        "remove-help with verbose",
@@ -888,9 +905,9 @@ func TestDryRunFlagValidation(t *testing.T) {
 			expectedErrMsg: "--dry-run cannot be used with --show-help",
 		},
 		{
-			name:        "dry-run with default mode (generation) - should work",
-			args:        []string{"--dry-run"},
-			expectError: true, // Will error because Makefile doesn't exist, not due to validation
+			name:           "dry-run with default mode (generation) - should work",
+			args:           []string{"--dry-run"},
+			expectError:    true, // Will error because Makefile doesn't exist, not due to validation
 			expectedErrMsg: "Makefile not found",
 		},
 	}

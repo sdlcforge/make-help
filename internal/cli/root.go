@@ -26,13 +26,6 @@ func init() {
 func NewRootCmd() *cobra.Command {
 	config := NewConfig()
 
-	// Flags for color mode (mutually exclusive, processed manually)
-	var noColor bool
-	var forceColor bool
-
-	// --keep-order-all is a convenience flag that sets both order flags
-	var keepOrderAll bool
-
 	rootCmd := &cobra.Command{
 		Use:     "make-help",
 		Short:   "Dynamic help generation for Makefiles",
@@ -52,15 +45,9 @@ Documentation directives (in ## comments):
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			// Process color flags
-			if err := processColorFlags(&config.ColorMode, noColor, forceColor); err != nil {
+			// Process flags that need special handling
+			if err := processFlagsAfterParse(cmd, config); err != nil {
 				return err
-			}
-
-			// Process --keep-order-all flag
-			if keepOrderAll {
-				config.KeepOrderCategories = true
-				config.KeepOrderTargets = true
 			}
 
 			// --remove-help only allows --verbose and --makefile-path (check this first)
@@ -106,9 +93,6 @@ Documentation directives (in ## comments):
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Normalize IncludeTargets from comma-separated + repeatable flags
-			config.IncludeTargets = parseIncludeTargets(config.IncludeTargets)
-
 			// Resolve color mode
 			config.UseColor = ResolveColorMode(config)
 
@@ -129,51 +113,8 @@ Documentation directives (in ## comments):
 		},
 	}
 
-	// Mode flags
-	rootCmd.Flags().BoolVar(&config.ShowHelp,
-		"show-help", false, "Display help dynamically instead of generating a help file")
-	rootCmd.Flags().BoolVar(&config.RemoveHelpTarget,
-		"remove-help", false, "Remove help target from Makefile")
-	rootCmd.Flags().BoolVar(&config.DryRun,
-		"dry-run", false, "Show what files would be created/modified without making changes")
-	rootCmd.Flags().BoolVar(&config.Lint,
-		"lint", false, "Check documentation quality and report issues")
-	rootCmd.Flags().BoolVar(&config.Fix,
-		"fix", false, "Automatically fix auto-fixable lint issues (requires --lint)")
-	rootCmd.Flags().StringVar(&config.Target,
-		"target", "", "Show detailed help for a specific target (requires --show-help)")
-
-	// Input flags
-	rootCmd.PersistentFlags().StringVar(&config.MakefilePath,
-		"makefile-path", "", "Path to Makefile (defaults to ./Makefile)")
-	rootCmd.Flags().StringVar(&config.HelpFileRelPath,
-		"help-file-rel-path", "", "Relative path for generated help target file (e.g., help.mk or make/help.mk)")
-
-	// Output/formatting flags
-	rootCmd.PersistentFlags().BoolVar(&forceColor,
-		"color", false, "Force colored output")
-	rootCmd.PersistentFlags().BoolVar(&noColor,
-		"no-color", false, "Disable colored output")
-	rootCmd.Flags().StringSliceVar(&config.IncludeTargets,
-		"include-target", []string{}, "Include undocumented target in help (repeatable, comma-separated)")
-	rootCmd.Flags().BoolVar(&config.IncludeAllPhony,
-		"include-all-phony", false, "Include all .PHONY targets in help output")
-	rootCmd.Flags().BoolVar(&config.KeepOrderCategories,
-		"keep-order-categories", false, "Preserve category discovery order")
-	rootCmd.Flags().BoolVar(&config.KeepOrderTargets,
-		"keep-order-targets", false, "Preserve target discovery order within categories")
-	rootCmd.Flags().BoolVar(&keepOrderAll,
-		"keep-order-all", false, "Preserve both category and target discovery order")
-	rootCmd.Flags().StringSliceVar(&config.CategoryOrder,
-		"category-order", []string{}, "Explicit category order (comma-separated)")
-	rootCmd.Flags().StringVar(&config.DefaultCategory,
-		"default-category", "", "Default category for uncategorized targets")
-	rootCmd.Flags().StringVar(&config.HelpCategory,
-		"help-category", "Help", "Category name for generated help targets (help, update-help)")
-
-	// Misc flags
-	rootCmd.PersistentFlags().BoolVarP(&config.Verbose,
-		"verbose", "v", false, "Enable verbose output for debugging")
+	// Set up flags using shared function
+	setupFlags(rootCmd, config)
 
 	// Annotate flags with their groups for custom help display
 	annotateFlag(rootCmd, "show-help", modeGroupLabel)
@@ -202,23 +143,6 @@ Documentation directives (in ## comments):
 	rootCmd.SetUsageTemplate(usageTemplate)
 
 	return rootCmd
-}
-
-// processColorFlags validates and processes color mode flags.
-func processColorFlags(mode *ColorMode, noColor, forceColor bool) error {
-	if noColor && forceColor {
-		return fmt.Errorf("cannot use both --color and --no-color flags")
-	}
-
-	if forceColor {
-		*mode = ColorAlways
-	} else if noColor {
-		*mode = ColorNever
-	} else {
-		*mode = ColorAuto
-	}
-
-	return nil
 }
 
 // validateRemoveHelpFlags checks for incompatible flags with --remove-help.

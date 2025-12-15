@@ -4,16 +4,17 @@ Quick reference for AI agents working on this codebase. For comprehensive detail
 
 ## What This Project Does
 
-`make-help` is a Go CLI tool that generates static help files for Makefiles from specially-formatted comments. By default, it creates help.mk files with embedded help text. It can also display help dynamically. The tool processes Makefiles through a pipeline: CLI → Discovery → Parser → Model Builder → Ordering → Summary → Formatter → Output.
+`make-help` is a Go CLI tool that generates static help files for Makefiles from specially-formatted comments. By default, it creates `./make/help.mk` (with automatic directory creation and include directive insertion) with embedded help text. It can also display help dynamically. The tool processes Makefiles through a pipeline: CLI → Discovery → Parser → Model Builder → Ordering → Summary → Formatter → Output.
 
 ## Essential Commands
 
 ```bash
 # Build and run
 go build ./cmd/make-help
-./make-help                            # Generate help.mk (default)
+./make-help                            # Generate ./make/help.mk (default)
 ./make-help --show-help                # Display help dynamically
 ./make-help --show-help --target build # Show detailed target help
+./make-help --version                  # Display version information
 
 # Testing
 go test ./...                          # All tests
@@ -22,7 +23,7 @@ go test ./internal/parser/... -run TestScanFile  # Specific test
 go test ./test/integration/...         # Integration tests only
 
 # Development
-./make-help --verbose                  # Debug mode (generates help.mk)
+./make-help --verbose                  # Debug mode (generates ./make/help.mk)
 ./make-help --show-help --verbose      # Debug dynamic help display
 ```
 
@@ -55,12 +56,13 @@ CLI Layer → Discovery → Parser → Model Builder → Ordering → Summary �
 
 ### Important Design Patterns
 
-1. **Static help generation by default**: Running `make-help` generates help.mk with embedded help text (use `--show-help` for dynamic display)
-2. **CLI uses flags, not subcommands**: Mode detection via flag combinations (`--show-help`, `--remove-help`, `--target <name>`)
-3. **Testability via interfaces**: `CommandExecutor` interface for mocking `make` commands
-4. **Security-first**: No shell injection; atomic file writes; 30s command timeouts
-5. **Stateful parser**: `parser.Scanner` maintains state across lines to associate docs with targets
-6. **Immutable model**: `HelpModel` is built once, not mutated
+1. **Static help generation by default**: Running `make-help` generates `./make/help.mk` with embedded help text (use `--show-help` for dynamic display)
+2. **Smart file placement**: Defaults to `./make/help.mk` with automatic directory creation, numbered prefix detection, and include directive insertion
+3. **CLI uses flags, not subcommands**: Mode detection via flag combinations (`--show-help`, `--remove-help`, `--target <name>`)
+4. **Testability via interfaces**: `CommandExecutor` interface for mocking `make` commands
+5. **Security-first**: No shell injection; atomic file writes; 30s command timeouts
+6. **Stateful parser**: `parser.Scanner` maintains state across lines to associate docs with targets
+7. **Immutable model**: `HelpModel` is built once, not mutated
 
 ## Documentation Syntax (for parser)
 
@@ -128,6 +130,10 @@ standalone:
 - **Generated help files contain static text**: Help text is embedded as @echo statements, not generated dynamically
 - **Auto-regeneration**: Generated help files include targets that regenerate when source Makefiles change
 - **Fallback chain**: Generated files try `make-help`, then `npx make-help`, then error
+- **Default location is `./make/help.mk`**: The `make/` directory is created automatically if needed
+- **Numbered prefix support**: If files in `./make/` use numeric prefixes (e.g., `10-foo.mk`), help file uses matching prefix (e.g., `00-help.mk`)
+- **Auto-add include directive**: If no `include make/*.mk` pattern exists, one is automatically added to the Makefile
+- **Fixed warnings are hidden**: When using `--lint --fix`, only unfixed warnings are displayed in output
 
 ## Comprehensive Documentation
 
@@ -151,5 +157,9 @@ standalone:
 **Target not appearing in help**: Check if it's .PHONY (use --include-all-phony or --include-target)
 **Want dynamic help instead of file generation**: Use `--show-help` flag
 **Need detailed target help**: Use `--show-help --target <name>`
-**Generated help not regenerating**: Check that help.mk has the auto-regeneration target
+**Generated help not regenerating**: Check that `./make/help.mk` (or custom location) has the auto-regeneration target
 **"make command timed out"**: Check for infinite recursion in Makefile includes
+**Help file in wrong location**: Default is now `./make/help.mk`; use `--help-file-rel-path` to override
+**Want numbered prefix for help file**: Place other numbered files (e.g., `10-foo.mk`) in `./make/` directory first
+**Lint shows fixed warnings**: With `--lint --fix`, only unfixed warnings should appear; fixed ones are hidden
+**Check version**: Use `--version` flag to display version information
