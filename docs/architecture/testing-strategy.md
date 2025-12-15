@@ -2,6 +2,8 @@
 
 Comprehensive testing approach for make-help.
 
+> **Note:** The code examples in this document are **illustrative patterns**, not exact copies of the implementation. They demonstrate the testing approach and structure. For the actual test implementations, see the source files in `internal/*/` and `test/integration/`.
+
 ## Table of Contents
 
 - [Unit Testing Approach](#unit-testing-approach)

@@ -13,233 +13,216 @@ Core data structures used throughout the make-help system.
 
 ## Overview
 
-### 1 Target Service Models
+### 1. Target Service Models
 
-```go
-// Config holds configuration for target manipulation operations.
-type Config struct {
-    MakefilePath        string
-    TargetFileRelPath   string   // Relative path for help target file
-    KeepOrderCategories bool
-    KeepOrderTargets    bool
-    CategoryOrder       []string
-    DefaultCategory     string
-}
+#### Config
+Configuration for target manipulation operations (add/remove help targets).
 
-// IncludePattern holds information about a detected include directive pattern.
-type IncludePattern struct {
-    // Suffix is the file extension (e.g., ".mk" or "")
-    Suffix string
-    // FullPattern is the complete include pattern (e.g., "make/*.mk")
-    FullPattern string
-    // PatternPrefix is the prefix part before the wildcard (e.g., "make/" or "./make/")
-    PatternPrefix string
-}
-```
+**Key fields:**
+- `MakefilePath` - Path to the Makefile being modified
+- `TargetFileRelPath` - Relative path for generated help file (e.g., "make/help.mk")
+- `KeepOrderCategories`, `KeepOrderTargets` - Preserve discovery order
+- `CategoryOrder` - Explicit category ordering
+- `DefaultCategory` - Category name for uncategorized targets
 
-### 2 Lint Service Models
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/add.go#L16-L23)
 
-```go
-// Check represents a lint check with optional auto-fix capability.
-type Check struct {
-    // Name is a unique identifier for the check (e.g., "summary-punctuation").
-    Name string
-    // CheckFunc performs the check and returns any warnings found.
-    CheckFunc CheckFunc
-    // FixFunc generates a fix for a warning. May be nil if not auto-fixable.
-    FixFunc FixFunc
-}
+#### AddService
+Service for adding help targets to Makefiles. Uses Config to determine placement and includes the logic for validating Makefiles, determining target file location, generating content, and adding include directives.
 
-// FixFunc generates a fix for a warning.
-// Returns nil if the warning cannot be auto-fixed.
-type FixFunc func(w Warning) *Fix
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/add.go#L26-L30)
 
-// Fix represents a single file modification to fix a lint warning.
-type Fix struct {
-    // File is the absolute path to the file to modify.
-    File string
-    // Line is the 1-indexed line number to modify.
-    Line int
-    // Operation specifies the type of modification.
-    Operation FixOperation
-    // OldContent is the expected current content of the line (for validation).
-    OldContent string
-    // NewContent is the replacement content (for FixReplace operation).
-    NewContent string
-}
+#### RemoveService
+Service for removing help target artifacts from Makefiles. Cleans up include directives and deletes generated help files.
 
-// FixOperation specifies the type of file modification.
-type FixOperation int
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/remove.go#L16-L20)
 
-const (
-    // FixReplace replaces the entire line with new content.
-    FixReplace FixOperation = iota
-    // FixDelete removes the line entirely.
-    FixDelete
-)
+#### IncludePattern
+Information about a detected include directive pattern in the Makefile.
 
-// Fixer applies fixes to source files.
-type Fixer struct {
-    // DryRun when true shows what would be fixed without modifying files.
-    DryRun bool
-}
+**Key fields:**
+- `Suffix` - File extension (e.g., ".mk" or "")
+- `FullPattern` - Complete include pattern (e.g., "make/*.mk")
+- `PatternPrefix` - Prefix before wildcard (e.g., "make/" or "./make/")
 
-// FixResult contains the results of applying fixes.
-type FixResult struct {
-    // TotalFixed is the number of fixes successfully applied.
-    TotalFixed int
-    // FilesModified maps file paths to the number of fixes applied.
-    FilesModified map[string]int
-}
-```
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/add.go#L128-L135)
 
-### 3 Makefile Documentation Model
+#### GeneratorConfig
+Configuration for static help file generation, including rendering options and the help model.
 
-```go
-// HelpModel represents the complete parsed help documentation
-type HelpModel struct {
-    FileDocs     []string              // !file documentation sections (ordered)
-    Categories   []Category            // Ordered list of categories
-    HasCategories bool                 // True if any !category directives found
-    DefaultCategory string             // Category for uncategorized targets
-}
+**Key fields:**
+- `HelpModel` - The built model to render
+- `UseColor` - Whether to embed ANSI color codes
+- `Makefiles` - List of discovered Makefiles for dependency tracking
+- `CommandLine` - Full command line used to generate the file (for restoration)
 
-// Category represents a documentation category
-type Category struct {
-    Name           string              // Category name
-    Targets        []Target            // Targets in this category
-    DiscoveryOrder int                 // Order of first appearance
-}
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/generator.go#L14-L41)
 
-// Target represents a documented target
-type Target struct {
-    Name           string              // Primary target name
-    Aliases        []string            // Alternative names (!alias)
-    Documentation  []string            // Full documentation lines
-    Summary        string              // Extracted summary (computed)
-    Variables      []Variable          // Associated environment variables
-    DiscoveryOrder int                 // Order of first appearance
-    SourceFile     string              // File where target was documented
-    LineNumber     int                 // Line number for error reporting
-}
+### 2. Lint Service Models
 
-// Variable represents a documented environment variable
-type Variable struct {
-    Name          string               // Variable name
-    Description   string               // Full description text
-}
+#### Check
+Represents a lint check with optional auto-fix capability.
 
-// Directive represents a parsed documentation directive
-type Directive struct {
-    Type          DirectiveType        // !file, !category, !var, !alias, or doc
-    Value         string               // Directive value/content
-    SourceFile    string               // File where directive appears
-    LineNumber    int                  // Line number
-}
+**Key fields:**
+- `Name` - Unique identifier (e.g., "summary-punctuation")
+- `CheckFunc` - Function that performs the check
+- `FixFunc` - Function that generates a fix (may be nil if not auto-fixable)
 
-type DirectiveType int
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/lint/types.go#L20-L28)
 
-const (
-    DirectiveFile DirectiveType = iota
-    DirectiveCategory
-    DirectiveVar
-    DirectiveAlias
-    DirectiveDoc  // Regular documentation line
-)
-```
+#### Fix
+Represents a single file modification to fix a lint warning.
 
-### 4 Configuration Model
+**Key fields:**
+- `File` - Absolute path to the file to modify
+- `Line` - 1-indexed line number to modify
+- `Operation` - Type of modification (FixReplace or FixDelete)
+- `OldContent` - Expected current content (for validation)
+- `NewContent` - Replacement content
 
-```go
-// Config holds all CLI configuration
-type Config struct {
-    // Global options
-    MakefilePath  string              // Path to Makefile (resolved absolute)
-    ColorMode     ColorMode           // Auto, Always, Never
-    Verbose       bool                // Enable verbose output for debugging
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/lint/types.go#L36-L51)
 
-    // Help generation options
-    KeepOrderCategories bool          // Preserve category discovery order
-    KeepOrderTargets    bool          // Preserve target discovery order
-    CategoryOrder       []string      // Explicit category order
-    DefaultCategory     string        // Default category name
-    HelpCategory        string        // Category for generated help targets (default: "Help")
+#### FixOperation
+Enum specifying the type of file modification: `FixReplace` (replace entire line) or `FixDelete` (remove line).
 
-    // Add-target options
-    HelpFileRelPath string            // Relative path for generated help target file
-    CreateHelpTarget bool             // Whether to generate help target file
-    RemoveHelpTarget bool             // Whether to remove help target from Makefile
-    Version         string            // Version for go install (e.g., "v1.2.3")
-    IncludeTargets  []string          // Undocumented targets to include in help
-    IncludeAllPhony bool              // Include all .PHONY targets in help output
-    Target          string            // Target name for detailed help view
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/lint/types.go#L54-L60)
 
-    // Derived state
-    UseColor      bool                // Computed based on ColorMode + terminal detection
-}
+#### Fixer
+Applies fixes to source files, with support for dry-run mode.
 
-type ColorMode int
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/lint/types.go#L63-L66)
 
-const (
-    ColorAuto ColorMode = iota
-    ColorAlways
-    ColorNever
-)
-```
+#### FixResult
+Contains the results of applying fixes, including total fixes applied and files modified.
 
-### 5 Discovery Model
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/lint/types.go#L69-L74)
 
-```go
-// MakefileInfo holds discovered Makefile information
-type MakefileInfo struct {
-    MainFile      string              // Main Makefile path (absolute)
-    IncludedFiles []string            // Included files in MAKEFILE_LIST order
-    AllTargets    []string            // All available targets from make -p
-}
+### 3. Makefile Documentation Model
 
-// ParsedFile represents a single parsed Makefile
-type ParsedFile struct {
-    Path          string              // File path
-    Directives    []Directive         // Parsed directives
-    TargetMap     map[string]int      // Target name -> first line number
-}
-```
+#### HelpModel
+The complete parsed help documentation from all Makefiles. This is the core data structure built by the model builder.
 
-### 6 Rendering Model
+**Key fields:**
+- `FileDocs` - !file documentation sections in discovery order
+- `Categories` - All documented categories with their targets
+- `HasCategories` - True if any !category directives were found
+- `DefaultCategory` - Category name for uncategorized targets
 
-```go
-// RenderContext holds data for template rendering
-type RenderContext struct {
-    Model         *HelpModel
-    Config        *Config
-    ColorScheme   *ColorScheme        // Color codes based on UseColor
-}
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/model/types.go#L8-L22)
 
-// ColorScheme defines color codes for different elements
-type ColorScheme struct {
-    CategoryName  string              // ANSI code for category headers
-    TargetName    string              // ANSI code for target names
-    Alias         string              // ANSI code for aliases
-    Variable      string              // ANSI code for variable names
-    Documentation string              // ANSI code for doc text
-    Reset         string              // ANSI reset code
-}
+#### Category
+A documentation category containing related targets.
 
-// NewColorScheme creates a scheme based on color mode
-func NewColorScheme(useColor bool) *ColorScheme {
-    if !useColor {
-        return &ColorScheme{} // All empty strings
-    }
-    return &ColorScheme{
-        CategoryName:  "\033[1;36m",  // Bold Cyan
-        TargetName:    "\033[1;32m",  // Bold Green
-        Alias:         "\033[0;33m",  // Yellow
-        Variable:      "\033[0;35m",  // Magenta
-        Documentation: "\033[0;37m",  // White
-        Reset:         "\033[0m",     // Reset
-    }
-}
-```
+**Key fields:**
+- `Name` - Category name from !category directive (empty string = uncategorized)
+- `Targets` - All targets in this category
+- `DiscoveryOrder` - When this category was first encountered (for --keep-order-categories)
+
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/model/types.go#L24-L36)
+
+#### Target
+A documented Makefile target with all associated metadata.
+
+**Key fields:**
+- `Name` - Primary target name
+- `Aliases` - Alternative names from !alias directives
+- `Documentation` - Full documentation lines (without ## prefix)
+- `Summary` - Extracted first sentence (computed from Documentation)
+- `Variables` - Associated environment variables from !var directives
+- `DiscoveryOrder` - When target was first encountered (for --keep-order-targets)
+- `SourceFile`, `LineNumber` - Location information
+- `IsPhony` - Whether target is declared as .PHONY
+
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/model/types.go#L38-L67)
+
+#### Variable
+A documented environment variable associated with a target.
+
+**Key fields:**
+- `Name` - Variable name (e.g., "DEBUG", "PORT")
+- `Description` - Full description text from !var directive
+
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/model/types.go#L69-L76)
+
+#### Directive
+A parsed documentation directive from a Makefile. Used during parsing before being assembled into the HelpModel.
+
+**Key fields:**
+- `Type` - Directive type (see DirectiveType below)
+- `Value` - Directive content after the directive keyword
+- `SourceFile`, `LineNumber` - Location information
+
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/parser/types.go#L41-L58)
+
+#### DirectiveType
+Enum representing the type of documentation directive: `DirectiveFile`, `DirectiveCategory`, `DirectiveVar`, `DirectiveAlias`, or `DirectiveDoc` (regular documentation line).
+
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/parser/types.go#L3-L21)
+
+#### ParsedFile
+The parsing result for a single Makefile, containing directives and target information.
+
+**Key fields:**
+- `Path` - Absolute path to the parsed file
+- `Directives` - All parsed documentation directives in order
+- `TargetMap` - Maps target names to their line numbers
+
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/parser/types.go#L60-L71)
+
+### 4. Configuration Model
+
+#### Config (CLI)
+All CLI configuration options, including global settings, help generation options, and derived state.
+
+**Key fields:**
+- **Global:** `MakefilePath`, `ColorMode`, `Verbose`
+- **Help generation:** `KeepOrderCategories`, `KeepOrderTargets`, `CategoryOrder`, `DefaultCategory`, `HelpCategory`
+- **Mode control:** `ShowHelp`, `RemoveHelpTarget`, `Lint`, `Fix`, `DryRun`
+- **Include options:** `IncludeTargets`, `IncludeAllPhony`
+- **Target detail:** `Target` (for detailed help view)
+- **Derived:** `UseColor` (computed based on ColorMode and terminal detection)
+
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/cli/config.go#L31-L102)
+
+#### ColorMode
+Enum for color output mode: `ColorAuto` (terminal detection), `ColorAlways`, or `ColorNever`.
+
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/cli/config.go#L3-L15)
+
+### 5. Discovery Model
+
+#### Service
+Provides Makefile and target discovery functionality using the `make` command.
+
+**Key methods:**
+- `DiscoverMakefiles()` - Find all Makefiles using MAKEFILE_LIST
+- `DiscoverTargets()` - Extract targets from make -p database output
+
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/discovery/service.go#L8-L12)
+
+#### DiscoverTargetsResult
+Contains discovered targets and their metadata extracted from make -p output.
+
+**Key fields:**
+- `Targets` - All discovered target names in order
+- `IsPhony` - Maps target names to their .PHONY status
+- `Dependencies` - Maps target names to their prerequisite targets
+- `HasRecipe` - Maps target names to whether they have a recipe
+
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/discovery/targets.go#L12-L24)
+
+### 6. Rendering Model
+
+#### ColorScheme
+Defines ANSI color codes for different elements in the rendered output.
+
+**Key fields:**
+- `CategoryName`, `TargetName`, `Alias`, `Variable`, `Documentation` - ANSI codes for each element type
+- `Reset` - ANSI reset code
+
+**Note:** All fields are empty strings when color is disabled.
+
+[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/format/colors.go#L3-L14)
 
 
 Last reviewed: 2025-12-25T16:43Z
