@@ -620,6 +620,57 @@ build:
 
 Summary: "Build the entire project."
 
+## Uninstalling
+
+### Removing Generated Help Files
+
+To remove the generated help files and artifacts created by `make-help`:
+
+```bash
+make-help --remove-help
+```
+
+**What gets removed**:
+- The generated help file (e.g., `./make/help.mk` or `./make/00-help.mk`)
+- The include directive that was automatically added to your Makefile (e.g., `-include make/*.mk`)
+
+**What does NOT get removed**:
+- Any targets or content you wrote yourself
+- The `bin/` directory (where the binary is built locally during development)
+- Your documentation comments (`##` comments in your Makefiles)
+
+### Removing the Binary
+
+The `--remove-help` flag only removes generated help files, not the `make-help` binary itself.
+
+**If installed via npm/npx**:
+```bash
+npm uninstall -g @sdlcforge/make-help
+```
+
+**If installed via `go install`**:
+```bash
+rm $(go env GOPATH)/bin/make-help
+```
+
+**If built locally during development**:
+```bash
+make clean    # Removes ./bin/make-help
+```
+
+### Version Control Considerations
+
+The generated `make/help.mk` file can be committed to version control, allowing your team to use `make help` without installing `make-help` (the file contains static help text as `@echo` statements).
+
+**If you remove the generated help file**:
+- Remember to commit the removal to version control
+- The include directive removal should also be committed
+- Consider removing `make/help.mk` (or `make/00-help.mk`) from `.gitignore` if you added it
+
+**The `bin/` directory**:
+- Should remain in `.gitignore` (it's only for local development)
+- Is not affected by `--remove-help`
+
 ## Troubleshooting
 
 ### Mixed Categorization Error

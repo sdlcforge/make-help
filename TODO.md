@@ -35,7 +35,7 @@ This document consolidates outstanding findings from three parallel reviews:
 
 ### Documentation
 
-- [ ] **Add "Uninstalling" section**
+- [x] **Add "Uninstalling" section**
   - Document: What `--remove-help-target` removes, whether `.bin/` is cleaned, version control considerations
 
 - [ ] **Add comparison to alternatives**
