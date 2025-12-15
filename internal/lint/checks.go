@@ -314,54 +314,20 @@ func CheckInconsistentNaming(ctx *CheckContext) []Warning {
 	return warnings
 }
 
-// CheckCircularAliases detects implicit alias chains that form loops.
-// An implicit alias is a phony target with a single phony dependency and no recipe.
+// CheckCircularDependencies detects circular dependency chains in targets.
+// Uses the dependency graph from `make -p` to detect cycles.
 // For example: a → b → c → a creates a circular dependency chain.
-func CheckCircularAliases(ctx *CheckContext) []Warning {
+func CheckCircularDependencies(ctx *CheckContext) []Warning {
 	var warnings []Warning
 
-	// Build a map of implicit alias relationships
-	// A target is an implicit alias if:
-	// 1. It's a .PHONY target
-	// 2. It has exactly one dependency
-	// 3. That dependency is also a .PHONY target
-	// 4. The target has no recipe
-	implicitAliases := make(map[string]string)
-
-	for targetName, isPhony := range ctx.PhonyTargets {
-		if !isPhony {
-			continue
-		}
-
-		// Check if target has a recipe
-		if ctx.HasRecipe[targetName] {
-			continue
-		}
-
-		// Check if target has exactly one dependency
-		deps := ctx.Dependencies[targetName]
-		if len(deps) != 1 {
-			continue
-		}
-
-		// Check if the dependency is also phony
-		dependencyName := deps[0]
-		if !ctx.PhonyTargets[dependencyName] {
-			continue
-		}
-
-		// This is an implicit alias
-		implicitAliases[targetName] = dependencyName
-	}
-
-	// Detect cycles using DFS
+	// Detect cycles using DFS on the actual dependency graph
 	// Track visited nodes and nodes in current path
 	visited := make(map[string]bool)
 	inPath := make(map[string]bool)
 	cycles := make(map[string][]string) // Map cycle start to full cycle path
 
-	var dfs func(node string, path []string) bool
-	dfs = func(node string, path []string) bool {
+	var dfs func(node string, path []string)
+	dfs = func(node string, path []string) {
 		if inPath[node] {
 			// Found a cycle - extract the cycle portion
 			cycleStart := -1
@@ -374,34 +340,38 @@ func CheckCircularAliases(ctx *CheckContext) []Warning {
 			if cycleStart >= 0 {
 				cycle := append([]string{}, path[cycleStart:]...)
 				cycle = append(cycle, node) // Complete the cycle
-				// Use the first node in the cycle as the key to avoid duplicates
-				cycleKey := cycle[0]
-				if _, exists := cycles[cycleKey]; !exists {
-					cycles[cycleKey] = cycle
+				// Use the lexicographically smallest node as key to avoid duplicate reports
+				minNode := cycle[0]
+				for _, n := range cycle {
+					if n < minNode {
+						minNode = n
+					}
+				}
+				if _, exists := cycles[minNode]; !exists {
+					cycles[minNode] = cycle
 				}
 			}
-			return true
+			return
 		}
 
 		if visited[node] {
-			return false
+			return
 		}
 
 		visited[node] = true
 		inPath[node] = true
 		path = append(path, node)
 
-		// Follow the alias chain
-		if next, isAlias := implicitAliases[node]; isAlias {
-			dfs(next, path)
+		// Follow all dependencies
+		for _, dep := range ctx.Dependencies[node] {
+			dfs(dep, path)
 		}
 
 		inPath[node] = false
-		return false
 	}
 
-	// Run DFS from each implicit alias
-	for targetName := range implicitAliases {
+	// Run DFS from each target with dependencies
+	for targetName := range ctx.Dependencies {
 		if !visited[targetName] {
 			dfs(targetName, []string{})
 		}
@@ -422,9 +392,111 @@ func CheckCircularAliases(ctx *CheckContext) []Warning {
 			File:      ctx.MakefilePath,
 			Line:      0, // Line number not available from discovery
 			Severity:  SeverityWarning,
-			CheckName: "circular-alias",
-			Message:   fmt.Sprintf("circular alias chain detected: %s", cycleStr),
+			CheckName: "circular-dependency",
+			Message:   fmt.Sprintf("circular dependency chain detected: %s", cycleStr),
 		})
+	}
+
+	return warnings
+}
+
+// CheckRedundantDirectives detects redundant or ineffective !notalias and !alias directives.
+// A !notalias is redundant when the target wouldn't be an implicit alias anyway:
+// - Target has documentation (documented targets are never implicit aliases)
+// - Target has a recipe (targets with recipes are never implicit aliases)
+// - Target is not .PHONY (non-phony targets are never implicit aliases)
+// - Target has multiple dependencies (only single-dep targets can be aliases)
+func CheckRedundantDirectives(ctx *CheckContext) []Warning {
+	var warnings []Warning
+
+	// Check each target marked with !notalias
+	for targetName := range ctx.NotAliasTargets {
+		loc := ctx.TargetLocations[targetName]
+
+		// Check if target has documentation
+		if ctx.DocumentedTargets[targetName] {
+			warnings = append(warnings, Warning{
+				File:      loc.File,
+				Line:      loc.Line,
+				Severity:  SeverityWarning,
+				CheckName: "redundant-notalias",
+				Message:   fmt.Sprintf("!notalias on '%s' is redundant: documented targets are never implicit aliases", targetName),
+				Fixable:   true,
+			})
+			continue
+		}
+
+		// Check if target has a recipe
+		if ctx.HasRecipe[targetName] {
+			warnings = append(warnings, Warning{
+				File:      loc.File,
+				Line:      loc.Line,
+				Severity:  SeverityWarning,
+				CheckName: "redundant-notalias",
+				Message:   fmt.Sprintf("!notalias on '%s' is redundant: targets with recipes are never implicit aliases", targetName),
+				Fixable:   true,
+			})
+			continue
+		}
+
+		// Check if target is not .PHONY
+		if !ctx.PhonyTargets[targetName] {
+			warnings = append(warnings, Warning{
+				File:      loc.File,
+				Line:      loc.Line,
+				Severity:  SeverityWarning,
+				CheckName: "redundant-notalias",
+				Message:   fmt.Sprintf("!notalias on '%s' is redundant: non-phony targets are never implicit aliases", targetName),
+				Fixable:   true,
+			})
+			continue
+		}
+
+		// Check if target has multiple dependencies
+		deps := ctx.Dependencies[targetName]
+		if len(deps) != 1 {
+			warnings = append(warnings, Warning{
+				File:      loc.File,
+				Line:      loc.Line,
+				Severity:  SeverityWarning,
+				CheckName: "redundant-notalias",
+				Message:   fmt.Sprintf("!notalias on '%s' is redundant: only targets with exactly one dependency can be implicit aliases", targetName),
+				Fixable:   true,
+			})
+			continue
+		}
+
+		// Check if the single dependency is not .PHONY
+		depName := deps[0]
+		if !ctx.PhonyTargets[depName] {
+			warnings = append(warnings, Warning{
+				File:      loc.File,
+				Line:      loc.Line,
+				Severity:  SeverityWarning,
+				CheckName: "redundant-notalias",
+				Message:   fmt.Sprintf("!notalias on '%s' is redundant: its dependency '%s' is not phony, so it can't be an implicit alias", targetName, depName),
+				Fixable:   true,
+			})
+		}
+	}
+
+	// Check for self-referencing aliases in explicit aliases
+	for _, cat := range ctx.HelpModel.Categories {
+		for _, target := range cat.Targets {
+			for _, alias := range target.Aliases {
+				if alias == target.Name {
+					loc := ctx.TargetLocations[target.Name]
+					warnings = append(warnings, Warning{
+						File:      loc.File,
+						Line:      loc.Line,
+						Severity:  SeverityWarning,
+						CheckName: "redundant-alias",
+						Message:   fmt.Sprintf("target '%s' has itself as an alias", target.Name),
+						Fixable:   true,
+					})
+				}
+			}
+		}
 	}
 
 	return warnings
@@ -440,6 +512,7 @@ func AllChecks() []Check {
 		{Name: "empty-doc", CheckFunc: CheckEmptyDocumentation, FixFunc: fixEmptyDocumentation},
 		{Name: "missing-var-desc", CheckFunc: CheckMissingVarDescriptions, FixFunc: nil},
 		{Name: "naming", CheckFunc: CheckInconsistentNaming, FixFunc: nil},
-		{Name: "circular-alias", CheckFunc: CheckCircularAliases, FixFunc: nil},
+		{Name: "circular-dependency", CheckFunc: CheckCircularDependencies, FixFunc: nil},
+		{Name: "redundant-notalias", CheckFunc: CheckRedundantDirectives, FixFunc: nil},
 	}
 }

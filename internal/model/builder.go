@@ -40,8 +40,9 @@ type BuilderConfig struct {
 // It aggregates file documentation, groups targets by category,
 // and associates aliases and variables with targets.
 type Builder struct {
-	config    *BuilderConfig
-	extractor *summary.Extractor
+	config      *BuilderConfig
+	extractor   *summary.Extractor
+	notAliasSet map[string]bool // Targets marked with !notalias directive
 }
 
 // NewBuilder creates a new Builder with the given configuration.
@@ -59,9 +60,15 @@ func NewBuilder(config *BuilderConfig) *Builder {
 		config.HasRecipe = make(map[string]bool)
 	}
 	return &Builder{
-		config:    config,
-		extractor: summary.NewExtractor(),
+		config:      config,
+		extractor:   summary.NewExtractor(),
+		notAliasSet: make(map[string]bool),
 	}
+}
+
+// NotAliasTargets returns the set of targets marked with !notalias directive.
+func (b *Builder) NotAliasTargets() map[string]bool {
+	return b.notAliasSet
 }
 
 // Build constructs a HelpModel from parsed files.
@@ -176,6 +183,8 @@ func (b *Builder) shouldIncludeTarget(target *Target) bool {
 
 // detectImplicitAliases finds targets that are implicit aliases of other targets.
 // A target is an implicit alias if:
+//   - It has no documentation (documented targets are semantically distinct)
+//   - It is not marked with !notalias directive
 //   - It is .PHONY
 //   - It has exactly one dependency
 //   - That dependency is also .PHONY
@@ -185,7 +194,17 @@ func (b *Builder) shouldIncludeTarget(target *Target) bool {
 func (b *Builder) detectImplicitAliases(targetMap map[string]*Target) map[string]string {
 	aliases := make(map[string]string)
 
-	for targetName := range targetMap {
+	for targetName, target := range targetMap {
+		// Skip if target has documentation (documented targets are not implicit aliases)
+		if len(target.Documentation) > 0 {
+			continue
+		}
+
+		// Skip if marked with !notalias
+		if b.notAliasSet[targetName] {
+			continue
+		}
+
 		// Check conditions for implicit alias:
 		// 1. Target is .PHONY
 		if !b.config.PhonyTargets[targetName] {
@@ -294,6 +313,7 @@ func (b *Builder) processFile(
 	var pendingDocs []string
 	var pendingVars []Variable
 	var pendingAliases []string
+	var pendingNotAlias bool
 
 	// Process directives in file order
 	directiveIdx := 0
@@ -352,6 +372,9 @@ func (b *Builder) processFile(
 
 			case parser.DirectiveAlias:
 				pendingAliases = append(pendingAliases, b.parseAliasDirective(directive.Value)...)
+
+			case parser.DirectiveNotAlias:
+				pendingNotAlias = true
 			}
 		} else {
 			// Process target - associate pending directives with it
@@ -381,10 +404,16 @@ func (b *Builder) processFile(
 			targetMap[tl.name] = target
 			targetToCategory[tl.name] = currentCategory
 
+			// Track targets marked with !notalias
+			if pendingNotAlias {
+				b.notAliasSet[tl.name] = true
+			}
+
 			// Clear pending state
 			pendingDocs = nil
 			pendingVars = nil
 			pendingAliases = nil
+			pendingNotAlias = false
 		}
 	}
 }

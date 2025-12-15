@@ -16,6 +16,9 @@ const (
 	// DirectiveAlias represents !alias directive for target aliases.
 	DirectiveAlias
 
+	// DirectiveNotAlias represents !notalias directive to exclude a target from implicit alias detection.
+	DirectiveNotAlias
+
 	// DirectiveDoc represents a regular documentation line (not a special directive).
 	DirectiveDoc
 )
@@ -31,6 +34,8 @@ func (d DirectiveType) String() string {
 		return "var"
 	case DirectiveAlias:
 		return "alias"
+	case DirectiveNotAlias:
+		return "notalias"
 	case DirectiveDoc:
 		return "doc"
 	default:

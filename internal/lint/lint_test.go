@@ -891,9 +891,9 @@ func TestCheckInconsistentNaming_WithInvalid(t *testing.T) {
 	}
 }
 
-// Tests for CheckCircularAliases
+// Tests for CheckCircularDependencies
 
-func TestCheckCircularAliases_NoWarnings(t *testing.T) {
+func TestCheckCircularDependencies_NoWarnings(t *testing.T) {
 	ctx := &CheckContext{
 		HelpModel:    &model.HelpModel{},
 		MakefilePath: "Makefile",
@@ -914,13 +914,13 @@ func TestCheckCircularAliases_NoWarnings(t *testing.T) {
 		},
 	}
 
-	warnings := CheckCircularAliases(ctx)
+	warnings := CheckCircularDependencies(ctx)
 	if len(warnings) != 0 {
 		t.Errorf("Expected no warnings, got %d", len(warnings))
 	}
 }
 
-func TestCheckCircularAliases_SimpleCycle(t *testing.T) {
+func TestCheckCircularDependencies_SimpleCycle(t *testing.T) {
 	ctx := &CheckContext{
 		HelpModel:    &model.HelpModel{},
 		MakefilePath: "Makefile",
@@ -938,7 +938,7 @@ func TestCheckCircularAliases_SimpleCycle(t *testing.T) {
 		},
 	}
 
-	warnings := CheckCircularAliases(ctx)
+	warnings := CheckCircularDependencies(ctx)
 	if len(warnings) != 1 {
 		t.Fatalf("Expected 1 warning, got %d", len(warnings))
 	}
@@ -955,12 +955,12 @@ func TestCheckCircularAliases_SimpleCycle(t *testing.T) {
 	if !strings.Contains(w.Message, "a") || !strings.Contains(w.Message, "b") {
 		t.Errorf("Expected warning to mention both 'a' and 'b', got: %s", w.Message)
 	}
-	if !strings.Contains(w.Message, "circular alias chain") {
-		t.Errorf("Expected warning to mention 'circular alias chain', got: %s", w.Message)
+	if !strings.Contains(w.Message, "circular dependency chain") {
+		t.Errorf("Expected warning to mention 'circular dependency chain', got: %s", w.Message)
 	}
 }
 
-func TestCheckCircularAliases_LongerCycle(t *testing.T) {
+func TestCheckCircularDependencies_LongerCycle(t *testing.T) {
 	ctx := &CheckContext{
 		HelpModel:    &model.HelpModel{},
 		MakefilePath: "Makefile",
@@ -981,7 +981,7 @@ func TestCheckCircularAliases_LongerCycle(t *testing.T) {
 		},
 	}
 
-	warnings := CheckCircularAliases(ctx)
+	warnings := CheckCircularDependencies(ctx)
 	if len(warnings) != 1 {
 		t.Fatalf("Expected 1 warning, got %d", len(warnings))
 	}
@@ -995,7 +995,352 @@ func TestCheckCircularAliases_LongerCycle(t *testing.T) {
 	if !strings.Contains(w.Message, "a") || !strings.Contains(w.Message, "b") || !strings.Contains(w.Message, "c") {
 		t.Errorf("Expected warning to mention 'a', 'b', and 'c', got: %s", w.Message)
 	}
-	if !strings.Contains(w.Message, "circular alias chain") {
-		t.Errorf("Expected warning to mention 'circular alias chain', got: %s", w.Message)
+	if !strings.Contains(w.Message, "circular dependency chain") {
+		t.Errorf("Expected warning to mention 'circular dependency chain', got: %s", w.Message)
+	}
+}
+
+// Tests for CheckRedundantDirectives
+
+func TestCheckRedundantDirectives_NoWarnings(t *testing.T) {
+	ctx := &CheckContext{
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:       "build",
+							Aliases:    []string{"b"},
+							SourceFile: "Makefile",
+							LineNumber: 10,
+						},
+					},
+				},
+			},
+		},
+		NotAliasTargets: map[string]bool{}, // No !notalias directives
+		TargetLocations: map[string]TargetLocation{
+			"build": {File: "Makefile", Line: 10},
+		},
+		DocumentedTargets: map[string]bool{
+			"build": true,
+		},
+		PhonyTargets: map[string]bool{
+			"build": true,
+		},
+		HasRecipe: map[string]bool{
+			"build": true,
+		},
+		Dependencies: map[string][]string{
+			"build": {},
+		},
+	}
+
+	warnings := CheckRedundantDirectives(ctx)
+	if len(warnings) != 0 {
+		t.Errorf("Expected no warnings, got %d", len(warnings))
+	}
+}
+
+func TestCheckRedundantDirectives_NotAliasOnDocumented(t *testing.T) {
+	// !notalias on a documented target is redundant
+	ctx := &CheckContext{
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:       "build",
+							SourceFile: "Makefile",
+							LineNumber: 10,
+						},
+					},
+				},
+			},
+		},
+		NotAliasTargets: map[string]bool{
+			"build": true, // Has !notalias
+		},
+		TargetLocations: map[string]TargetLocation{
+			"build": {File: "Makefile", Line: 10},
+		},
+		DocumentedTargets: map[string]bool{
+			"build": true, // Is documented
+		},
+		PhonyTargets: map[string]bool{
+			"build": true,
+		},
+		HasRecipe: map[string]bool{
+			"build": true,
+		},
+		Dependencies: map[string][]string{
+			"build": {"test"},
+		},
+	}
+
+	warnings := CheckRedundantDirectives(ctx)
+	if len(warnings) != 1 {
+		t.Errorf("Expected 1 warning, got %d", len(warnings))
+	}
+
+	if len(warnings) > 0 {
+		w := warnings[0]
+		if w.CheckName != "redundant-notalias" {
+			t.Errorf("Expected check name 'redundant-notalias', got '%s'", w.CheckName)
+		}
+		if !strings.Contains(w.Message, "documented targets are never implicit aliases") {
+			t.Errorf("Expected message about documented targets, got: %s", w.Message)
+		}
+		if !w.Fixable {
+			t.Errorf("Expected warning to be fixable")
+		}
+	}
+}
+
+func TestCheckRedundantDirectives_NotAliasOnHasRecipe(t *testing.T) {
+	// !notalias on a target with a recipe is redundant
+	ctx := &CheckContext{
+		HelpModel:    &model.HelpModel{},
+		MakefilePath: "Makefile",
+		NotAliasTargets: map[string]bool{
+			"build": true, // Has !notalias
+		},
+		TargetLocations: map[string]TargetLocation{
+			"build": {File: "Makefile", Line: 10},
+		},
+		DocumentedTargets: map[string]bool{}, // Not documented
+		PhonyTargets: map[string]bool{
+			"build": true,
+		},
+		HasRecipe: map[string]bool{
+			"build": true, // Has recipe
+		},
+		Dependencies: map[string][]string{
+			"build": {"test"},
+		},
+	}
+
+	warnings := CheckRedundantDirectives(ctx)
+	if len(warnings) != 1 {
+		t.Errorf("Expected 1 warning, got %d", len(warnings))
+	}
+
+	if len(warnings) > 0 {
+		w := warnings[0]
+		if w.CheckName != "redundant-notalias" {
+			t.Errorf("Expected check name 'redundant-notalias', got '%s'", w.CheckName)
+		}
+		if !strings.Contains(w.Message, "targets with recipes are never implicit aliases") {
+			t.Errorf("Expected message about recipes, got: %s", w.Message)
+		}
+	}
+}
+
+func TestCheckRedundantDirectives_NotAliasOnNonPhony(t *testing.T) {
+	// !notalias on a non-.PHONY target is redundant
+	ctx := &CheckContext{
+		HelpModel:    &model.HelpModel{},
+		MakefilePath: "Makefile",
+		NotAliasTargets: map[string]bool{
+			"build": true, // Has !notalias
+		},
+		TargetLocations: map[string]TargetLocation{
+			"build": {File: "Makefile", Line: 10},
+		},
+		DocumentedTargets: map[string]bool{}, // Not documented
+		PhonyTargets:      map[string]bool{}, // Not .PHONY
+		HasRecipe: map[string]bool{
+			"build": false, // No recipe
+		},
+		Dependencies: map[string][]string{
+			"build": {"test"},
+		},
+	}
+
+	warnings := CheckRedundantDirectives(ctx)
+	if len(warnings) != 1 {
+		t.Errorf("Expected 1 warning, got %d", len(warnings))
+	}
+
+	if len(warnings) > 0 {
+		w := warnings[0]
+		if w.CheckName != "redundant-notalias" {
+			t.Errorf("Expected check name 'redundant-notalias', got '%s'", w.CheckName)
+		}
+		if !strings.Contains(w.Message, "non-phony targets are never implicit aliases") {
+			t.Errorf("Expected message about non-phony, got: %s", w.Message)
+		}
+	}
+}
+
+func TestCheckRedundantDirectives_NotAliasMultipleDeps(t *testing.T) {
+	// !notalias on a target with multiple dependencies is redundant
+	ctx := &CheckContext{
+		HelpModel:    &model.HelpModel{},
+		MakefilePath: "Makefile",
+		NotAliasTargets: map[string]bool{
+			"all": true, // Has !notalias
+		},
+		TargetLocations: map[string]TargetLocation{
+			"all": {File: "Makefile", Line: 10},
+		},
+		DocumentedTargets: map[string]bool{}, // Not documented
+		PhonyTargets: map[string]bool{
+			"all":   true,
+			"build": true,
+			"test":  true,
+		},
+		HasRecipe: map[string]bool{
+			"all": false, // No recipe
+		},
+		Dependencies: map[string][]string{
+			"all": {"build", "test"}, // Multiple dependencies
+		},
+	}
+
+	warnings := CheckRedundantDirectives(ctx)
+	if len(warnings) != 1 {
+		t.Errorf("Expected 1 warning, got %d", len(warnings))
+	}
+
+	if len(warnings) > 0 {
+		w := warnings[0]
+		if w.CheckName != "redundant-notalias" {
+			t.Errorf("Expected check name 'redundant-notalias', got '%s'", w.CheckName)
+		}
+		if !strings.Contains(w.Message, "only targets with exactly one dependency") {
+			t.Errorf("Expected message about single dependency, got: %s", w.Message)
+		}
+	}
+}
+
+func TestCheckRedundantDirectives_NotAliasNonPhonyDep(t *testing.T) {
+	// !notalias on a target whose dependency is not .PHONY is redundant
+	ctx := &CheckContext{
+		HelpModel:    &model.HelpModel{},
+		MakefilePath: "Makefile",
+		NotAliasTargets: map[string]bool{
+			"b": true, // Has !notalias
+		},
+		TargetLocations: map[string]TargetLocation{
+			"b": {File: "Makefile", Line: 10},
+		},
+		DocumentedTargets: map[string]bool{}, // Not documented
+		PhonyTargets: map[string]bool{
+			"b": true, // b is .PHONY
+			// "build" is NOT .PHONY
+		},
+		HasRecipe: map[string]bool{
+			"b": false, // No recipe
+		},
+		Dependencies: map[string][]string{
+			"b": {"build"}, // Single dependency but not .PHONY
+		},
+	}
+
+	warnings := CheckRedundantDirectives(ctx)
+	if len(warnings) != 1 {
+		t.Errorf("Expected 1 warning, got %d", len(warnings))
+	}
+
+	if len(warnings) > 0 {
+		w := warnings[0]
+		if w.CheckName != "redundant-notalias" {
+			t.Errorf("Expected check name 'redundant-notalias', got '%s'", w.CheckName)
+		}
+		if !strings.Contains(w.Message, "dependency 'build' is not phony") {
+			t.Errorf("Expected message about non-phony dependency, got: %s", w.Message)
+		}
+	}
+}
+
+func TestCheckRedundantDirectives_SelfAlias(t *testing.T) {
+	// A target that has itself as an alias
+	ctx := &CheckContext{
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:       "build",
+							Aliases:    []string{"build", "b"}, // "build" is a self-reference
+							SourceFile: "Makefile",
+							LineNumber: 10,
+						},
+					},
+				},
+			},
+		},
+		NotAliasTargets: map[string]bool{},
+		TargetLocations: map[string]TargetLocation{
+			"build": {File: "Makefile", Line: 10},
+		},
+		DocumentedTargets: map[string]bool{
+			"build": true,
+		},
+		PhonyTargets: map[string]bool{
+			"build": true,
+		},
+		HasRecipe: map[string]bool{
+			"build": true,
+		},
+		Dependencies: map[string][]string{
+			"build": {},
+		},
+	}
+
+	warnings := CheckRedundantDirectives(ctx)
+	if len(warnings) != 1 {
+		t.Errorf("Expected 1 warning, got %d", len(warnings))
+	}
+
+	if len(warnings) > 0 {
+		w := warnings[0]
+		if w.CheckName != "redundant-alias" {
+			t.Errorf("Expected check name 'redundant-alias', got '%s'", w.CheckName)
+		}
+		if !strings.Contains(w.Message, "has itself as an alias") {
+			t.Errorf("Expected message about self-alias, got: %s", w.Message)
+		}
+		if !w.Fixable {
+			t.Errorf("Expected warning to be fixable")
+		}
+	}
+}
+
+func TestCheckRedundantDirectives_ValidNotAlias(t *testing.T) {
+	// !notalias that is actually useful - target would be implicit alias without it
+	ctx := &CheckContext{
+		HelpModel:    &model.HelpModel{},
+		MakefilePath: "Makefile",
+		NotAliasTargets: map[string]bool{
+			"t": true, // Has !notalias
+		},
+		TargetLocations: map[string]TargetLocation{
+			"t": {File: "Makefile", Line: 10},
+		},
+		DocumentedTargets: map[string]bool{}, // Not documented
+		PhonyTargets: map[string]bool{
+			"t":    true, // Is .PHONY
+			"test": true, // Dependency is also .PHONY
+		},
+		HasRecipe: map[string]bool{
+			"t": false, // No recipe
+		},
+		Dependencies: map[string][]string{
+			"t": {"test"}, // Single .PHONY dependency
+		},
+	}
+
+	warnings := CheckRedundantDirectives(ctx)
+	// No warnings - the !notalias is useful (without it, t would be an implicit alias)
+	if len(warnings) != 0 {
+		t.Errorf("Expected no warnings (valid !notalias), got %d", len(warnings))
+		for _, w := range warnings {
+			t.Errorf("Unexpected warning: %s", w.Message)
+		}
 	}
 }

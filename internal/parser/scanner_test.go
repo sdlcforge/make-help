@@ -225,6 +225,46 @@ build:
 	}
 }
 
+func TestScanContent_NotAliasDirective(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected []Directive
+	}{
+		{
+			name: "notalias directive",
+			content: `## !notalias
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveNotAlias, Value: "", SourceFile: "test.mk", LineNumber: 1},
+			},
+		},
+		{
+			name: "notalias with trailing content ignored",
+			content: `## !notalias some extra text
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveNotAlias, Value: "", SourceFile: "test.mk", LineNumber: 1},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scanner := NewScanner()
+			result, err := scanner.ScanContent(tt.content, "test.mk")
+			require.NoError(t, err)
+			assert.Equal(t, len(tt.expected), len(result.Directives))
+			for i, expected := range tt.expected {
+				assert.Equal(t, expected.Type, result.Directives[i].Type)
+				assert.Equal(t, expected.Value, result.Directives[i].Value)
+			}
+		})
+	}
+}
+
 func TestScanContent_RegularDocumentation(t *testing.T) {
 	tests := []struct {
 		name     string

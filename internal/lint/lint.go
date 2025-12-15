@@ -78,6 +78,10 @@ type CheckContext struct {
 	// This is populated from parsed Makefiles and used to provide line numbers
 	// in warnings for targets discovered via make but not in the help model.
 	TargetLocations map[string]TargetLocation
+
+	// NotAliasTargets contains targets marked with !notalias directive.
+	// Used to detect redundant !notalias warnings.
+	NotAliasTargets map[string]bool
 }
 
 // CheckFunc is a function that performs a specific lint check.

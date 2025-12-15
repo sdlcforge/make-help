@@ -1239,3 +1239,190 @@ func TestBuild_UndocumentedPhonyWithIncludeAllPhony(t *testing.T) {
 	assert.Equal(t, "", targetMap["install"].Summary, "Undocumented target should have empty summary")
 	assert.True(t, targetMap["install"].IsPhony)
 }
+
+func TestBuild_DocumentedTargetNotImplicitAlias(t *testing.T) {
+	// Test that a documented target with a single phony dependency is NOT an implicit alias.
+	// Documented targets are semantically distinct, not just shortcuts.
+	config := &BuilderConfig{
+		DefaultCategory: "",
+		PhonyTargets: map[string]bool{
+			"test-unit": true,
+			"test-all":  true,
+			"test":      true,
+		},
+		Dependencies: map[string][]string{
+			"test-all": {"test-unit"}, // single dep, but documented
+			"test":     {"test-unit"}, // single dep, undocumented (should be alias)
+		},
+		HasRecipe: map[string]bool{
+			"test-unit": true,
+			"test-all":  false, // no recipe
+			"test":      false, // no recipe
+		},
+	}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveDoc, Value: "Runs unit tests.", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "Runs all tests. Currently only unit tests exist.", SourceFile: "Makefile", LineNumber: 4},
+				// test has no documentation - should be implicit alias
+			},
+			TargetMap: map[string]int{
+				"test-unit": 2, // documented
+				"test-all":  5, // documented - NOT an alias despite single dep
+				"test":      6, // undocumented - IS an alias
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1)
+	// test-unit and test-all should be targets; test should be an alias of test-unit
+	assert.Len(t, model.Categories[0].Targets, 2)
+
+	// Find each target
+	targetMap := make(map[string]*Target)
+	for i := range model.Categories[0].Targets {
+		target := &model.Categories[0].Targets[i]
+		targetMap[target.Name] = target
+	}
+
+	// test-unit should exist and have "test" as an alias
+	require.NotNil(t, targetMap["test-unit"], "test-unit should exist as a target")
+	assert.Contains(t, targetMap["test-unit"].Aliases, "test", "test should be an alias of test-unit")
+
+	// test-all should exist as a separate target (not an alias) because it's documented
+	require.NotNil(t, targetMap["test-all"], "test-all should exist as a separate target (documented)")
+	assert.Equal(t, "Runs all tests.", targetMap["test-all"].Summary)
+
+	// test should NOT exist as a separate target (it's an alias)
+	assert.Nil(t, targetMap["test"], "test should not be a separate target (it's an implicit alias)")
+}
+
+func TestBuild_NotAliasDirective(t *testing.T) {
+	// Test that !notalias directive prevents a target from being treated as an implicit alias.
+	config := &BuilderConfig{
+		DefaultCategory: "",
+		IncludeAllPhony: true, // Include undocumented phony targets
+		PhonyTargets: map[string]bool{
+			"test-unit": true,
+			"test":      true,
+			"t":         true,
+		},
+		Dependencies: map[string][]string{
+			"test": {"test-unit"}, // single dep, marked with !notalias
+			"t":    {"test-unit"}, // single dep, no !notalias (should be alias)
+		},
+		HasRecipe: map[string]bool{
+			"test-unit": true,
+			"test":      false,
+			"t":         false,
+		},
+	}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveDoc, Value: "Runs unit tests.", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveNotAlias, Value: "", SourceFile: "Makefile", LineNumber: 4},
+				// "test" target follows !notalias - should NOT be alias
+				// "t" has no !notalias - should be alias
+			},
+			TargetMap: map[string]int{
+				"test-unit": 2,
+				"test":      5, // has !notalias above it
+				"t":         6, // no !notalias
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1)
+	// test-unit and test should be targets; t should be an alias
+	assert.Len(t, model.Categories[0].Targets, 2, "Should have 2 targets: test-unit and test")
+
+	// Find each target
+	targetMap := make(map[string]*Target)
+	for i := range model.Categories[0].Targets {
+		target := &model.Categories[0].Targets[i]
+		targetMap[target.Name] = target
+	}
+
+	// test-unit should exist and have "t" as an alias (not "test")
+	require.NotNil(t, targetMap["test-unit"], "test-unit should exist as a target")
+	assert.Contains(t, targetMap["test-unit"].Aliases, "t", "t should be an alias of test-unit")
+	assert.NotContains(t, targetMap["test-unit"].Aliases, "test", "test should NOT be an alias due to !notalias")
+
+	// test should exist as a separate target because of !notalias
+	require.NotNil(t, targetMap["test"], "test should exist as a separate target due to !notalias")
+
+	// Verify !notalias is tracked in builder
+	assert.True(t, builder.NotAliasTargets()["test"], "test should be tracked as !notalias target")
+	assert.False(t, builder.NotAliasTargets()["t"], "t should not be tracked as !notalias target")
+}
+
+func TestBuild_NotAliasWithDocumentation(t *testing.T) {
+	// Test edge case: !notalias combined with documentation.
+	// The !notalias is redundant (documented targets are never implicit aliases),
+	// but should not cause errors.
+	config := &BuilderConfig{
+		DefaultCategory: "",
+		PhonyTargets: map[string]bool{
+			"build": true,
+			"b":     true,
+		},
+		Dependencies: map[string][]string{
+			"b": {"build"},
+		},
+		HasRecipe: map[string]bool{
+			"build": true,
+			"b":     false,
+		},
+	}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveDoc, Value: "Build the project.", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveNotAlias, Value: "", SourceFile: "Makefile", LineNumber: 4},
+				{Type: parser.DirectiveDoc, Value: "Short alias for build.", SourceFile: "Makefile", LineNumber: 5},
+			},
+			TargetMap: map[string]int{
+				"build": 2,
+				"b":     6, // has both !notalias and documentation
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1)
+	assert.Len(t, model.Categories[0].Targets, 2)
+
+	// Find each target
+	targetMap := make(map[string]*Target)
+	for i := range model.Categories[0].Targets {
+		target := &model.Categories[0].Targets[i]
+		targetMap[target.Name] = target
+	}
+
+	// Both should exist as separate targets
+	require.NotNil(t, targetMap["build"])
+	require.NotNil(t, targetMap["b"])
+	assert.Equal(t, "Short alias for build.", targetMap["b"].Summary)
+
+	// b should be tracked as !notalias (even though redundant)
+	assert.True(t, builder.NotAliasTargets()["b"])
+}

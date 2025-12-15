@@ -152,6 +152,7 @@ func runLint(config *Config) error {
 		Aliases:              aliases,
 		GeneratedHelpTargets: generatedHelpTargets,
 		TargetLocations:      targetLocations,
+		NotAliasTargets:      builder.NotAliasTargets(),
 	}
 
 	// Step 8: Run all lint checks

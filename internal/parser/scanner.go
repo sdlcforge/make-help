@@ -132,6 +132,11 @@ func (s *Scanner) parseDirective(line string, lineNum int) Directive {
 		directive.Type = DirectiveAlias
 		directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!alias "))
 
+	case strings.HasPrefix(content, "!notalias"):
+		directive.Type = DirectiveNotAlias
+		// Value is empty; the directive itself is sufficient
+		directive.Value = ""
+
 	default:
 		// Regular documentation line
 		directive.Type = DirectiveDoc
