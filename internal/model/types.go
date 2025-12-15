@@ -1,5 +1,10 @@
 package model
 
+// UncategorizedCategoryName is the category name used for targets without
+// an explicit !category directive. Empty string has special meaning as the
+// default/uncategorized group.
+const UncategorizedCategoryName = ""
+
 // HelpModel represents the complete parsed help documentation from all Makefiles.
 type HelpModel struct {
 	// FileDocs contains !file documentation sections in discovery order.

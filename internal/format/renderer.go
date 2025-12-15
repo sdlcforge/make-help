@@ -59,7 +59,7 @@ func (r *Renderer) Render(model *model.HelpModel) (string, error) {
 // Each target is rendered with proper indentation.
 func (r *Renderer) renderCategory(buf *strings.Builder, category *model.Category) {
 	// Render category name (if present)
-	if category.Name != "" {
+	if category.Name != model.UncategorizedCategoryName {
 		buf.WriteString("\n")
 		buf.WriteString(r.colors.CategoryName)
 		buf.WriteString(category.Name)
@@ -246,7 +246,7 @@ func (r *Renderer) renderCategoryForMakefile(category *model.Category) []string 
 	var lines []string
 
 	// Category name (if present)
-	if category.Name != "" {
+	if category.Name != model.UncategorizedCategoryName {
 		lines = append(lines, escapeForMakefileEcho(""))
 		categoryLine := r.colors.CategoryName + category.Name + ":" + r.colors.Reset
 		lines = append(lines, escapeForMakefileEcho(categoryLine))

@@ -79,7 +79,7 @@ func TestBuild_BasicTargetWithDocs(t *testing.T) {
 	// Find the uncategorized category
 	var uncategorized *Category
 	for i := range model.Categories {
-		if model.Categories[i].Name == "" {
+		if model.Categories[i].Name == UncategorizedCategoryName {
 			uncategorized = &model.Categories[i]
 			break
 		}

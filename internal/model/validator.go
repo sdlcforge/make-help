@@ -30,7 +30,7 @@ func ValidateCategorization(model *HelpModel, defaultCategory string) error {
 	var uncategorizedTargets []string
 
 	for _, cat := range model.Categories {
-		if cat.Name == "" {
+		if cat.Name == UncategorizedCategoryName {
 			for _, t := range cat.Targets {
 				if !generatedHelpTargets[t.Name] {
 					uncategorizedTargets = append(uncategorizedTargets, t.Name)
@@ -72,7 +72,7 @@ func ApplyDefaultCategory(model *HelpModel, defaultCategory string) {
 	emptyIdx := -1
 
 	for i := range model.Categories {
-		if model.Categories[i].Name == "" {
+		if model.Categories[i].Name == UncategorizedCategoryName {
 			emptyCategory = &model.Categories[i]
 			emptyIdx = i
 		}
@@ -120,7 +120,7 @@ func CountTargetsByCategory(model *HelpModel) map[string]int {
 func GetCategoryNames(model *HelpModel) []string {
 	names := make([]string, 0, len(model.Categories))
 	for _, cat := range model.Categories {
-		if cat.Name != "" {
+		if cat.Name != UncategorizedCategoryName {
 			names = append(names, cat.Name)
 		}
 	}

@@ -61,10 +61,10 @@ This document consolidates outstanding findings from three parallel reviews:
   - Issue: `int(^uint(0) >> 1)` is obscure
   - Action: Define `const maxInt = int(^uint(0) >> 1)`
 
-- [ ] **Define uncategorized category constant**
+- [x] **Define uncategorized category constant** ✓ DONE
   - Location: `internal/model/types.go`
-  - Issue: Empty string `""` has special meaning as uncategorized
-  - Action: Add `const UncategorizedCategoryName = ""`
+  - Added `const UncategorizedCategoryName = ""`
+  - Updated all usages in `validator.go`, `renderer.go`, and `builder_test.go`
 
 - [ ] **Add edge case tests for model builder**
   - Test: Target defined in multiple files
@@ -136,4 +136,4 @@ This document consolidates outstanding findings from three parallel reviews:
 2. **Discovery order vs. rendering order** - `DiscoveryOrder` field is set during building but only used during ordering
 3. **`shouldIncludeTarget` conditions** - Three conditions interact with categorization in non-obvious ways
 4. **Max int calculation** - `int(^uint(0) >> 1)` is a Go idiom that's not immediately obvious
-5. **Empty string as category** - `""` is used for uncategorized targets with special meaning
+5. **Empty string as category** - Now clarified via `UncategorizedCategoryName` constant in `model/types.go`
