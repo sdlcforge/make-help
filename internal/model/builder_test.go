@@ -1088,3 +1088,154 @@ func TestBuild_CategoryResetAtStartNoDefault(t *testing.T) {
 	assert.Equal(t, "", model.Categories[0].Name)
 	assert.Len(t, model.Categories[0].Targets, 1)
 }
+
+func TestBuild_DuplicateTargetInMultipleFiles(t *testing.T) {
+	// Test that when the same target is defined in multiple files,
+	// only the first occurrence is used (first file wins).
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveDoc, Value: "First documentation for build target.", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveVar, Value: "DEBUG - Debug mode from first file", SourceFile: "Makefile", LineNumber: 2},
+			},
+			TargetMap: map[string]int{
+				"build": 3,
+			},
+		},
+		{
+			Path: "include.mk",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveDoc, Value: "Second documentation for build target.", SourceFile: "include.mk", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "This should be ignored.", SourceFile: "include.mk", LineNumber: 2},
+				{Type: parser.DirectiveVar, Value: "PORT - Port from second file", SourceFile: "include.mk", LineNumber: 3},
+			},
+			TargetMap: map[string]int{
+				"build": 4, // Same target name - should be skipped
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1)
+	assert.Len(t, model.Categories[0].Targets, 1)
+
+	// Verify that the first file's documentation is used
+	target := model.Categories[0].Targets[0]
+	assert.Equal(t, "build", target.Name)
+	assert.Equal(t, "Makefile", target.SourceFile)
+	assert.Len(t, target.Documentation, 1)
+	assert.Equal(t, "First documentation for build target.", target.Documentation[0])
+	assert.Equal(t, "First documentation for build target.", target.Summary)
+
+	// Verify variables are from the first file only
+	assert.Len(t, target.Variables, 1)
+	assert.Equal(t, "DEBUG", target.Variables[0].Name)
+	assert.Equal(t, "Debug mode from first file", target.Variables[0].Description)
+}
+
+func TestBuild_DocumentationWithoutTargets(t *testing.T) {
+	// Test that documentation comments without any following target
+	// are handled gracefully. Documentation accumulates until a target is found,
+	// so all directives before a target get attached to it.
+	// Only directives AFTER all targets (orphaned at end of file) are discarded.
+	config := &BuilderConfig{DefaultCategory: ""}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				{Type: parser.DirectiveDoc, Value: "Build the project.", SourceFile: "Makefile", LineNumber: 1},
+				{Type: parser.DirectiveDoc, Value: "Orphaned doc after target.", SourceFile: "Makefile", LineNumber: 5},
+				{Type: parser.DirectiveVar, Value: "ORPHAN - This variable has no target", SourceFile: "Makefile", LineNumber: 6},
+				{Type: parser.DirectiveAlias, Value: "orphan1, orphan2", SourceFile: "Makefile", LineNumber: 7},
+			},
+			TargetMap: map[string]int{
+				"build": 2, // Target appears early
+				// No more targets after line 2, so directives at lines 5-7 are orphaned
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1)
+	assert.Len(t, model.Categories[0].Targets, 1)
+
+	// Verify the target has only the documentation that preceded it
+	target := model.Categories[0].Targets[0]
+	assert.Equal(t, "build", target.Name)
+	assert.Len(t, target.Documentation, 1)
+	assert.Equal(t, "Build the project.", target.Documentation[0])
+	// Orphaned directives after the target should be discarded
+	assert.Len(t, target.Variables, 0, "Orphaned variables after all targets should not be attached")
+	assert.Len(t, target.Aliases, 0, "Orphaned aliases after all targets should not be attached")
+}
+
+func TestBuild_UndocumentedPhonyWithIncludeAllPhony(t *testing.T) {
+	// Test edge case: undocumented .PHONY targets are included with IncludeAllPhony,
+	// and they should have empty documentation, no summary, but still appear in output.
+	config := &BuilderConfig{
+		DefaultCategory: "",
+		IncludeAllPhony: true,
+		PhonyTargets: map[string]bool{
+			"clean":   true,
+			"test":    true,
+			"install": true,
+		},
+	}
+	builder := NewBuilder(config)
+
+	parsedFiles := []*parser.ParsedFile{
+		{
+			Path: "Makefile",
+			Directives: []parser.Directive{
+				// Only one target has documentation
+				{Type: parser.DirectiveDoc, Value: "Remove build artifacts.", SourceFile: "Makefile", LineNumber: 1},
+			},
+			TargetMap: map[string]int{
+				"clean":   2, // documented
+				"test":    3, // undocumented but .PHONY
+				"install": 4, // undocumented but .PHONY
+			},
+		},
+	}
+
+	model, err := builder.Build(parsedFiles)
+
+	require.NoError(t, err)
+	assert.Len(t, model.Categories, 1)
+	assert.Len(t, model.Categories[0].Targets, 3)
+
+	// Find each target and verify their properties
+	targetMap := make(map[string]*Target)
+	for i := range model.Categories[0].Targets {
+		target := &model.Categories[0].Targets[i]
+		targetMap[target.Name] = target
+	}
+
+	// Check clean target (documented)
+	require.NotNil(t, targetMap["clean"])
+	assert.Len(t, targetMap["clean"].Documentation, 1)
+	assert.Equal(t, "Remove build artifacts.", targetMap["clean"].Summary)
+	assert.True(t, targetMap["clean"].IsPhony)
+
+	// Check test target (undocumented but included because .PHONY)
+	require.NotNil(t, targetMap["test"])
+	assert.Len(t, targetMap["test"].Documentation, 0, "Undocumented target should have no documentation")
+	assert.Equal(t, "", targetMap["test"].Summary, "Undocumented target should have empty summary")
+	assert.True(t, targetMap["test"].IsPhony)
+
+	// Check install target (undocumented but included because .PHONY)
+	require.NotNil(t, targetMap["install"])
+	assert.Len(t, targetMap["install"].Documentation, 0, "Undocumented target should have no documentation")
+	assert.Equal(t, "", targetMap["install"].Summary, "Undocumented target should have empty summary")
+	assert.True(t, targetMap["install"].IsPhony)
+}

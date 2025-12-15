@@ -66,15 +66,15 @@ This document consolidates outstanding findings from three parallel reviews:
   - Added `const UncategorizedCategoryName = ""`
   - Updated all usages in `validator.go`, `renderer.go`, and `builder_test.go`
 
-- [ ] **Add edge case tests for model builder**
-  - Test: Target defined in multiple files
-  - Test: Documentation without targets
-  - Test: Targets without documentation but with `--include-all-phony`
+- [x] **Add edge case tests for model builder** ✓ DONE
+  - Test: Target defined in multiple files (`TestBuild_DuplicateTargetInMultipleFiles`)
+  - Test: Documentation without targets (`TestBuild_DocumentationWithoutTargets`)
+  - Test: Targets without documentation but with `--include-all-phony` (`TestBuild_UndocumentedPhonyWithIncludeAllPhony`)
 
-- [ ] **Add integration tests for error scenarios**
-  - Test: Invalid Makefile syntax
-  - Test: Missing Makefile
-  - Test: Mixed categorization without `--default-category`
+- [x] **Add integration tests for error scenarios** ✓ DONE
+  - Test: Invalid Makefile syntax (`TestErrorScenario_InvalidMakefileSyntax`)
+  - Test: Missing Makefile (`TestErrorScenario_MissingMakefile`)
+  - Test: Mixed categorization without `--default-category` (`TestErrorScenario_MixedCategorizationWithoutDefault`)
 
 - [ ] **Add example-based tests (godoc examples)**
   - Location: Create `examples_test.go` files

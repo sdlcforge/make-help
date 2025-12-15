@@ -224,13 +224,6 @@ func TestVerboseFlag(t *testing.T) {
 	assert.Contains(t, stderr, "Using Makefile")
 }
 
-func TestMissingMakefile(t *testing.T) {
-	binary := buildBinary(t)
-
-	_, _, err := runMakeHelp(t, binary, "--makefile-path", "/nonexistent/Makefile")
-	assert.Error(t, err)
-}
-
 func TestEmptyMakefile(t *testing.T) {
 	binary := buildBinary(t)
 	fixture := getFixturePath(t, "empty.mk")
@@ -659,4 +652,66 @@ build:
 	// Run lint again - should pass with no warnings
 	_, _, err = runMakeHelp(t, binary, "--lint", "--makefile-path", tmpFile)
 	require.NoError(t, err, "fully fixed file should have no warnings")
+}
+
+// Error Scenario Tests
+
+func TestErrorScenario_InvalidMakefileSyntax(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "invalid_syntax.mk")
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--no-color")
+
+	// Should fail when make cannot parse the Makefile
+	require.Error(t, err, "should fail for invalid Makefile syntax")
+
+	// Check that error output contains meaningful information
+	combinedOutput := stdout + stderr
+	assert.Contains(t, combinedOutput, "failed to discover", "error should mention discovery failure")
+}
+
+func TestErrorScenario_MissingMakefile(t *testing.T) {
+	binary := buildBinary(t)
+	nonexistentPath := "/nonexistent/path/to/Makefile"
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", nonexistentPath, "--no-color")
+
+	// Should fail when Makefile doesn't exist
+	require.Error(t, err, "should fail when Makefile doesn't exist")
+
+	// Check that error output contains meaningful information
+	combinedOutput := stdout + stderr
+	assert.Contains(t, combinedOutput, "not found", "error should mention file not found")
+	assert.Contains(t, combinedOutput, nonexistentPath, "error should include the path that was searched")
+}
+
+func TestErrorScenario_MixedCategorizationWithoutDefault(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "mixed_categorization.mk")
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--no-color")
+
+	// Should fail due to mixed categorization
+	require.Error(t, err, "should fail for mixed categorization without --default-category")
+
+	// Check that error message is helpful
+	combinedOutput := stdout + stderr
+	assert.Contains(t, combinedOutput, "mixed categorization", "error should mention mixed categorization")
+	assert.Contains(t, combinedOutput, "--default-category", "error should suggest using --default-category flag")
+}
+
+func TestErrorScenario_MixedCategorizationWithDefault(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "mixed_categorization.mk")
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--show-help", "--makefile-path", fixture, "--no-color", "--default-category", "Misc")
+
+	// Should succeed when --default-category is provided
+	require.NoError(t, err, "stderr: %s", stderr)
+
+	// Should show both categorized and uncategorized targets
+	assert.Contains(t, stdout, "Build:", "should show Build category")
+	assert.Contains(t, stdout, "Misc:", "should show Misc category for uncategorized targets")
+	assert.Contains(t, stdout, "build", "should show build target")
+	assert.Contains(t, stdout, "clean", "should show clean target")
 }
