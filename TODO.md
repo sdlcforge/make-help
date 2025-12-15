@@ -76,10 +76,6 @@ This document consolidates outstanding findings from three parallel reviews:
   - Test: Missing Makefile (`TestErrorScenario_MissingMakefile`)
   - Test: Mixed categorization without `--default-category` (`TestErrorScenario_MixedCategorizationWithoutDefault`)
 
-- [ ] **Add example-based tests (godoc examples)**
-  - Location: Create `examples_test.go` files
-  - Purpose: Runnable examples that appear in godoc
-
 - [ ] **Add review dates to architecture docs**
   - Action: Add "Last Reviewed: YYYY-MM-DD" to each architecture doc
 
