@@ -13,6 +13,8 @@ Step-by-step flows for each operation mode in make-help.
 
 ## Overview
 
+![CLI Mode Routing](diagrams/cli-mode-routing.svg)
+
 ### 1 Static Help File Generation Flow (Default)
 
 ```

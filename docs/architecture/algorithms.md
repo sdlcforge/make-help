@@ -17,6 +17,8 @@ Core algorithms and their implementations in make-help.
 
 ### 1 File Discovery via MAKEFILE_LIST
 
+![Makefile Discovery Sequence](diagrams/makefile-discovery.svg)
+
 **Algorithm:**
 ```
 Input: makefilePath (path to main Makefile)
@@ -71,6 +73,8 @@ is created in the same directory as the Makefile to ensure relative includes wor
 - Invalid paths -> "Makefile not found: <path>"
 
 ### 2 Documentation Parsing and Directive Handling
+
+![Parser State Machine](diagrams/parser-state-machine.svg)
 
 **Algorithm:**
 ```

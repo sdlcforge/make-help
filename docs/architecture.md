@@ -30,6 +30,8 @@ make-help is a CLI tool that generates formatted help output from specially-form
 
 ## System Architecture
 
+![Processing Pipeline Overview](architecture/diagrams/pipeline-overview.svg)
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                          CLI Layer                               │

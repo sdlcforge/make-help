@@ -6,11 +6,6 @@ SRC_FILES:=$(shell find cmd internal -name "*.go" -not -name "*_test.go")
 VERSION:=$(shell node -p "require('./package.json').version")
 LDFLAGS:=-ldflags "-X github.com/sdlcforge/make-help/internal/version.Version=$(VERSION)"
 
-## !category Build
-## Builds the make-help binary.
-build: $(MAKE_HELP_BIN)
-.PHONY: build
-
 $(MAKE_HELP_BIN): go.mod go.sum $(SRC_FILES) package.json
 	@mkdir -p $(dir $@)
 	go build $(LDFLAGS) -o $@ cmd/make-help/main.go
@@ -58,6 +53,29 @@ lint-fix:
 ## Run all quality checks (test.all + lint).
 qa: test.all lint
 .PHONY: qa
+
+## !category Documentation
+DIAGRAM_DIR:=docs/architecture/diagrams
+MMD_FILES:=$(wildcard $(DIAGRAM_DIR)/*.mmd)
+SVG_FILES:=$(MMD_FILES:.mmd=.svg)
+
+## Generate SVG diagrams from Mermaid files.
+## Requires mermaid-cli: npm install -g @mermaid-js/mermaid-cli
+diagrams: $(SVG_FILES)
+.PHONY: diagrams
+
+$(DIAGRAM_DIR)/%.svg: $(DIAGRAM_DIR)/%.mmd
+	mmdc -i $< -o $@
+
+## Remove generated diagram SVG files.
+clean.diagrams:
+	rm -f $(SVG_FILES)
+.PHONY: diagrams-clean
+
+## !category Build
+## Builds the make-help binary.
+build: $(MAKE_HELP_BIN) $(SVG_FILES)
+.PHONY: build
 
 .DELETE_ON_ERROR:
 

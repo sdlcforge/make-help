@@ -41,9 +41,11 @@ This document consolidates outstanding findings from three parallel reviews:
 - [ ] **Add comparison to alternatives**
   - Compare to: AWK-based `make help` solutions, `just`, other Makefile documentation tools
 
-- [ ] **Add visual diagrams**
+- [x] **Add visual diagrams** ✓ DONE
   - Location: `docs/architecture/diagrams/`
-  - Examples: Parser state machine, data flow through pipeline, include file resolution
+  - Created 4 Mermaid diagrams: pipeline-overview.mmd, cli-mode-routing.mmd, parser-state-machine.mmd, makefile-discovery.mmd
+  - Added Makefile target `make diagrams` to generate SVG files via mmdc
+  - Referenced SVG files in architecture.md, program-flow.md, and algorithms.md
 
 - [ ] **Add glossary**
   - Location: `docs/glossary.md`

@@ -1,0 +1,42 @@
+%% Processing Pipeline Overview
+%% Shows the flow from CLI input through all processing stages to output
+
+flowchart LR
+    subgraph Input
+        CLI[CLI Parser]
+        MF[Makefile]
+    end
+
+    subgraph Discovery
+        DS[Discovery<br/>Service]
+    end
+
+    subgraph Parsing
+        PS[Parser<br/>Scanner]
+    end
+
+    subgraph Building
+        MB[Model<br/>Builder]
+    end
+
+    subgraph Processing
+        OS[Ordering<br/>Service]
+        SE[Summary<br/>Extractor]
+    end
+
+    subgraph Output
+        FM[Formatter<br/>Renderer]
+        OUT[Help Output]
+    end
+
+    CLI --> DS
+    MF --> DS
+    DS -->|"Makefile paths<br/>+ targets"| PS
+    PS -->|"ParsedFile[]<br/>directives + targets"| MB
+    MB -->|"HelpModel"| OS
+    OS -->|"sorted model"| SE
+    SE -->|"with summaries"| FM
+    FM --> OUT
+
+    style CLI fill:#e1f5fe
+    style OUT fill:#c8e6c9
