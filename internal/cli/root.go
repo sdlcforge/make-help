@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/sdlcforge/make-help/internal/version"
@@ -49,6 +50,9 @@ Documentation directives (in ## comments):
 			if err := processFlagsAfterParse(cmd, config); err != nil {
 				return err
 			}
+
+			// Capture the raw command line exactly as invoked
+			config.CommandLine = strings.Join(os.Args, " ")
 
 			// --remove-help only allows --verbose and --makefile-path (check this first)
 			if config.RemoveHelpTarget {

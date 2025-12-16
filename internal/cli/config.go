@@ -99,6 +99,10 @@ type Config struct {
 
 	// UseColor is the resolved color setting based on ColorMode and terminal detection.
 	UseColor bool
+
+	// CommandLine stores the raw command line to be recorded in generated help files.
+	// Captured from os.Args in PreRunE.
+	CommandLine string
 }
 
 // NewConfig creates a new Config with default values.

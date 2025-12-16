@@ -163,6 +163,8 @@ func runCreateHelpTarget(config *Config) error {
 				}
 				// Don't fail the whole operation if we can't restore options
 			}
+			// Note: We don't override config.CommandLine here - we always use
+			// the actual invocation command, not what was stored in the file
 		}
 	}
 
@@ -174,6 +176,7 @@ func runCreateHelpTarget(config *Config) error {
 	}
 
 	// 10. Generate help file content
+	// Use the raw command line (always captured from os.Args in PreRunE)
 	genConfig := &target.GeneratorConfig{
 		UseColor:            config.UseColor,
 		Makefiles:           makefiles,
@@ -186,7 +189,7 @@ func runCreateHelpTarget(config *Config) error {
 		HelpCategory:        config.HelpCategory,
 		IncludeTargets:      parseIncludeTargets(config.IncludeTargets),
 		IncludeAllPhony:     config.IncludeAllPhony,
-		CommandLine:         BuildCommandLine(config),
+		CommandLine:         config.CommandLine,
 	}
 	content, err := target.GenerateHelpFile(genConfig)
 	if err != nil {
