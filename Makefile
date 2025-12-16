@@ -53,6 +53,7 @@ DIAGRAM_DIR:=docs/architecture/diagrams
 MMD_FILES:=$(wildcard $(DIAGRAM_DIR)/*.mmd)
 SVG_FILES:=$(patsubst $(DIAGRAM_DIR)/%.mmd,$(DIAGRAM_DIR)/%.svg,$(MMD_FILES))
 
+## !category Build
 ## Generate SVG diagrams from Mermaid files.
 ## Requires mermaid-cli: npm install -g @mermaid-js/mermaid-cli
 diagrams: $(SVG_FILES)
@@ -61,7 +62,6 @@ diagrams: $(SVG_FILES)
 $(SVG_FILES): $(DIAGRAM_DIR)/%.svg: $(DIAGRAM_DIR)/%.mmd
 	npx mmdc -i $< -o $@
 
-## !category Build
 ## Builds the make-help binary.
 build: $(MAKE_HELP_BIN)
 .PHONY: build
@@ -86,7 +86,7 @@ SHELL:=bash
 
 .DEFAULT_GOAL:=all
 
-## !category build
+## !category Build
 ## Builds the make-help binary and generated diagram SVG files.
 all: build diagrams
 .PHONY: all
