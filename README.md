@@ -157,29 +157,34 @@ make-help --include-all-phony          # Include all .PHONY targets
 make-help --remove-help                # Remove generated help files
 ```
 
-## Flags Reference
+## CLI reference
 
-| Flag | Description |
-|------|-------------|
-| `--makefile-path` | Path to Makefile (default: ./Makefile) |
-| `--show-help` | Display help dynamically instead of generating file |
-| `--target` | Show detailed help for specific target (requires `--show-help`) |
-| `--include-target` | Include undocumented target (repeatable) |
-| `--include-all-phony` | Include all .PHONY targets |
-| `--remove-help` | Remove generated help files |
-| `--dry-run` | Preview what files would be created/modified without making changes |
-| `--help-file-rel-path` | Override relative path for generated help file (default: `make/help.mk`). Must be a relative path. |
-| `--default-category` | Default category for uncategorized targets |
-| `--help-category` | Category name for generated help targets (`help`, `update-help`). Default: `Help` |
-| `--keep-order-categories` | Preserve category discovery order |
-| `--keep-order-targets` | Preserve target discovery order |
-| `--category-order` | Explicit category order (comma-separated) |
-| `--no-color` | Disable colored output |
-| `--color` | Force colored output |
-| `--verbose` | Enable verbose output |
-| `--version` | Display version information |
-| `--lint` | Check documentation quality and report warnings |
-| `--fix` | Automatically fix lint warnings (requires `--lint`) |
+**Mode:**
+- `--dry-run` - Preview changes without making them
+- `--fix` - Auto-fix lint issues (requires `--lint`)
+- `--lint` - Check documentation quality and report warning
+- `--remove-help` - Remove generated help files
+- `--show-help` - Display help dynamically instead of generating file
+- `--target <name>` - Show detailed help for specific target (requires `--show-help`)
+
+**Input:**
+- `--help-file-rel-path <path>` - Relative path for generated help file (default: `make/help.mk`)
+- `--makefile-path <path>` - Path to Makefile (default: `./Makefile`)
+
+**Output/formatting:**
+- `--category-order <list>` - Explicit category order (comma-separated)
+- `--color` / `--no-color` - Force or disable colored output
+- `--default-category <name>` - Default category for uncategorized targets
+- `--help-category <name>` - Category for generated help targets (default: `Help`)
+- `--include-all-phony` - Include all .PHONY targets
+- `--include-target <list>` - Include undocumented targets (comma-separated, repeatable)
+- `--keep-order-categories` - Preserve category discovery order
+- `--keep-order-targets` - Preserve target discovery order
+- `--keep-order-all` - Preserve both category and target order
+
+**Misc:**
+- `--verbose` - Enable verbose output
+- `--version` - Display version information
 
 ## Documentation syntax
 

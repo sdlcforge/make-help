@@ -125,6 +125,7 @@ Documentation directives (in ## comments):
 	annotateFlag(rootCmd, "remove-help", modeGroupLabel)
 	annotateFlag(rootCmd, "dry-run", modeGroupLabel)
 	annotateFlag(rootCmd, "lint", modeGroupLabel)
+	annotateFlag(rootCmd, "fix", modeGroupLabel)
 	annotateFlag(rootCmd, "target", modeGroupLabel)
 
 	annotateFlag(rootCmd, "makefile-path", inputGroupLabel)
