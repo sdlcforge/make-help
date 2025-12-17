@@ -16,7 +16,7 @@
     "preversion": "make qa",
     "lint": "make lint",
     "lint:fix": "make lint-fix",
-    "prepack": "make qa",
+    "prepack": "make qa && ./scripts/prepack.sh",
     "postinstall": "node scripts/install.js",
     "qa": "make qa"
   },
