@@ -76,20 +76,31 @@ func (b *Builder) NotAliasTargets() map[string]bool {
 // and validates categorization rules.
 func (b *Builder) Build(parsedFiles []*parser.ParsedFile) (*HelpModel, error) {
 	model := &HelpModel{
-		FileDocs:   []string{},
+		FileDocs:   []FileDoc{},
 		Categories: []Category{},
 	}
 
 	categoryMap := make(map[string]*Category)
 	targetMap := make(map[string]*Target)
 	targetToCategory := make(map[string]string) // target name -> category name
+	fileDocMap := make(map[string]*FileDoc)     // source file path -> FileDoc
 
 	categoryOrder := 0
 	targetOrder := 0
+	fileOrder := 0
 
 	for _, file := range parsedFiles {
-		b.processFile(file, model, categoryMap, targetMap, targetToCategory, &categoryOrder, &targetOrder)
+		b.processFile(file, model, categoryMap, targetMap, targetToCategory, fileDocMap, &categoryOrder, &targetOrder, &fileOrder)
 	}
+
+	// Convert fileDocMap to slice
+	for _, fileDoc := range fileDocMap {
+		model.FileDocs = append(model.FileDocs, *fileDoc)
+	}
+	// Sort by discovery order for deterministic output
+	sort.Slice(model.FileDocs, func(i, j int) bool {
+		return model.FileDocs[i].DiscoveryOrder < model.FileDocs[j].DiscoveryOrder
+	})
 
 	// Detect implicit aliases: phony targets with single phony dependency and no recipe
 	implicitAliases := b.detectImplicitAliases(targetMap)
@@ -290,8 +301,10 @@ func (b *Builder) processFile(
 	categoryMap map[string]*Category,
 	targetMap map[string]*Target,
 	targetToCategory map[string]string,
+	fileDocMap map[string]*FileDoc,
 	categoryOrder *int,
 	targetOrder *int,
+	fileOrder *int,
 ) {
 	// Build a sorted list of target line numbers for association
 	type targetLine struct {
@@ -340,7 +353,24 @@ func (b *Builder) processFile(
 			switch directive.Type {
 			case parser.DirectiveFile:
 				if directive.Value != "" {
-					model.FileDocs = append(model.FileDocs, directive.Value)
+					// Get or create FileDoc for this file
+					fileDoc, exists := fileDocMap[file.Path]
+					if !exists {
+						fileDoc = &FileDoc{
+							SourceFile:     file.Path,
+							Documentation:  []string{},
+							DiscoveryOrder: *fileOrder,
+							IsEntryPoint:   *fileOrder == 0, // First file is entry point
+						}
+						*fileOrder++
+						fileDocMap[file.Path] = fileDoc
+					}
+
+					// Concatenate multiple !file blocks with blank line separation
+					if len(fileDoc.Documentation) > 0 {
+						fileDoc.Documentation = append(fileDoc.Documentation, "") // Blank line
+					}
+					fileDoc.Documentation = append(fileDoc.Documentation, directive.Value)
 				}
 
 			case parser.DirectiveCategory:

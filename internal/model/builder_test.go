@@ -49,9 +49,12 @@ func TestBuild_FileDocumentation(t *testing.T) {
 	model, err := builder.Build(parsedFiles)
 
 	require.NoError(t, err)
-	assert.Len(t, model.FileDocs, 2)
-	assert.Contains(t, model.FileDocs, "Main project Makefile")
-	assert.Contains(t, model.FileDocs, "Build tools and utilities")
+	assert.Len(t, model.FileDocs, 1)
+	assert.Equal(t, "Makefile", model.FileDocs[0].SourceFile)
+	assert.True(t, model.FileDocs[0].IsEntryPoint)
+	assert.Equal(t, 0, model.FileDocs[0].DiscoveryOrder)
+	// Multiple !file blocks in same file are concatenated with blank line separation
+	assert.Equal(t, []string{"Main project Makefile", "", "Build tools and utilities"}, model.FileDocs[0].Documentation)
 }
 
 func TestBuild_BasicTargetWithDocs(t *testing.T) {
@@ -497,8 +500,16 @@ func TestBuild_MultipleFilesAggregation(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Len(t, model.FileDocs, 2)
-	assert.Contains(t, model.FileDocs, "Main Makefile")
-	assert.Contains(t, model.FileDocs, "Include file")
+	// First file should be entry point
+	assert.Equal(t, "Makefile", model.FileDocs[0].SourceFile)
+	assert.Equal(t, []string{"Main Makefile"}, model.FileDocs[0].Documentation)
+	assert.True(t, model.FileDocs[0].IsEntryPoint)
+	assert.Equal(t, 0, model.FileDocs[0].DiscoveryOrder)
+	// Second file should not be entry point
+	assert.Equal(t, "include.mk", model.FileDocs[1].SourceFile)
+	assert.Equal(t, []string{"Include file"}, model.FileDocs[1].Documentation)
+	assert.False(t, model.FileDocs[1].IsEntryPoint)
+	assert.Equal(t, 1, model.FileDocs[1].DiscoveryOrder)
 }
 
 func TestParseVarDirective(t *testing.T) {
@@ -626,9 +637,11 @@ func TestBuild_EmptyFileDocValue(t *testing.T) {
 	model, err := builder.Build(parsedFiles)
 
 	require.NoError(t, err)
-	// Empty file doc values should be skipped
+	// Empty file doc values should be skipped, but the file should still appear with only non-empty content
 	assert.Len(t, model.FileDocs, 1)
-	assert.Equal(t, "Has content", model.FileDocs[0])
+	assert.Equal(t, "Makefile", model.FileDocs[0].SourceFile)
+	assert.Equal(t, []string{"Has content"}, model.FileDocs[0].Documentation)
+	assert.True(t, model.FileDocs[0].IsEntryPoint)
 }
 
 // Helper function to find a category by name

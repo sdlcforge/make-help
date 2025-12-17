@@ -95,8 +95,32 @@ func sortTargetsByDiscoveryOrder(targets []model.Target) {
 	})
 }
 
+// sortFilesAlphabetically sorts files by source path in ascending order,
+// but always keeps the entry point file first.
+// Case-insensitive comparison is used for natural sorting.
+func sortFilesAlphabetically(files []model.FileDoc) {
+	sort.SliceStable(files, func(i, j int) bool {
+		// Entry point always comes first
+		if files[i].IsEntryPoint {
+			return true
+		}
+		if files[j].IsEntryPoint {
+			return false
+		}
+		return strings.ToLower(files[i].SourceFile) < strings.ToLower(files[j].SourceFile)
+	})
+}
+
+// sortFilesByDiscoveryOrder sorts files by their discovery order.
+// This preserves the order in which files were discovered during parsing.
+func sortFilesByDiscoveryOrder(files []model.FileDoc) {
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].DiscoveryOrder < files[j].DiscoveryOrder
+	})
+}
+
 // String representation for debugging
 func (s *Service) String() string {
-	return fmt.Sprintf("OrderingService{keepOrderCategories=%v, keepOrderTargets=%v, categoryOrder=%v}",
-		s.keepOrderCategories, s.keepOrderTargets, s.categoryOrder)
+	return fmt.Sprintf("OrderingService{keepOrderCategories=%v, keepOrderTargets=%v, keepOrderFiles=%v, categoryOrder=%v}",
+		s.keepOrderCategories, s.keepOrderTargets, s.keepOrderFiles, s.categoryOrder)
 }

@@ -101,6 +101,7 @@ func runHelp(config *Config) error {
 	orderingService := ordering.NewService(
 		config.KeepOrderCategories,
 		config.KeepOrderTargets,
+		config.KeepOrderFiles,
 		config.CategoryOrder,
 	)
 	if err := orderingService.ApplyOrdering(helpModel); err != nil {

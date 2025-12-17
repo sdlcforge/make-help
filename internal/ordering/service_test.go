@@ -49,14 +49,14 @@ func createTestModel() *model.HelpModel {
 }
 
 func TestNewService(t *testing.T) {
-	service := NewService(false, false, []string{})
+	service := NewService(false, false, false, []string{})
 
 	assert.NotNil(t, service)
 	assert.NotNil(t, service)
 }
 
 func TestApplyOrdering_DefaultAlphabeticalCategories(t *testing.T) {
-	service := NewService(false, false, []string{})
+	service := NewService(false, false, false, []string{})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -69,7 +69,7 @@ func TestApplyOrdering_DefaultAlphabeticalCategories(t *testing.T) {
 }
 
 func TestApplyOrdering_DefaultAlphabeticalTargets(t *testing.T) {
-	service := NewService(false, false, []string{})
+	service := NewService(false, false, false, []string{})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -86,7 +86,7 @@ func TestApplyOrdering_DefaultAlphabeticalTargets(t *testing.T) {
 }
 
 func TestApplyOrdering_KeepOrderCategories(t *testing.T) {
-	service := NewService(true, false, []string{})
+	service := NewService(true, false, false, []string{})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -99,7 +99,7 @@ func TestApplyOrdering_KeepOrderCategories(t *testing.T) {
 }
 
 func TestApplyOrdering_KeepOrderTargets(t *testing.T) {
-	service := NewService(false, true, []string{})
+	service := NewService(false, true, false, []string{})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -116,7 +116,7 @@ func TestApplyOrdering_KeepOrderTargets(t *testing.T) {
 }
 
 func TestApplyOrdering_KeepOrderBoth(t *testing.T) {
-	service := NewService(true, true, []string{})
+	service := NewService(true, true, false, []string{})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -137,7 +137,7 @@ func TestApplyOrdering_KeepOrderBoth(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder(t *testing.T) {
-	service := NewService(false, false, []string{"Development", "CI"})
+	service := NewService(false, false, false, []string{"Development", "CI"})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -150,7 +150,7 @@ func TestApplyOrdering_ExplicitCategoryOrder(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder_AllSpecified(t *testing.T) {
-	service := NewService(false, false, []string{"CI", "Development", "Deployment"})
+	service := NewService(false, false, false, []string{"CI", "Development", "Deployment"})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -162,7 +162,7 @@ func TestApplyOrdering_ExplicitCategoryOrder_AllSpecified(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder_UnknownCategory(t *testing.T) {
-	service := NewService(false, false, []string{"Development", "NonExistent", "CI"})
+	service := NewService(false, false, false, []string{"Development", "NonExistent", "CI"})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -177,7 +177,7 @@ func TestApplyOrdering_ExplicitCategoryOrder_UnknownCategory(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder_WithKeepOrderTargets(t *testing.T) {
-	service := NewService(false, true, []string{"Deployment"})
+	service := NewService(false, true, false, []string{"Deployment"})
 	helpModel := createTestModel()
 
 	err := service.ApplyOrdering(helpModel)
@@ -192,7 +192,7 @@ func TestApplyOrdering_ExplicitCategoryOrder_WithKeepOrderTargets(t *testing.T) 
 }
 
 func TestApplyOrdering_EmptyModel(t *testing.T) {
-	service := NewService(false, false, []string{})
+	service := NewService(false, false, false, []string{})
 	helpModel := &model.HelpModel{
 		Categories:    []model.Category{},
 		HasCategories: false,
@@ -205,7 +205,7 @@ func TestApplyOrdering_EmptyModel(t *testing.T) {
 }
 
 func TestApplyOrdering_SingleCategory(t *testing.T) {
-	service := NewService(false, false, []string{})
+	service := NewService(false, false, false, []string{})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
 			{
@@ -331,7 +331,7 @@ func TestApplyExplicitCategoryOrder_DuplicatesInOrder(t *testing.T) {
 }
 
 func TestService_String(t *testing.T) {
-	service := NewService(true, false, []string{"Build", "Deploy"})
+	service := NewService(true, false, false, []string{"Build", "Deploy"})
 
 	result := service.String()
 	assert.Contains(t, result, "keepOrderCategories=true")
@@ -340,7 +340,7 @@ func TestService_String(t *testing.T) {
 }
 
 func TestApplyOrdering_CaseInsensitiveSorting(t *testing.T) {
-	service := NewService(false, false, []string{})
+	service := NewService(false, false, false, []string{})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
 			{
@@ -368,9 +368,16 @@ func TestApplyOrdering_CaseInsensitiveSorting(t *testing.T) {
 }
 
 func TestApplyOrdering_PreservesOtherFields(t *testing.T) {
-	service := NewService(false, false, []string{})
+	service := NewService(false, false, false, []string{})
 	helpModel := &model.HelpModel{
-		FileDocs: []string{"File documentation"},
+		FileDocs: []model.FileDoc{
+			{
+				SourceFile:     "Makefile",
+				Documentation:  []string{"File documentation"},
+				DiscoveryOrder: 0,
+				IsEntryPoint:   true,
+			},
+		},
 		Categories: []model.Category{
 			{
 				Name:           "Build",
@@ -397,7 +404,9 @@ func TestApplyOrdering_PreservesOtherFields(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that other fields are preserved
-	assert.Equal(t, []string{"File documentation"}, helpModel.FileDocs)
+	assert.Len(t, helpModel.FileDocs, 1)
+	assert.Equal(t, "Makefile", helpModel.FileDocs[0].SourceFile)
+	assert.Equal(t, []string{"File documentation"}, helpModel.FileDocs[0].Documentation)
 	assert.True(t, helpModel.HasCategories)
 	assert.Equal(t, "Other", helpModel.DefaultCategory)
 
@@ -410,4 +419,70 @@ func TestApplyOrdering_PreservesOtherFields(t *testing.T) {
 	assert.Equal(t, "VERBOSE", target.Variables[0].Name)
 	assert.Equal(t, "/path/to/Makefile", target.SourceFile)
 	assert.Equal(t, 10, target.LineNumber)
+}
+
+func TestApplyOrdering_KeepOrderFiles(t *testing.T) {
+	service := NewService(false, false, true, []string{})
+	helpModel := &model.HelpModel{
+		FileDocs: []model.FileDoc{
+			{
+				SourceFile:     "Makefile",
+				Documentation:  []string{"Entry point"},
+				DiscoveryOrder: 0,
+				IsEntryPoint:   true,
+			},
+			{
+				SourceFile:     "make/zulu.mk",
+				Documentation:  []string{"Third file"},
+				DiscoveryOrder: 2,
+				IsEntryPoint:   false,
+			},
+			{
+				SourceFile:     "make/alpha.mk",
+				Documentation:  []string{"Second file"},
+				DiscoveryOrder: 1,
+				IsEntryPoint:   false,
+			},
+		},
+	}
+
+	err := service.ApplyOrdering(helpModel)
+	require.NoError(t, err)
+
+	// Files should be in discovery order
+	require.Len(t, helpModel.FileDocs, 3)
+	assert.Equal(t, 0, helpModel.FileDocs[0].DiscoveryOrder)
+	assert.Equal(t, "Makefile", helpModel.FileDocs[0].SourceFile)
+	assert.Equal(t, 1, helpModel.FileDocs[1].DiscoveryOrder)
+	assert.Equal(t, "make/alpha.mk", helpModel.FileDocs[1].SourceFile)
+	assert.Equal(t, 2, helpModel.FileDocs[2].DiscoveryOrder)
+	assert.Equal(t, "make/zulu.mk", helpModel.FileDocs[2].SourceFile)
+}
+
+func TestSortFilesAlphabetically_EntryPointFirst(t *testing.T) {
+	files := []model.FileDoc{
+		{
+			SourceFile:     "make/zulu.mk",
+			DiscoveryOrder: 2,
+			IsEntryPoint:   false,
+		},
+		{
+			SourceFile:     "Makefile",
+			DiscoveryOrder: 0,
+			IsEntryPoint:   true,
+		},
+		{
+			SourceFile:     "make/alpha.mk",
+			DiscoveryOrder: 1,
+			IsEntryPoint:   false,
+		},
+	}
+
+	sortFilesAlphabetically(files)
+
+	// Entry point should be first, followed by alphabetically sorted files
+	assert.Equal(t, "Makefile", files[0].SourceFile)
+	assert.True(t, files[0].IsEntryPoint)
+	assert.Equal(t, "make/alpha.mk", files[1].SourceFile)
+	assert.Equal(t, "make/zulu.mk", files[2].SourceFile)
 }

@@ -50,6 +50,9 @@ type Config struct {
 	// KeepOrderTargets preserves target discovery order within categories.
 	KeepOrderTargets bool
 
+	// KeepOrderFiles preserves file discovery order instead of alphabetical.
+	KeepOrderFiles bool
+
 	// CategoryOrder specifies explicit category ordering.
 	// Categories not in this list are appended alphabetically.
 	CategoryOrder []string
