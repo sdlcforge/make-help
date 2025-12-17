@@ -88,7 +88,7 @@ This document consolidates outstanding findings from three parallel reviews:
 
 ### Infrastructure
 
-- [ ] **Consider prebuilt binaries**
+- [x] **Consider prebuilt binaries**
   - Issue: Non-Go users cannot use `go install`
   - Options: GitHub Releases, Homebrew
 
