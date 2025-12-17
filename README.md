@@ -1,28 +1,24 @@
 # make-help
 
-Static help generation for Makefiles with rich documentation support.
+Static help generation for Makefiles with rich documentation support and linting.
 
 ## Why make-help?
 
-Makefiles are powerful but lack a built-in help system. As projects grow, developers accumulate dozens of targets with no easy way to discover or document them. Running `make` without arguments often fails, and `make --help` only shows Make's own options—not your project's targets.
+Makefiles are powerful but lack a built-in help system. As projects grow, developers accumulate dozens of targets with no easy way to discover or document them.
 
-`make-help` solves this by extracting documentation from specially-formatted comments and generating static help files that work with `make help`. The generated help files contain embedded help text and automatically regenerate when source Makefiles change. It supports categories, aliases, environment variables, and target filtering.
+`make-help` solves this by extracting documentation from specially-formatted comments and generating static help files displayed with `make help`. The generated help files contain embedded help text and automatically regenerate when source Makefiles change. It supports categories, aliases, environment variables, and target filtering.
 
 ## Features
 
 - **Static Help Generation**: Creates help files with embedded help text (no runtime dependencies)
 - **Auto-Regeneration**: Generated files automatically regenerate when source Makefiles change
 - **Automatic Target Discovery**: Scans your Makefiles (including included files) to find documented targets
-- **Smart File Placement**: Defaults to `./make/help.mk` with automatic directory creation and include directive insertion
-- **Numbered Prefix Support**: Automatically detects and uses numeric prefixes (e.g., `00-help.mk`) when other files use them
 - **Rich Documentation Syntax**: Support for file-level docs, categories, aliases, and environment variables
 - **Target Filtering**: Control which targets appear in help output
 - **Detailed Target Help**: Show full documentation for individual targets via `make help-<target>`
 - **Flexible Ordering**: Alphabetical or discovery order for both categories and targets
 - **Colored Output**: Terminal-aware colored output with override flags
 - **Summary Extraction**: Automatically extracts first sentence from multi-line documentation
-- **Include Support**: Discovers and processes Makefiles via `include` directives
-- **Fallback Chain**: Generated files use `make-help` → `npx make-help` → error message
 
 ## Installation
 
@@ -38,43 +34,20 @@ brew install sdlcforge/tap/make-help
 go install github.com/sdlcforge/make-help/cmd/make-help@latest
 ```
 
-### npm
+### npm/bun
 
 ```bash
+# global installation
 npm install -g @sdlcforge/make-help
+bun install -g @sdlcforge/make-help
+# package installation
+npm install --save-dev @sdlcforce/make-help
+bun install --save-dev --trust true @sdlcforge/make-help
 ```
 
-Or use without installing:
+## Quick start
 
-```bash
-npx @sdlcforge/make-help
-```
-
-### Add Help to Your Project
-
-Generate a static help file for your project:
-
-```bash
-make-help
-```
-
-This creates a help file with:
-- Static `@echo` statements containing formatted help text
-- `make help` - displays help summary
-- `make help-<target>` - detailed help for each documented target
-- Auto-regeneration when source Makefiles change
-
-**Default location**: `./make/help.mk` (the `make/` directory is created automatically)
-
-**Smart behaviors**:
-- If no `include make/*.mk` pattern exists in your Makefile, one is automatically added
-- If files in `./make/` use numeric prefixes (e.g., `10-constants.mk`, `20-utils.mk`), the help file uses a matching prefix (e.g., `00-help.mk`) to load first
-- The file suffix matches the detected include pattern (e.g., `.mk` from `include make/*.mk`)
-- Use `--help-file-rel-path` to override the default location
-
-## Quick Start
-
-### 1. Document Your Makefile
+### 1. Document your Makefile
 
 Add documentation comments using the `##` prefix:
 
@@ -100,7 +73,7 @@ deploy:
 	./scripts/deploy.sh $(ENV)
 ```
 
-### 2. Generate Static Help File
+### 2. Generate static help file
 
 ```bash
 make-help
@@ -108,13 +81,17 @@ make-help
 
 This generates `./make/help.mk` (or `./make/00-help.mk` if numbered files exist) and automatically adds `-include make/*.mk` to your Makefile if needed.
 
+- `make help` - displays help summary
+- `make help-<target>` - detailed help for each documented target
+- Run `make update-help` or add 'update-help' to your 'build' target to regenerate the help when source files change
+
 ### 3. Use the Help System
 
 Now you can run:
 - `make help` - displays help summary
 - `make help-build` - detailed documentation for the build target
 
-Output from `make help`:
+Output from `make help` (coloration not shown):
 
 ```
 Usage: make [<target>...] [<ENV_VAR>=<value>...]
@@ -134,7 +111,7 @@ Test:
 
 ## Usage
 
-### Generate Static Help File (default)
+### Generate static help file (default)
 
 ```bash
 make-help                              # Generate ./make/help.mk for ./Makefile
@@ -142,7 +119,14 @@ make-help --makefile-path path/to/Makefile
 make-help --help-file-rel-path custom/path.mk  # Override default location
 ```
 
-### Display Help Dynamically
+### Lint Makefile and help documentation
+
+```bash
+make-help --lint        # find potential red flags
+make-help --lint --fix  # fix what can be automatically fixed and report the rest
+```
+
+### Display help dynamically
 
 To see help output without generating a file:
 
@@ -151,7 +135,7 @@ make-help --show-help                  # Show help for ./Makefile
 make-help --show-help --makefile-path path/to/Makefile
 ```
 
-### Detailed Target Help
+To get detailed help for a particular target:
 
 ```bash
 make-help --show-help --target build   # Full docs for 'build' target
@@ -197,9 +181,18 @@ make-help --remove-help                # Remove generated help files
 | `--lint` | Check documentation quality and report warnings |
 | `--fix` | Automatically fix lint warnings (requires `--lint`) |
 
-## Documentation Syntax
+## Documentation syntax
 
-### File-Level Documentation
+- Any line beginning with `##` is considered part of the documentation.
+- Lines beginning with a `#` are treated as internal documentation and will be ignored.
+- Documentation directives include:
+  - `!file` to identify file level documentation.
+  - `!category` to specify the category for the following targets within the source file.
+  - `!alias` explicitly names another target as an alias for the target being documented. Aliases can usually be inferred and the use of this directive may not be necessary.
+  - `!noalias` keeps the next alias looking target as not an alias.
+  - `!var` documents environment variables affecting the target behavior.
+
+### File-level documentation
 
 Use `!file` to add file-level documentation that appears before the targets list:
 
@@ -247,27 +240,23 @@ integration:              # category: Test (inherited)
 ```
 
 **Key Behaviors:**
-- **Sticky directive**: Once set, `!category` applies to all subsequent targets until another `!category` is encountered
+- **Sticky directive**: Once set, `!category` applies to all subsequent targets within that make file until another `!category` is encountered
 - **Reset to uncategorized**: Use `!category _` to reset the category to uncategorized (nil)
+- **Categories are merged**: If you switch back and forth to the same category in a single or use the same category in mulitple files, all targets in that category will be grouped together.
 - **Mixed categorization**: If you use categories, all documented targets must be categorized. Use `--default-category` to assign uncategorized targets to a default category
-
-**Example with reset:**
-
-```makefile
-## !category Build
-## Build the project
-build:                    # category: Build
-	@echo "Building..."
-
-## !category _
-## This target is uncategorized
-standalone:               # category: (none) - will error without --default-category
-	@echo "Standalone task..."
-```
 
 ### Aliases
 
-Provide alternative names for targets using `!alias`:
+An 'alias' is just an alternate name for a target. There are two ways to create an aliase.
+
+**Implicit aliases**: A single phony target with a single phony target dependincy is regonized as an aliase; e.g., `test: test.unit` recognized `test` as an alias for `test.unit`. This can be supressed by placing the `## !noalias` directive before the target. E.g.:
+
+```makefile
+## !noalias
+all: build
+```
+
+You can also explicitly name one or more aliases with the `!alias` directive:
 
 ```makefile
 ## !alias b, build-all
@@ -276,11 +265,9 @@ build:
 	@echo "Building..."
 ```
 
-Now users can run `make b` or `make build-all` instead of `make build`.
+### Environment variables
 
-### Environment Variables
-
-Document behavior affecting environment variables using `!var`:
+Document behavior affecting environment variables using `!var`. This is similar to how parameters would be documented for function documentation.
 
 ```makefile
 ## !var DATABASE_URL Database connection string
@@ -297,241 +284,17 @@ Variables appear in the help output under the target:
     Vars: DATABASE_URL Database connection string, LOG_LEVEL Logging verbosity (debug, info, warn, error)
 ```
 
-### Complete Example
-
-```makefile
-## !file
-## MyApp Build System
-## Targets for building, testing, and deploying MyApp.
-
-## !category Build
-## !alias b
-## !var CC C compiler to use
-## !var CFLAGS Compiler flags
-## Build the entire project.
-## This compiles all sources and links the final binary.
-build:
-	$(CC) $(CFLAGS) -o myapp main.c
-
-## !category Test
-## !alias t
-## !var TEST_FILTER Filter for test names
-## Run all tests.
-## Uses the native test framework.
-test:
-	./scripts/test.sh $(TEST_FILTER)
-
-## !category Deploy
-## !var ENV Target environment (dev, staging, prod)
-## Deploy to specified environment
-deploy:
-	./scripts/deploy.sh $(ENV)
-```
-
 ## Examples
 
-### Basic Usage
-
-```bash
-# Generate static help file (creates ./make/help.mk by default)
-make-help
-
-# Generate help file for specific Makefile
-make-help --makefile-path path/to/Makefile
-
-# Preview what would be created without making changes
-make-help --dry-run
-
-# Specify custom location for help file
-make-help --help-file-rel-path custom-help.mk
-
-# Display version information
-make-help --version
-
-# Enable verbose debugging
-make-help --verbose
-```
-
-### Dynamic Help Display
-
-```bash
-# Show help dynamically (no file generation)
-make-help --show-help
-
-# Show help for specific Makefile
-make-help --show-help --makefile-path path/to/Makefile
-
-# Show detailed help for a target
-make-help --show-help --target build
-
-# Disable colored output
-make-help --show-help --no-color
-```
-
-### Target Filtering
-
-```bash
-# Include specific undocumented targets
-make-help --include-target clean,install
-
-# Include all .PHONY targets
-make-help --include-all-phony
-```
-
-### Ordering Examples
-
-```bash
-# Preserve discovery order for categories and targets
-make-help --keep-order-categories --keep-order-targets
-
-# Only preserve category order
-make-help --keep-order-categories
-
-# Explicit category order (Build, Test, then others alphabetically)
-make-help --category-order Build,Test
-
-# Handle mixed categorization by assigning to default
-make-help --default-category Uncategorized
-```
-
-### Remove Help Files
-
-```bash
-# Remove help files and all artifacts
-make-help --remove-help
-```
-
-## Example Projects
-
-The `examples/` directory contains complete working examples demonstrating different features.
-
-### Running Examples
-
-Each example includes a generated `help.mk` file, so you can run them via Make:
+The `examples/` directory contains complete working examples demonstrating different features. Each example includes a
+generated `help.mk` file, so you can run them via Make:
 
 ```bash
 make -f examples/categorized-project/Makefile help
 make -f examples/full-featured/Makefile help-build
 ```
 
-Or use the helper script which sets up a shared binary location:
-
-```bash
-./scripts/run-example.sh examples/categorized-project
-./scripts/run-example.sh examples/full-featured help-build
-```
-
-The helper script installs the make-help binary to the project root's `.bin/` directory, avoiding multiple installations across examples.
-
-### uncategorized-targets
-
-Simple flat target list without categories. Demonstrates basic documentation with `!var` and `!alias` directives.
-
-```bash
-# Generate help file
-cd examples/uncategorized-targets
-make-help
-
-# Or show dynamically
-make-help --show-help --makefile-path examples/uncategorized-targets/Makefile
-```
-
-### categorized-project
-
-Uses `!category` to organize targets into logical groups (Build, Test, Development, Maintenance).
-
-```bash
-# Generate help file
-cd examples/categorized-project
-make-help
-
-# Or show dynamically
-make-help --show-help --makefile-path examples/categorized-project/Makefile
-```
-
-### full-featured
-
-Comprehensive example using all directives:
-- `!file` for project-level documentation
-- `!category` for target organization
-- `!var` for variables affecting target behavior
-- `!alias` for target shortcuts
-- Multi-line documentation with paragraph breaks
-
-```bash
-# Generate help file
-cd examples/full-featured
-make-help
-
-# Show help summary dynamically
-make-help --show-help --makefile-path examples/full-featured/Makefile
-
-# Show detailed help for a target
-make-help --show-help --target build --makefile-path examples/full-featured/Makefile
-```
-
-### filtering-demo
-
-Demonstrates target filtering with `--include-target` and `--include-all-phony` flags. Contains both documented and undocumented targets.
-
-```bash
-# Default: only documented targets
-make-help --show-help --makefile-path examples/filtering-demo/Makefile
-
-# Include specific undocumented targets
-make-help --show-help --makefile-path examples/filtering-demo/Makefile --include-target setup,check --default-category Misc
-
-# Include all .PHONY targets
-make-help --show-help --makefile-path examples/filtering-demo/Makefile --include-all-phony --default-category Misc
-```
-
-## Integration with Make
-
-After running `make-help`, you can invoke help directly from Make:
-
-```bash
-# Show help summary
-make help
-
-# Show detailed help for specific target
-make help-build
-make help-test
-
-# Continue using other targets
-make build
-make test
-```
-
-The generated help file contains static `@echo` statements with formatted help text embedded directly.
-
-### How Generated Help Files Work
-
-The generated file (typically `./make/help.mk`) contains static help text and auto-regeneration logic:
-
-```makefile
-# Help text embedded as @echo statements
-.PHONY: help
-help:
-	@echo "Usage: make [<target>...] [<ENV_VAR>=<value>...]"
-	@echo ""
-	@echo "Build:"
-	@echo "  - build: Build the application"
-	# ... more help text ...
-
-# Auto-regeneration when Makefiles change
-make/help.mk: Makefile
-	@command -v make-help >/dev/null 2>&1 || \
-	command -v npx >/dev/null 2>&1 && npx -y @sdlcforge/make-help || \
-	{ echo "Error: make-help not found. Install via: npm install -g @sdlcforge/make-help"; exit 1; }
-```
-
-This pattern ensures:
-- **No runtime dependencies**: Help works without installing binaries
-- **Auto-regeneration**: Help file updates when source Makefiles change
-- **Fallback chain**: Uses `make-help` if available, falls back to `npx`, then shows error
-- **Self-contained**: All help text is embedded in the generated file
-
-## Output Format
+## Output format
 
 The help output follows this structure:
 
@@ -547,7 +310,7 @@ Targets:
     [Vars: <VAR1> <description1>, <VAR2> <description2>...]
 ```
 
-### Color Scheme
+### Color scheme
 
 When colors are enabled:
 
@@ -557,9 +320,9 @@ When colors are enabled:
 - **Variable Names**: Magenta
 - **Documentation**: White
 
-## Advanced Topics
+## Advanced topics
 
-### Working with Included Files
+### Working with included files
 
 `make-help` automatically discovers all Makefiles via `include` directives using Make's `MAKEFILE_LIST` variable. Documentation from all files is aggregated in discovery order.
 
@@ -582,49 +345,6 @@ build:
 ```
 
 Both files are processed and targets are grouped by category.
-
-### Split Categories
-
-You can define the same category in multiple files. Targets are merged together:
-
-```makefile
-# Makefile
-## !category Build
-## Build the application
-build:
-	go build ./...
-```
-
-```makefile
-# make/build.mk
-## !category Build
-## Build documentation
-docs:
-	go doc ./...
-```
-
-The `Build` category will contain both `build` and `docs` targets.
-
-### Summary Extraction Algorithm
-
-`make-help` uses a sophisticated algorithm (ported from the extract-topic JavaScript library) to extract the first sentence from multi-line documentation:
-
-- Strips markdown formatting (`**bold**`, `*italic*`, `` `code` ``, `[links](urls)`)
-- Strips HTML tags
-- Handles edge cases like ellipsis (`...`) and IP addresses (`127.0.0.1`)
-- Extracts the first sentence ending in `.`, `!`, or `?`
-
-Example:
-
-```makefile
-## **Build** the entire project.
-## This compiles all sources, runs code generation,
-## and links the final binary. See docs/build.md for details.
-build:
-	@echo "Building..."
-```
-
-Summary: "Build the entire project."
 
 ## Uninstalling
 
@@ -659,28 +379,20 @@ brew uninstall make-help
 rm $(go env GOPATH)/bin/make-help
 ```
 
-**If installed via npm**:
+**If installed via npm or bun**:
 ```bash
+# global installation
 npm uninstall -g @sdlcforge/make-help
+bun uninstall -g @sdlcforge/make-help
+# package installation
+npm uninstall @sdlcforce/make-help
+bun uninstall @sdlcforge/make-help
 ```
 
 **If built locally during development**:
 ```bash
 make clean    # Removes ./bin/make-help
 ```
-
-### Version Control Considerations
-
-The generated `make/help.mk` file can be committed to version control, allowing your team to use `make help` without installing `make-help` (the file contains static help text as `@echo` statements).
-
-**If you remove the generated help file**:
-- Remember to commit the removal to version control
-- The include directive removal should also be committed
-- Consider removing `make/help.mk` (or `make/00-help.mk`) from `.gitignore` if you added it
-
-**The `bin/` directory**:
-- Should remain in `.gitignore` (it's only for local development)
-- Is not affected by `--remove-help`
 
 ## Troubleshooting
 
@@ -716,7 +428,7 @@ If your Makefile is very complex or has expensive operations during parsing, you
 
 **Solution**: Simplify variable expansions or move expensive operations out of variable assignments.
 
-## Documentation
+## Developer documentation
 
 - **[Developer Brief](docs/developer-brief.md)** - Contributing guide, development setup, and common tasks
 - **[Architecture Document](docs/architecture.md)** - Comprehensive architecture and implementation details

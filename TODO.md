@@ -38,7 +38,7 @@ This document consolidates outstanding findings from three parallel reviews:
 - [x] **Add "Uninstalling" section**
   - Document: What `--remove-help-target` removes, whether `.bin/` is cleaned, version control considerations
 
-- [ ] **Add comparison to alternatives**
+- [x] **Add comparison to alternatives**
   - Compare to: AWK-based `make help` solutions, `just`, other Makefile documentation tools
 
 - [x] **Add visual diagrams** ✓ DONE

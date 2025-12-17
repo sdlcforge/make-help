@@ -1,5 +1,24 @@
 # Research Report: Makefile Help Systems Comparison
 
+## TLDR: When and Why Use make-help?
+
+**Choose make-help if you need:**
+- Comprehensive documentation: categories + variables + aliases + detailed per-target help
+- Static help output with no runtime dependencies
+- Auto-regeneration when Makefiles change
+- Documentation linting and fixing
+
+**Choose AWK patterns if you need:**
+- Zero dependencies, basic target help only, immediate setup
+
+**Quick decision:**
+- Need categories + variables + aliases? → **make-help**
+- Want remote Makefile sharing? → **mmake**
+- Node.js project? → **makefile-help**
+- Just basic help? → **AWK pattern**
+
+---
+
 ## Executive Summary
 
 This report compares `make-help` with other tools and patterns specifically designed to document Makefiles and generate help output. All tools in this comparison work **with** Makefiles rather than replacing Make.
@@ -127,102 +146,17 @@ Comments above targets and `?=` variables are automatically extracted.
 
 ---
 
-## 4. makefile-parser by kba
+## 4. Other Tools (Niche)
 
-**GitHub:** [kba/makefile-parser](https://github.com/kba/makefile-parser)
-**npm:** `@kba/makefile-parser`
-**Language:** JavaScript
+Several other tools exist with lower adoption or specialized use cases:
 
-A full Makefile parser that can generate help output or AST.
-
-### How It Works
-```bash
-# CLI usage
-makefile-parser --make-help Makefile
-
-# Or embed in Makefile
-# BEGIN-EVAL makefile-parser --make-help Makefile
-# END-EVAL
-```
-
-Uses single-line comments above targets/variables.
-
-| Strengths | Weaknesses |
-|-----------|------------|
-| Full AST parsing | JavaScript/npm dependency |
-| Programmatic API | Complex for simple use |
-| Variables documented | No categories |
-| Integrates with shinclude | Less popular |
-
-**Workflow Fit:** Projects needing programmatic Makefile analysis.
+- **[makefile-parser](https://github.com/kba/makefile-parser)** (npm): Full AST parser with programmatic API. Best for projects needing Makefile analysis, not just help generation.
+- **[makehelp](https://github.com/ryanvolpe/makehelp)** (Shell): Uses `#:` syntax, has static output option. Very low adoption (2 stars).
+- **[TangoMan Makefile Generator](https://github.com/TangoMan75/makefile-generator)** (Shell): Template-based generator for new Makefiles, not for documenting existing ones.
 
 ---
 
-## 5. makehelp by ryanvolpe
-
-**GitHub:** [ryanvolpe/makehelp](https://github.com/ryanvolpe/makehelp) (2 stars)
-**Language:** Shell
-
-### How It Works
-Uses `#:` prefix for documentation comments:
-```makefile
-#: Build the application.
-#: This compiles all sources.
-build:
-    go build ./...
-```
-
-Supports text formatting: `*bold*`, `_underline_`, `~inverse~`
-
-### Unique Features
-- **Static mode**: `--static` embeds help directly in Makefile
-- **Text formatting** in docs
-- **Header vs target docs**: Unassociated `#:` blocks become header text
-
-| Strengths | Weaknesses |
-|-----------|------------|
-| Static output option | Very low adoption |
-| Text formatting | Shell script dependency |
-| Header documentation | Different syntax (`#:`) |
-| | No categories |
-| | No variable docs |
-
-**Workflow Fit:** Niche use case, similar concept to make-help's static generation.
-
----
-
-## 6. TangoMan Makefile Generator
-
-**GitHub:** [TangoMan75/makefile-generator](https://github.com/TangoMan75/makefile-generator)
-**Language:** Shell
-
-A template-based generator that creates Makefiles with embedded help.
-
-### How It Works
-- Define templates in `makefiles/`, `vars/`, `header/` directories
-- Configure via `config.yaml`
-- Run generator to produce Makefile with AWK-based help
-
-### Syntax
-```makefile
-### Category Name
-## Description of target
-target:
-    command
-```
-
-| Strengths | Weaknesses |
-|-----------|------------|
-| Generates full Makefile | Not for existing Makefiles |
-| Categories via `###` | Template-based workflow |
-| README generation | Requires GAWK, SED |
-| License file generation | Overkill for simple needs |
-
-**Workflow Fit:** Starting new projects with standardized Makefile structure.
-
----
-
-## 7. make-help (This Project)
+## 5. make-help (This Project)
 
 **Language:** Go
 **Install:** `npm install -g @sdlcforge/make-help` or `go install`
@@ -286,48 +220,6 @@ Run `make-help` to generate `./make/help.mk` with static help.
 
 ---
 
-## Workflow Integration Comparison
-
-### Development Experience
-
-| Tool | Setup Effort | Maintenance | Editor Support |
-|------|--------------|-------------|----------------|
-| AWK Pattern | Copy-paste | Edit AWK | None |
-| mmake | Install + alias | None | None |
-| makefile-help | npm install | None | None |
-| make-help | Install + run | Auto-regen | VSCode (planned) |
-
-### CI/CD Integration
-
-| Tool | CI Dependencies | Reproducibility |
-|------|-----------------|-----------------|
-| AWK Pattern | None | Excellent |
-| mmake | Go binary or brew | Good |
-| makefile-help | npm | Good |
-| make-help | Go/npm OR none (static) | Excellent |
-
----
-
-## Strengths & Weaknesses Summary
-
-### AWK Patterns
-- **Best for:** Simple projects, minimal setup, no dependencies
-- **Avoid when:** Need categories + variables + aliases together
-
-### mmake
-- **Best for:** Teams wanting remote include sharing
-- **Avoid when:** Can't alias make, need active maintenance
-
-### makefile-help
-- **Best for:** Node.js projects, simple variable docs
-- **Avoid when:** Not using npm, need categories
-
-### make-help
-- **Best for:** Comprehensive docs, existing Makefiles, static output
-- **Avoid when:** Want zero new tools, prefer `##` inline syntax
-
----
-
 ## Recommendations by Use Case
 
 | Use Case | Recommended Tool |
@@ -343,18 +235,9 @@ Run `make-help` to generate `./make/help.mk` with static help.
 
 ## Competitive Position of make-help
 
-### Unique to make-help
-1. **Only tool with all four**: categories + variables + aliases + detailed help
-2. **Static generation by default**: No runtime dependency for `make help`
-3. **Auto-regeneration**: Help stays in sync automatically
-4. **Summary extraction**: Intelligent first-sentence parsing
-5. **Lint/fix**: Documentation quality checking
-6. **Smart defaults**: Directory creation, numbered prefixes, include insertion
+make-help is the only tool combining categories, variables, aliases, detailed help, static generation, and auto-regeneration. Unlike AWK patterns, it provides structured documentation; unlike mmake/makefile-help, it works without runtime wrappers.
 
-### Potential Gaps to Consider
-Based on this research, features other tools have that make-help doesn't:
-- **Remote includes** (mmake): Could be interesting for shared team standards
-- **Simpler `#` comment syntax** (mmake, makefile-help): Lower barrier to entry
+**Trade-offs:** Requires installation (vs AWK's zero-dependency approach) and learning directive syntax (`!category`, `!var`).
 
 ---
 
@@ -376,4 +259,4 @@ Based on this research, features other tools have that make-help doesn't:
 - [FreeCodeCamp: Self-Documenting Makefile](https://www.freecodecamp.org/news/self-documenting-makefile/)
 - [Jiby's Toolbox: Documenting Makefiles](https://jiby.tech/post/make-help-documenting-makefile/)
 
-Last reviewed: 2025-12-25T16:43Z
+Last reviewed: 2025-12-17
