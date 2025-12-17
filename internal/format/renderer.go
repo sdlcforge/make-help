@@ -23,30 +23,67 @@ func NewRenderer(useColor bool) *Renderer {
 // Render generates the complete help output from a HelpModel.
 // The output includes:
 //   - Usage line
-//   - File documentation (if any)
+//   - Entry point file documentation (if any)
+//   - Included files section (if any non-entry files have docs)
 //   - Targets section with categories (if applicable)
 //
 // Returns the formatted help string and any error encountered.
-func (r *Renderer) Render(model *model.HelpModel) (string, error) {
+func (r *Renderer) Render(helpModel *model.HelpModel) (string, error) {
 	var buf strings.Builder
 
 	// Usage line
 	buf.WriteString("Usage: make [<target>...] [<ENV_VAR>=<value>...]\n")
 
 	// File documentation
-	if len(model.FileDocs) > 0 {
-		buf.WriteString("\n")
-		for _, doc := range model.FileDocs {
-			buf.WriteString(doc)
-			buf.WriteString("\n")
+	if len(helpModel.FileDocs) > 0 {
+		// Render entry point file docs first
+		for _, fileDoc := range helpModel.FileDocs {
+			if fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
+				buf.WriteString("\n")
+				for _, line := range fileDoc.Documentation {
+					buf.WriteString(line)
+					buf.WriteString("\n")
+				}
+				break
+			}
+		}
+
+		// Render included files section
+		var includedFiles []model.FileDoc
+		for _, fileDoc := range helpModel.FileDocs {
+			if !fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
+				includedFiles = append(includedFiles, fileDoc)
+			}
+		}
+
+		if len(includedFiles) > 0 {
+			buf.WriteString("\nIncluded Files:\n")
+			for _, fileDoc := range includedFiles {
+				// File path
+				buf.WriteString("  ")
+				buf.WriteString(fileDoc.SourceFile)
+				buf.WriteString("\n")
+
+				// Documentation (indented)
+				for _, line := range fileDoc.Documentation {
+					if line == "" {
+						buf.WriteString("\n")
+					} else {
+						buf.WriteString("    ")
+						buf.WriteString(line)
+						buf.WriteString("\n")
+					}
+				}
+				buf.WriteString("\n") // Blank line after each file
+			}
 		}
 	}
 
 	// Targets section
-	if len(model.Categories) > 0 {
+	if len(helpModel.Categories) > 0 {
 		buf.WriteString("\nTargets:\n")
 
-		for _, category := range model.Categories {
+		for _, category := range helpModel.Categories {
 			r.renderCategory(&buf, &category)
 		}
 	}
@@ -213,26 +250,59 @@ func (r *Renderer) RenderBasicTarget(name string, sourceFile string, lineNumber 
 // Returns a slice of strings, each representing one line to be echoed.
 // Each line is properly escaped for shell/Makefile context.
 // ANSI color codes are embedded as literal escape sequences (e.g., \033[36m).
-func (r *Renderer) RenderForMakefile(model *model.HelpModel) ([]string, error) {
+func (r *Renderer) RenderForMakefile(helpModel *model.HelpModel) ([]string, error) {
 	var lines []string
 
 	// Usage line
 	lines = append(lines, escapeForMakefileEcho("Usage: make [<target>...] [<ENV_VAR>=<value>...]"))
 
 	// File documentation
-	if len(model.FileDocs) > 0 {
-		lines = append(lines, escapeForMakefileEcho(""))
-		for _, doc := range model.FileDocs {
-			lines = append(lines, escapeForMakefileEcho(doc))
+	if len(helpModel.FileDocs) > 0 {
+		// Render entry point file docs first
+		for _, fileDoc := range helpModel.FileDocs {
+			if fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
+				lines = append(lines, escapeForMakefileEcho(""))
+				for _, line := range fileDoc.Documentation {
+					lines = append(lines, escapeForMakefileEcho(line))
+				}
+				break
+			}
+		}
+
+		// Render included files section
+		var includedFiles []model.FileDoc
+		for _, fileDoc := range helpModel.FileDocs {
+			if !fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
+				includedFiles = append(includedFiles, fileDoc)
+			}
+		}
+
+		if len(includedFiles) > 0 {
+			lines = append(lines, escapeForMakefileEcho(""))
+			lines = append(lines, escapeForMakefileEcho("Included Files:"))
+			for _, fileDoc := range includedFiles {
+				// File path
+				lines = append(lines, escapeForMakefileEcho("  "+fileDoc.SourceFile))
+
+				// Documentation (indented)
+				for _, line := range fileDoc.Documentation {
+					if line == "" {
+						lines = append(lines, escapeForMakefileEcho(""))
+					} else {
+						lines = append(lines, escapeForMakefileEcho("    "+line))
+					}
+				}
+				lines = append(lines, escapeForMakefileEcho("")) // Blank line after each file
+			}
 		}
 	}
 
 	// Targets section
-	if len(model.Categories) > 0 {
+	if len(helpModel.Categories) > 0 {
 		lines = append(lines, escapeForMakefileEcho(""))
 		lines = append(lines, escapeForMakefileEcho("Targets:"))
 
-		for _, category := range model.Categories {
+		for _, category := range helpModel.Categories {
 			categoryLines := r.renderCategoryForMakefile(&category)
 			lines = append(lines, categoryLines...)
 		}

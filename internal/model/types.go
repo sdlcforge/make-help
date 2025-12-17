@@ -5,10 +5,26 @@ package model
 // default/uncategorized group.
 const UncategorizedCategoryName = ""
 
+// FileDoc represents documentation for a single Makefile.
+type FileDoc struct {
+	// SourceFile is the path to the file.
+	SourceFile string
+
+	// Documentation contains full documentation lines from !file directives.
+	// Multiple !file blocks in the same file are concatenated with blank line separation.
+	Documentation []string
+
+	// DiscoveryOrder tracks when this file was discovered (used for --keep-order-files).
+	DiscoveryOrder int
+
+	// IsEntryPoint is true for the entry point Makefile (the first file).
+	IsEntryPoint bool
+}
+
 // HelpModel represents the complete parsed help documentation from all Makefiles.
 type HelpModel struct {
-	// FileDocs contains !file documentation sections in discovery order.
-	FileDocs []string
+	// FileDocs contains file-level documentation for each Makefile.
+	FileDocs []FileDoc
 
 	// Categories contains all documented categories with their targets.
 	Categories []Category

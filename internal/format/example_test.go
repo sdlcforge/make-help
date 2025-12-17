@@ -16,7 +16,14 @@ func ExampleRenderer() {
 
 	// Create a sample HelpModel
 	helpModel := &model.HelpModel{
-		FileDocs: []string{"Example project Makefile"},
+		FileDocs: []model.FileDoc{
+			{
+				SourceFile:     "Makefile",
+				Documentation:  []string{"Example project Makefile"},
+				DiscoveryOrder: 0,
+				IsEntryPoint:   true,
+			},
+		},
 		Categories: []model.Category{
 			{
 				Name: "Build",

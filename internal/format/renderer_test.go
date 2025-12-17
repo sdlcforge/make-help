@@ -30,9 +30,13 @@ func TestRender_WithFileDocumentation(t *testing.T) {
 	renderer := NewRenderer(false)
 
 	helpModel := &model.HelpModel{
-		FileDocs: []string{
-			"This is the main Makefile for the project.",
-			"It provides common development tasks.",
+		FileDocs: []model.FileDoc{
+			{
+				SourceFile:     "Makefile",
+				Documentation:  []string{"This is the main Makefile for the project.", "It provides common development tasks."},
+				DiscoveryOrder: 0,
+				IsEntryPoint:   true,
+			},
 		},
 	}
 	output, err := renderer.Render(helpModel)
@@ -40,6 +44,58 @@ func TestRender_WithFileDocumentation(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, output, "This is the main Makefile for the project.")
 	assert.Contains(t, output, "It provides common development tasks.")
+}
+
+func TestRender_WithIncludedFiles(t *testing.T) {
+	renderer := NewRenderer(false)
+
+	helpModel := &model.HelpModel{
+		FileDocs: []model.FileDoc{
+			{
+				SourceFile:     "Makefile",
+				Documentation:  []string{"Main project Makefile.", "Entry point for all tasks."},
+				DiscoveryOrder: 0,
+				IsEntryPoint:   true,
+			},
+			{
+				SourceFile:     "make/build.mk",
+				Documentation:  []string{"Build tasks and compilation.", "Handles Go build process."},
+				DiscoveryOrder: 1,
+				IsEntryPoint:   false,
+			},
+			{
+				SourceFile:     "make/test.mk",
+				Documentation:  []string{"Testing utilities."},
+				DiscoveryOrder: 2,
+				IsEntryPoint:   false,
+			},
+		},
+	}
+
+	output, err := renderer.Render(helpModel)
+
+	require.NoError(t, err)
+
+	// Entry point docs should appear first (not under "Included Files")
+	assert.Contains(t, output, "Main project Makefile.")
+	assert.Contains(t, output, "Entry point for all tasks.")
+
+	// Should have "Included Files:" section
+	assert.Contains(t, output, "Included Files:")
+
+	// Should contain file paths
+	assert.Contains(t, output, "make/build.mk")
+	assert.Contains(t, output, "make/test.mk")
+
+	// Should contain indented documentation for included files
+	assert.Contains(t, output, "    Build tasks and compilation.")
+	assert.Contains(t, output, "    Handles Go build process.")
+	assert.Contains(t, output, "    Testing utilities.")
+
+	// Verify structure: entry point docs before "Included Files:"
+	entryPointIdx := strings.Index(output, "Main project Makefile.")
+	includedFilesIdx := strings.Index(output, "Included Files:")
+	assert.Less(t, entryPointIdx, includedFilesIdx, "Entry point docs should appear before 'Included Files:' section")
 }
 
 func TestRender_BasicTargetsNoCategories(t *testing.T) {
@@ -305,9 +361,13 @@ func TestRender_ComplexHelpModel(t *testing.T) {
 	renderer := NewRenderer(useColor)
 
 	helpModel := &model.HelpModel{
-		FileDocs: []string{
-			"Project Makefile",
-			"Common development tasks",
+		FileDocs: []model.FileDoc{
+			{
+				SourceFile:     "Makefile",
+				Documentation:  []string{"Project Makefile", "Common development tasks"},
+				DiscoveryOrder: 0,
+				IsEntryPoint:   true,
+			},
 		},
 		HasCategories: true,
 		Categories: []model.Category{
@@ -623,9 +683,13 @@ func TestRenderForMakefile_EmptyModel(t *testing.T) {
 func TestRenderForMakefile_WithFileDocumentation(t *testing.T) {
 	renderer := NewRenderer(false)
 	helpModel := &model.HelpModel{
-		FileDocs: []string{
-			"This is the main Makefile for the project.",
-			"It provides common development tasks.",
+		FileDocs: []model.FileDoc{
+			{
+				SourceFile:     "Makefile",
+				Documentation:  []string{"This is the main Makefile for the project.", "It provides common development tasks."},
+				DiscoveryOrder: 0,
+				IsEntryPoint:   true,
+			},
 		},
 	}
 

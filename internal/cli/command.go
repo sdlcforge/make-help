@@ -53,9 +53,11 @@ func setupFlags(cmd *cobra.Command, config *Config) {
 		"keep-order-categories", false, "Preserve category discovery order")
 	cmd.Flags().BoolVar(&config.KeepOrderTargets,
 		"keep-order-targets", false, "Preserve target discovery order within categories")
+	cmd.Flags().BoolVar(&config.KeepOrderFiles,
+		"keep-order-files", false, "Preserve file discovery order")
 	// Note: keep-order-all is bound to local variable for special processing
 	cmd.Flags().BoolVar(&keepOrderAll,
-		"keep-order-all", false, "Preserve both category and target discovery order")
+		"keep-order-all", false, "Preserve category, target, and file discovery order")
 	cmd.Flags().StringSliceVar(&config.CategoryOrder,
 		"category-order", []string{}, "Explicit category order (comma-separated)")
 	cmd.Flags().StringVar(&config.DefaultCategory,
@@ -91,6 +93,7 @@ func processFlagsAfterParse(cmd *cobra.Command, config *Config) error {
 	if cmd.Flags().Lookup("keep-order-all").Changed {
 		config.KeepOrderCategories = true
 		config.KeepOrderTargets = true
+		config.KeepOrderFiles = true
 	}
 
 	// Normalize IncludeTargets from comma-separated + repeatable flags

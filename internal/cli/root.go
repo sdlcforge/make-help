@@ -137,6 +137,7 @@ Documentation directives (in ## comments):
 	annotateFlag(rootCmd, "include-all-phony", outputGroupLabel)
 	annotateFlag(rootCmd, "keep-order-categories", outputGroupLabel)
 	annotateFlag(rootCmd, "keep-order-targets", outputGroupLabel)
+	annotateFlag(rootCmd, "keep-order-files", outputGroupLabel)
 	annotateFlag(rootCmd, "keep-order-all", outputGroupLabel)
 	annotateFlag(rootCmd, "category-order", outputGroupLabel)
 	annotateFlag(rootCmd, "default-category", outputGroupLabel)
@@ -167,6 +168,7 @@ func validateRemoveHelpFlags(config *Config) error {
 		{config.HelpFileRelPath != "", "--help-file-rel-path"},
 		{config.KeepOrderCategories, "--keep-order-categories"},
 		{config.KeepOrderTargets, "--keep-order-targets"},
+		{config.KeepOrderFiles, "--keep-order-files"},
 		{len(config.CategoryOrder) > 0, "--category-order"},
 		{config.DefaultCategory != "", "--default-category"},
 	}
