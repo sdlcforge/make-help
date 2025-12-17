@@ -67,7 +67,7 @@ CLI Layer → Discovery → Parser → Model Builder → Ordering → Summary �
 ## Documentation Syntax (for parser)
 
 ```makefile
-## !file                     # File-level docs (appears before targets)
+## !file                     # File-level docs (entry point: before targets; included: in "Included Files:" section)
 ## !category Build           # Switch: all subsequent targets use "Build" category
 ## !var CC [description]     # Documents environment variable
 ## !alias b, build-all       # Alternative target names
@@ -84,6 +84,12 @@ test:
 standalone:
 	@echo "Task"
 ```
+
+**Key !file Behavior:**
+- **Entry point Makefile**: `!file` documentation appears at top of help output (full text, not just summary)
+- **Included files**: `!file` documentation appears in "Included Files:" section (full text)
+- **Multiple directives**: Multiple `!file` directives in same file are concatenated with blank line
+- **File ordering**: Files sorted alphabetically by default; use `--keep-order-files` to preserve discovery order
 
 **Key !category Behavior:**
 - **Sticky directive**: Once set, applies to all subsequent targets until another `!category` is encountered

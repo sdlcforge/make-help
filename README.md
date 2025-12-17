@@ -178,9 +178,10 @@ make-help --remove-help                # Remove generated help files
 - `--help-category <name>` - Category for generated help targets (default: `Help`)
 - `--include-all-phony` - Include all .PHONY targets
 - `--include-target <list>` - Include undocumented targets (comma-separated, repeatable)
+- `--keep-order-all` - Preserve category, target, and file order
 - `--keep-order-categories` - Preserve category discovery order
+- `--keep-order-files` - Preserve file discovery order (default: alphabetical)
 - `--keep-order-targets` - Preserve target discovery order
-- `--keep-order-all` - Preserve both category and target order
 
 **Misc:**
 - `--verbose` - Enable verbose output
@@ -199,13 +200,17 @@ make-help --remove-help                # Remove generated help files
 
 ### File-level documentation
 
-Use `!file` to add file-level documentation that appears before the targets list:
+Use `!file` to add file-level documentation. The entry point Makefile's `!file` documentation appears at the top of the help output (after the usage line). Documentation from included files appears in an "Included Files:" section.
 
 ```makefile
 ## !file
 ## Project Build System
 ## This Makefile handles building, testing, and deploying the application.
 ```
+
+**Multiple `!file` directives**: You can have multiple `!file` directives in the same file. They will be concatenated with a blank line between them.
+
+**File ordering**: By default, included files are sorted alphabetically in the "Included Files:" section. Use `--keep-order-files` to preserve the discovery order instead.
 
 ### Target Documentation
 
@@ -306,7 +311,15 @@ The help output follows this structure:
 ```
 Usage: make [<target>...] [<ENV_VAR>=<value>...]
 
-[File-level documentation if present]
+[Entry point Makefile's !file documentation - full text, if present]
+
+Included Files:
+  path/to/file.mk
+    Full documentation from the file's !file directive
+    Can be multiple lines
+
+  path/to/another.mk
+    Documentation here
 
 Targets:
 
@@ -314,6 +327,11 @@ Targets:
   - <target> [<alias1>, <alias2>...]: <summary>
     [Vars: <VAR1> <description1>, <VAR2> <description2>...]
 ```
+
+**Key behaviors**:
+- Entry point's `!file` docs appear first (full text, not just summary)
+- Included files' `!file` docs appear in the "Included Files:" section (full text)
+- Files are sorted alphabetically by default (use `--keep-order-files` to preserve discovery order)
 
 ### Color scheme
 
