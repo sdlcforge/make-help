@@ -62,9 +62,7 @@ func ExtractTargetName(line string) string {
 	beforeColon := line[:colonIdx]
 
 	// Handle grouped target operator (&:)
-	if strings.HasSuffix(beforeColon, "&") {
-		beforeColon = strings.TrimSuffix(beforeColon, "&")
-	}
+	beforeColon = strings.TrimSuffix(beforeColon, "&")
 
 	// Trim whitespace
 	targetPart := strings.TrimSpace(beforeColon)

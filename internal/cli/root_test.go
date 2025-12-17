@@ -66,7 +66,7 @@ func TestProcessColorFlags(t *testing.T) {
 				args = append(args, "--color")
 			}
 			cmd.SetArgs(args)
-			cmd.Execute() // Parse the flags
+			_ = cmd.Execute() // Parse the flags
 
 			err := processFlagsAfterParse(cmd, config)
 			mode := config.ColorMode

@@ -24,19 +24,19 @@ func AtomicWriteFile(filename string, data []byte, perm os.FileMode) error {
 	success := false
 	defer func() {
 		if !success {
-			os.Remove(tmpName)
+			_ = os.Remove(tmpName)
 		}
 	}()
 
 	// Write content
 	if _, err := tmpFile.Write(data); err != nil {
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		return fmt.Errorf("failed to write temp file: %w", err)
 	}
 
 	// Sync to disk
 	if err := tmpFile.Sync(); err != nil {
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		return fmt.Errorf("failed to sync temp file: %w", err)
 	}
 

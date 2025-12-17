@@ -38,7 +38,7 @@ func (s *RemoveService) RemoveTarget() error {
 
 	// Validate Makefile syntax before modifying
 	if err := s.validateMakefile(makefilePath); err != nil {
-		return fmt.Errorf("Makefile validation failed: %w", err)
+		return fmt.Errorf("makefile validation failed: %w", err)
 	}
 
 	removed := false

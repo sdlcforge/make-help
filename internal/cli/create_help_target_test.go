@@ -43,11 +43,11 @@ test:
 	err = cmd.Execute()
 	require.NoError(t, err)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	var outBuf bytes.Buffer
-	outBuf.ReadFrom(r)
+	_, _ = outBuf.ReadFrom(r)
 	output := outBuf.String()
 
 	// Verify dry-run message
@@ -100,11 +100,11 @@ build:
 	err = cmd.Execute()
 	require.NoError(t, err)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	var outBuf bytes.Buffer
-	outBuf.ReadFrom(r)
+	_, _ = outBuf.ReadFrom(r)
 	output := outBuf.String()
 
 	// Verify dry-run message
@@ -159,11 +159,11 @@ build:
 	err = cmd.Execute()
 	require.NoError(t, err)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	var outBuf bytes.Buffer
-	outBuf.ReadFrom(r)
+	_, _ = outBuf.ReadFrom(r)
 	output := outBuf.String()
 
 	// Verify dry-run message
@@ -220,11 +220,11 @@ test:
 	err = cmd.Execute()
 	require.NoError(t, err)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	var outBuf bytes.Buffer
-	outBuf.ReadFrom(r)
+	_, _ = outBuf.ReadFrom(r)
 	output := outBuf.String()
 
 	// Verify dry-run message
@@ -300,11 +300,11 @@ func TestPrintDryRunOutput(t *testing.T) {
 
 			err := printDryRunOutput(makefilePath, targetFile, tt.needsInclude, content)
 
-			w.Close()
+			_ = w.Close()
 			os.Stdout = oldStdout
 
 			var buf bytes.Buffer
-			buf.ReadFrom(r)
+			_, _ = buf.ReadFrom(r)
 			output := buf.String()
 
 			assert.NoError(t, err)
@@ -351,11 +351,11 @@ build:
 	err = cmd.Execute()
 	require.NoError(t, err)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 
 	var outBuf bytes.Buffer
-	outBuf.ReadFrom(r)
+	_, _ = outBuf.ReadFrom(r)
 	output := outBuf.String()
 
 	// Check the output format matches the spec

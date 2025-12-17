@@ -32,17 +32,17 @@ func (s *Service) discoverMakefileList(mainPath string) ([]string, error) {
 	tmpName := tmpFile.Name()
 
 	// Clean up temporary file when done
-	defer os.Remove(tmpName)
+	defer func() { _ = os.Remove(tmpName) }()
 
 	// Write main content + discovery target
 	discoveryTarget := "\n\n.PHONY: _list_makefiles\n_list_makefiles:\n\t@echo $(MAKEFILE_LIST)\n"
 
 	if _, err := tmpFile.Write(mainContent); err != nil {
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		return nil, fmt.Errorf("failed to write temp file: %w", err)
 	}
 	if _, err := tmpFile.WriteString(discoveryTarget); err != nil {
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		return nil, fmt.Errorf("failed to write discovery target: %w", err)
 	}
 
@@ -114,9 +114,9 @@ func (s *Service) resolveAbsolutePaths(files []string, baseDir string) ([]string
 		// Validate that the file exists
 		if _, err := os.Stat(absPath); err != nil {
 			if os.IsNotExist(err) {
-				return nil, fmt.Errorf("Makefile not found: %s", absPath)
+				return nil, fmt.Errorf("makefile not found: %s", absPath)
 			}
-			return nil, fmt.Errorf("failed to stat Makefile %s: %w", absPath, err)
+			return nil, fmt.Errorf("failed to stat makefile %s: %w", absPath, err)
 		}
 
 		resolved = append(resolved, absPath)

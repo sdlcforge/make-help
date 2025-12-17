@@ -173,9 +173,9 @@ func TestBuild_CategorySwitchBehavior(t *testing.T) {
 				{Type: parser.DirectiveDoc, Value: "Run integration tests.", SourceFile: "Makefile", LineNumber: 12},
 			},
 			TargetMap: map[string]int{
-				"build":       3,
-				"build-debug": 6,
-				"test":        10,
+				"build":            3,
+				"build-debug":      6,
+				"test":             10,
 				"test-integration": 13,
 			},
 		},
@@ -516,10 +516,10 @@ func TestParseVarDirective(t *testing.T) {
 	builder := NewBuilder(&BuilderConfig{DefaultCategory: ""})
 
 	tests := []struct {
-		name        string
-		input       string
-		wantName    string
-		wantDesc    string
+		name     string
+		input    string
+		wantName string
+		wantDesc string
 	}{
 		{
 			name:     "with description",
@@ -796,9 +796,10 @@ func TestBuild_PhonyStatusSet(t *testing.T) {
 
 	// Find each target and check IsPhony
 	for _, target := range model.Categories[0].Targets {
-		if target.Name == "build" {
+		switch target.Name {
+		case "build":
 			assert.False(t, target.IsPhony, "build should not be phony")
-		} else if target.Name == "clean" {
+		case "clean":
 			assert.True(t, target.IsPhony, "clean should be phony")
 		}
 	}

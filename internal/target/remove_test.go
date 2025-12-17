@@ -472,5 +472,5 @@ func TestRemoveService_ValidateMakefile_SyntaxError(t *testing.T) {
 
 	err = service.RemoveTarget()
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Makefile validation failed")
+	assert.Contains(t, err.Error(), "makefile validation failed")
 }

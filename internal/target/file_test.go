@@ -121,7 +121,7 @@ func TestAtomicWriteFileErrorCases(t *testing.T) {
 		// Make directory read-only to cause permission error on temp file creation
 		err = os.Chmod(tmpDir, 0444)
 		require.NoError(t, err)
-		defer os.Chmod(tmpDir, 0755) // Restore for cleanup
+		defer func() { _ = os.Chmod(tmpDir, 0755) }() // Restore for cleanup
 
 		// Attempt to write should fail
 		err = AtomicWriteFile(targetFile, []byte("new content"), 0644)

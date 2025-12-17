@@ -282,7 +282,7 @@ func TestAddService_ValidateMakefile_SyntaxError(t *testing.T) {
 	// Execute
 	err = service.AddTarget()
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Makefile validation failed")
+	assert.Contains(t, err.Error(), "makefile validation failed")
 }
 
 func TestAddService_VerboseOutput(t *testing.T) {

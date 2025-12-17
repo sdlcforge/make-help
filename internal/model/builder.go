@@ -335,8 +335,8 @@ func (b *Builder) processFile(
 	for directiveIdx < len(file.Directives) || targetIdx < len(targetLines) {
 		// Determine what comes next by comparing line numbers.
 		// Initialize to maxInt so exhausted lists sort to the end.
-		var nextDirectiveLine int = maxInt
-		var nextTargetLine int = maxInt
+		var nextDirectiveLine = maxInt
+		var nextTargetLine = maxInt
 
 		if directiveIdx < len(file.Directives) {
 			nextDirectiveLine = file.Directives[directiveIdx].LineNumber

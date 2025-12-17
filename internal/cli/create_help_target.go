@@ -44,7 +44,7 @@ func runCreateHelpTarget(config *Config) error {
 	// 2. Validate Makefile syntax
 	executor := discovery.NewDefaultExecutor()
 	if err := target.ValidateMakefile(executor, makefilePath); err != nil {
-		return fmt.Errorf("Makefile validation failed: %w", err)
+		return fmt.Errorf("makefile validation failed: %w", err)
 	}
 
 	// 3. Discover files and targets
