@@ -24,7 +24,10 @@
   "author": "Zane Rockenbaugh <zane@liquid-labs.com>",
   "license": "Apache-2.0",
   "type": "commonjs",
-  "repository": "git+ssh://git@github.com/sdlcforge/make-help.git",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/sdlcforge/make-help.git"
+  },
   "bugs": {
     "url": "https://github.com/sdlcforge/make-help/issues"
   },
