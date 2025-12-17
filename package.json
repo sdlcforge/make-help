@@ -29,5 +29,8 @@
   "homepage": "https://github.com/sdlcforge/make-help#readme",
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.12.0"
+  },
+  "_comply": {
+    "orgKey": "@liquid-labs"
   }
 }
