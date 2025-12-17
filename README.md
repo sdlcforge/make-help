@@ -1,5 +1,7 @@
 # make-help
 
+[![codecov](https://codecov.io/gh/sdlcforge/make-help/graph/badge.svg)](https://codecov.io/gh/sdlcforge/make-help)
+
 Static help generation for Makefiles with rich documentation support and linting.
 
 ## Why make-help?

@@ -92,7 +92,7 @@ This document consolidates outstanding findings from three parallel reviews:
   - Issue: Non-Go users cannot use `go install`
   - Options: GitHub Releases, Homebrew
 
-- [ ] **Add code coverage badge to README**
+- [x] **Add code coverage badge to README**
 
 - [ ] **Add performance benchmarks**
   - Location: `internal/parser/scanner_bench_test.go`
