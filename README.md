@@ -26,23 +26,29 @@ Makefiles are powerful but lack a built-in help system. As projects grow, develo
 
 ## Installation
 
-### Via npm (Recommended)
+### Homebrew (macOS/Linux)
 
 ```bash
-npm install -g @sdlcforge/make-help
+brew install sdlcforge/tap/make-help
 ```
 
-This installs the `make-help` CLI globally and makes it available to generated help files via `npx`.
-
-### Via Go
-
-Requires Go 1.21 or later:
+### Go
 
 ```bash
 go install github.com/sdlcforge/make-help/cmd/make-help@latest
 ```
 
-Note: When building from source, the binary is placed in `./bin/make-help` instead of `./make-help`.
+### npm
+
+```bash
+npm install -g @sdlcforge/make-help
+```
+
+Or use without installing:
+
+```bash
+npx @sdlcforge/make-help
+```
 
 ### Add Help to Your Project
 
@@ -643,14 +649,19 @@ make-help --remove-help
 
 The `--remove-help` flag only removes generated help files, not the `make-help` binary itself.
 
-**If installed via npm/npx**:
+**If installed via Homebrew**:
 ```bash
-npm uninstall -g @sdlcforge/make-help
+brew uninstall make-help
 ```
 
-**If installed via `go install`**:
+**If installed via Go**:
 ```bash
 rm $(go env GOPATH)/bin/make-help
+```
+
+**If installed via npm**:
+```bash
+npm uninstall -g @sdlcforge/make-help
 ```
 
 **If built locally during development**:

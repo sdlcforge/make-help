@@ -5,13 +5,17 @@
   "bin": {
     "make-help": "bin/make-help"
   },
+  "files": [
+    "cmd/", "internal/", "scripts/"
+  ],
   "scripts": {
     "build": "make build",
     "test": "make test",
     "preversion": "make qa",
     "lint": "make lint",
     "lint:fix": "make lint-fix",
-    "prepack": "make",
+    "prepack": "make qa",
+    "postinstall": "node scripts/install.js",
     "qa": "make qa"
   },
   "keywords": [],
