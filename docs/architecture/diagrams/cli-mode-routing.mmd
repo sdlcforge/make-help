@@ -1,0 +1,31 @@
+%% CLI Mode Routing
+%% Shows how CLI flags determine which handler is invoked
+
+flowchart TD
+    START[Parse CLI Flags] --> VERSION{--version?}
+    VERSION -->|Yes| V_OUT[Print version<br/>and exit]
+    VERSION -->|No| HELP_FLAG{--help?}
+
+    HELP_FLAG -->|Yes| H_OUT[Print usage<br/>and exit]
+    HELP_FLAG -->|No| REMOVE{--remove-help?}
+
+    REMOVE -->|Yes| RM_HANDLER[RemoveService<br/>Clean up help artifacts]
+    REMOVE -->|No| LINT{--lint?}
+
+    LINT -->|Yes| FIX{--fix?}
+    FIX -->|Yes| LINT_FIX[LintService<br/>Check + Apply fixes]
+    FIX -->|No| LINT_ONLY[LintService<br/>Check only]
+
+    LINT -->|No| SHOW{--show-help?}
+
+    SHOW -->|Yes| TARGET{--target set?}
+    TARGET -->|Yes| DETAIL[Render detailed<br/>target help]
+    TARGET -->|No| FULL[Render full<br/>help output]
+
+    SHOW -->|No| STATIC[Generate static<br/>help file<br/>./make/help.mk]
+
+    style START fill:#e3f2fd
+    style STATIC fill:#c8e6c9
+    style RM_HANDLER fill:#ffcdd2
+    style LINT_FIX fill:#fff9c4
+    style LINT_ONLY fill:#fff9c4

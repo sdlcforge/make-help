@@ -1,0 +1,659 @@
+package target
+
+import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/sdlcforge/make-help/internal/model"
+)
+
+func TestGenerateHelpFile_Basic(t *testing.T) {
+	config := &GeneratorConfig{
+		UseColor:    true,
+		Makefiles:   []string{"/path/to/Makefile"},
+		MakefileDir: "/path/to",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+							SourceFile:    "Makefile",
+							LineNumber:    10,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// Check header (new format)
+	if !strings.Contains(result, "# generated-by: make-help") {
+		t.Error("Missing generated-by header")
+	}
+	if !strings.Contains(result, "# command:") {
+		t.Error("Missing command line header")
+	}
+	if !strings.Contains(result, "# DO NOT EDIT") {
+		t.Error("Missing DO NOT EDIT warning")
+	}
+	// Check for date line
+	if !strings.Contains(result, "# date:") {
+		t.Error("Missing date header")
+	}
+
+	// Check variables
+	if !strings.Contains(result, "MAKE_HELP_DIR := $(dir $(lastword $(MAKEFILE_LIST)))") {
+		t.Error("Missing MAKE_HELP_DIR variable")
+	}
+	if !strings.Contains(result, "MAKE_HELP_MAKEFILES :=") {
+		t.Error("Missing MAKE_HELP_MAKEFILES variable")
+	}
+
+	// Check main help target
+	if !strings.Contains(result, ".PHONY: help") {
+		t.Error("help target should be .PHONY")
+	}
+	if !strings.Contains(result, "## Displays help for available targets.") {
+		t.Error("Missing help documentation comment")
+	}
+	if !strings.Contains(result, "help:\n") {
+		t.Error("help target should have no dependencies")
+	}
+
+	// Check for @printf statements (static content)
+	if !strings.Contains(result, "@printf") {
+		t.Error("Should contain @printf statements for static help")
+	}
+
+	// Check help-<target> target
+	if !strings.Contains(result, ".PHONY: help-build") {
+		t.Error("help-build should be .PHONY")
+	}
+	if !strings.Contains(result, "help-build:\n") {
+		t.Error("help-build target should have no dependencies")
+	}
+
+	// Check timestamp warning in help target
+	if !strings.Contains(result, "if [ \"$$f\" -nt \"$(MAKE_HELP_DIR)help.mk\" ]") {
+		t.Error("Missing timestamp check in help target")
+	}
+	if !strings.Contains(result, "Run make update-help to refresh") {
+		t.Error("Missing update-help suggestion in warning")
+	}
+
+	// Check update-help target (replaces auto-regeneration)
+	if !strings.Contains(result, ".PHONY: update-help") {
+		t.Error("Missing update-help target")
+	}
+	if !strings.Contains(result, "@make-help --makefile-path $(MAKE_HELP_DIR)Makefile") {
+		t.Error("Missing make-help command in help-update target")
+	}
+	if !strings.Contains(result, "npx make-help --makefile-path $(MAKE_HELP_DIR)Makefile") {
+		t.Error("Missing npx fallback in help-update target")
+	}
+}
+
+func TestGenerateHelpFile_NoColor(t *testing.T) {
+	config := &GeneratorConfig{
+		UseColor:    false,
+		Makefiles:   []string{"/path/to/Makefile"},
+		MakefileDir: "/path/to",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// Should include --no-color in command line
+	if !strings.Contains(result, "# command: make-help --no-color") {
+		t.Error("Should include --no-color flag in command line")
+	}
+
+	// Should NOT contain ANSI escape codes
+	if strings.Contains(result, "\\033[") {
+		t.Error("Should not contain ANSI color codes when UseColor=false")
+	}
+}
+
+func TestGenerateHelpFile_WithColor(t *testing.T) {
+	config := &GeneratorConfig{
+		UseColor:    true,
+		Makefiles:   []string{"/path/to/Makefile"},
+		MakefileDir: "/path/to",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// Should contain ANSI escape codes (escaped for Makefile)
+	if !strings.Contains(result, "\\033[") {
+		t.Error("Should contain escaped ANSI color codes when UseColor=true")
+	}
+
+	// Should NOT include --no-color in regeneration command
+	if strings.Contains(result, "--no-color") {
+		t.Error("Should not include --no-color flag when UseColor=true")
+	}
+}
+
+func TestGenerateHelpFile_AllOptions(t *testing.T) {
+	config := &GeneratorConfig{
+		UseColor:            true,
+		KeepOrderCategories: true,
+		KeepOrderTargets:    true,
+		CategoryOrder:       []string{"Build", "Test", "Deploy"},
+		DefaultCategory:     "Misc",
+		IncludeTargets:      []string{"lint", "fmt"},
+		IncludeAllPhony:     true,
+		HelpCategory:        "Utilities",
+		Makefiles:           []string{"/path/to/Makefile", "/path/to/make/build.mk"},
+		MakefileDir:         "/path/to",
+		HelpModel: &model.HelpModel{
+			HasCategories: true,
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// Check all flags in regeneration command
+	if !strings.Contains(result, "--keep-order-categories") {
+		t.Error("Missing --keep-order-categories")
+	}
+	if !strings.Contains(result, "--keep-order-targets") {
+		t.Error("Missing --keep-order-targets")
+	}
+	if !strings.Contains(result, "--category-order Build,Test,Deploy") {
+		t.Error("Missing or incorrect --category-order")
+	}
+	if !strings.Contains(result, "--default-category Misc") {
+		t.Error("Missing --default-category")
+	}
+	if !strings.Contains(result, "--include-target lint") {
+		t.Error("Missing --include-target lint")
+	}
+	if !strings.Contains(result, "--include-target fmt") {
+		t.Error("Missing --include-target fmt")
+	}
+	if !strings.Contains(result, "--include-all-phony") {
+		t.Error("Missing --include-all-phony")
+	}
+	if !strings.Contains(result, "--help-category Utilities") {
+		t.Error("Missing --help-category")
+	}
+	// Check category directive is applied to help targets
+	if !strings.Contains(result, "## !category Utilities") {
+		t.Error("Missing category directive for help targets")
+	}
+}
+
+func TestGenerateHelpFile_MultipleTargets(t *testing.T) {
+	config := &GeneratorConfig{
+		UseColor:    false,
+		Makefiles:   []string{"/path/to/Makefile"},
+		MakefileDir: "/path/to",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+						},
+						{
+							Name:          "test",
+							Documentation: []string{"Run tests"},
+						},
+					},
+				},
+				{
+					Name: "Deploy",
+					Targets: []model.Target{
+						{
+							Name:          "deploy",
+							Documentation: []string{"Deploy to production"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// Check all help-<target> targets exist
+	expectedTargets := []string{"build", "test", "deploy"}
+	for _, target := range expectedTargets {
+		phonyDecl := ".PHONY: help-" + target
+		targetDecl := "help-" + target + ":\n"
+
+		if !strings.Contains(result, phonyDecl) {
+			t.Errorf("Missing .PHONY declaration for help-%s", target)
+		}
+		if !strings.Contains(result, targetDecl) {
+			t.Errorf("Missing target declaration for help-%s", target)
+		}
+	}
+}
+
+func TestGenerateHelpFile_MultipleMakefiles(t *testing.T) {
+	config := &GeneratorConfig{
+		UseColor: false,
+		Makefiles: []string{
+			"/path/to/Makefile",
+			"/path/to/make/build.mk",
+			"/path/to/make/test.mk",
+		},
+		MakefileDir: "/path/to",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// Check all Makefiles are in the dependencies
+	if !strings.Contains(result, "$(MAKE_HELP_DIR)Makefile") {
+		t.Error("Missing main Makefile in dependencies")
+	}
+	if !strings.Contains(result, "$(MAKE_HELP_DIR)make/build.mk") {
+		t.Error("Missing make/build.mk in dependencies")
+	}
+	if !strings.Contains(result, "$(MAKE_HELP_DIR)make/test.mk") {
+		t.Error("Missing make/test.mk in dependencies")
+	}
+}
+
+func TestGenerateHelpFile_TargetWithAliases(t *testing.T) {
+	config := &GeneratorConfig{
+		UseColor:    false,
+		Makefiles:   []string{"/path/to/Makefile"},
+		MakefileDir: "/path/to",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Aliases:       []string{"b", "compile"},
+							Documentation: []string{"Build the application"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// The aliases should appear in the help output
+	// (exact format depends on renderer, but they should be present)
+	if !strings.Contains(result, "build") {
+		t.Error("Target name should appear in output")
+	}
+}
+
+func TestGenerateHelpFile_TargetWithVariables(t *testing.T) {
+	config := &GeneratorConfig{
+		UseColor:    false,
+		Makefiles:   []string{"/path/to/Makefile"},
+		MakefileDir: "/path/to",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+							Variables: []model.Variable{
+								{Name: "DEBUG", Description: "Enable debug mode"},
+								{Name: "VERBOSE", Description: "Enable verbose output"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// Variables should appear in detailed help
+	// (format depends on renderer, but variables should be mentioned)
+	if !strings.Contains(result, "help-build") {
+		t.Error("Should have help-build target")
+	}
+}
+
+func TestGenerateHelpFile_ValidMakefile(t *testing.T) {
+	// Skip if make is not available
+	if _, err := exec.LookPath("make"); err != nil {
+		t.Skip("make command not available")
+	}
+
+	tmpDir := t.TempDir()
+
+	config := &GeneratorConfig{
+		UseColor:    false,
+		Makefiles:   []string{filepath.Join(tmpDir, "Makefile")},
+		MakefileDir: tmpDir,
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// Write help.mk to temp directory
+	helpMkPath := filepath.Join(tmpDir, "help.mk")
+	if err := os.WriteFile(helpMkPath, []byte(result), 0644); err != nil {
+		t.Fatalf("Failed to write temp help.mk: %v", err)
+	}
+
+	// Create a minimal Makefile that includes help.mk
+	makefileContent := "include help.mk\n\n.PHONY: build\nbuild:\n\t@echo building\n"
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	if err := os.WriteFile(makefilePath, []byte(makefileContent), 0644); err != nil {
+		t.Fatalf("Failed to write temp Makefile: %v", err)
+	}
+
+	// Run make -n to validate syntax
+	cmd := exec.Command("make", "-n", "-f", makefilePath, "help")
+	cmd.Dir = tmpDir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Errorf("Generated Makefile has syntax errors:\n%s\nError: %v", output, err)
+	}
+}
+
+func TestRelativizeMakefilePaths(t *testing.T) {
+	tests := []struct {
+		name        string
+		makefiles   []string
+		makefileDir string
+		expected    []string
+	}{
+		{
+			name:        "single file in same directory",
+			makefiles:   []string{"/path/to/Makefile"},
+			makefileDir: "/path/to",
+			expected:    []string{"$(MAKE_HELP_DIR)Makefile"},
+		},
+		{
+			name:        "multiple files in subdirectory",
+			makefiles:   []string{"/path/to/Makefile", "/path/to/make/build.mk", "/path/to/make/test.mk"},
+			makefileDir: "/path/to",
+			expected:    []string{"$(MAKE_HELP_DIR)Makefile", "$(MAKE_HELP_DIR)make/build.mk", "$(MAKE_HELP_DIR)make/test.mk"},
+		},
+		{
+			name:        "files with different separators",
+			makefiles:   []string{"/path/to/Makefile", "/path/to/scripts/deploy.mk"},
+			makefileDir: "/path/to",
+			expected:    []string{"$(MAKE_HELP_DIR)Makefile", "$(MAKE_HELP_DIR)scripts/deploy.mk"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := relativizeMakefilePaths(tt.makefiles, tt.makefileDir)
+			if len(result) != len(tt.expected) {
+				t.Errorf("Expected %d paths, got %d", len(tt.expected), len(result))
+				return
+			}
+			for i, expected := range tt.expected {
+				if result[i] != expected {
+					t.Errorf("Path %d: expected %q, got %q", i, expected, result[i])
+				}
+			}
+		})
+	}
+}
+
+func TestBuildRegenerateFlags(t *testing.T) {
+	tests := []struct {
+		name     string
+		config   *GeneratorConfig
+		expected string
+	}{
+		{
+			name:     "empty config with color",
+			config:   &GeneratorConfig{UseColor: true},
+			expected: "",
+		},
+		{
+			name:     "no color",
+			config:   &GeneratorConfig{UseColor: false},
+			expected: " --no-color",
+		},
+		{
+			name: "keep order categories",
+			config: &GeneratorConfig{
+				UseColor:            true,
+				KeepOrderCategories: true,
+			},
+			expected: " --keep-order-categories",
+		},
+		{
+			name: "keep order targets",
+			config: &GeneratorConfig{
+				UseColor:         true,
+				KeepOrderTargets: true,
+			},
+			expected: " --keep-order-targets",
+		},
+		{
+			name: "category order",
+			config: &GeneratorConfig{
+				UseColor:      true,
+				CategoryOrder: []string{"Build", "Test"},
+			},
+			expected: " --category-order Build,Test",
+		},
+		{
+			name: "default category",
+			config: &GeneratorConfig{
+				UseColor:        true,
+				DefaultCategory: "Misc",
+			},
+			expected: " --default-category Misc",
+		},
+		{
+			name: "include targets",
+			config: &GeneratorConfig{
+				UseColor:       true,
+				IncludeTargets: []string{"lint", "fmt"},
+			},
+			expected: " --include-target lint --include-target fmt",
+		},
+		{
+			name: "include all phony",
+			config: &GeneratorConfig{
+				UseColor:        true,
+				IncludeAllPhony: true,
+			},
+			expected: " --include-all-phony",
+		},
+		{
+			name: "help category non-default",
+			config: &GeneratorConfig{
+				UseColor:     true,
+				HelpCategory: "Utilities",
+			},
+			expected: " --help-category Utilities",
+		},
+		{
+			name: "help category default value",
+			config: &GeneratorConfig{
+				UseColor:     true,
+				HelpCategory: "Help",
+			},
+			expected: "", // default "Help" should not be in flags
+		},
+		{
+			name: "multiple options",
+			config: &GeneratorConfig{
+				UseColor:            false,
+				KeepOrderCategories: true,
+				DefaultCategory:     "Tasks",
+				IncludeAllPhony:     true,
+			},
+			expected: " --no-color --keep-order-categories --default-category Tasks --include-all-phony",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := buildRegenerateFlags(tt.config)
+			if result != tt.expected {
+				t.Errorf("buildRegenerateFlags() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestGenerateRegenerationTarget(t *testing.T) {
+	config := &GeneratorConfig{
+		UseColor:    false,
+		Makefiles:   []string{"/path/to/Makefile"},
+		MakefileDir: "/path/to",
+		HelpModel:   &model.HelpModel{},
+	}
+
+	result := generateRegenerationTarget(config)
+
+	// Check structure - now generates update-help target instead of file rule
+	if !strings.Contains(result, "# Explicit target to regenerate help.mk") {
+		t.Error("Missing comment")
+	}
+	if !strings.Contains(result, ".PHONY: update-help") {
+		t.Error("Missing update-help phony declaration")
+	}
+	if !strings.Contains(result, "update-help:\n") {
+		t.Error("Missing update-help target")
+	}
+	if !strings.Contains(result, "@make-help --makefile-path $(MAKE_HELP_DIR)Makefile --no-color") {
+		t.Error("Missing make-help command with --no-color flag")
+	}
+	if !strings.Contains(result, "npx make-help --makefile-path $(MAKE_HELP_DIR)Makefile --no-color") {
+		t.Error("Missing npx fallback with --no-color flag")
+	}
+	if !strings.Contains(result, "echo \"make-help not found") {
+		t.Error("Missing error message")
+	}
+}
+
+func TestGenerateRegenerationTarget_WithFlags(t *testing.T) {
+	config := &GeneratorConfig{
+		UseColor:            true, // no --no-color flag
+		KeepOrderCategories: true,
+		DefaultCategory:     "Other",
+		Makefiles:           []string{"/path/to/Makefile"},
+		MakefileDir:         "/path/to",
+		HelpModel:           &model.HelpModel{},
+	}
+
+	result := generateRegenerationTarget(config)
+
+	// Should include the config flags
+	if !strings.Contains(result, "--keep-order-categories") {
+		t.Error("Missing --keep-order-categories flag")
+	}
+	if !strings.Contains(result, "--default-category Other") {
+		t.Error("Missing --default-category flag")
+	}
+	// Should NOT include --no-color since UseColor is true
+	if strings.Contains(result, "--no-color") {
+		t.Error("Should not have --no-color when UseColor is true")
+	}
+}

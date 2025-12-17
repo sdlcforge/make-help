@@ -1,0 +1,11 @@
+Usage: make [<target>...] [<ENV_VAR>=<value>...]
+
+Targets:
+
+Build:
+  - build: Build the project
+  - compile: Compile sources
+
+Test:
+  - integration: Run integration tests
+  - test: Run unit tests

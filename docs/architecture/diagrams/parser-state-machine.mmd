@@ -1,0 +1,35 @@
+%% Parser State Machine
+%% Shows how the scanner maintains state while processing directives
+
+stateDiagram-v2
+    [*] --> Idle: Start scanning
+
+    Idle --> Idle: Non-doc line
+    Idle --> CollectingDocs: ## directive
+
+    CollectingDocs --> CollectingDocs: ## doc line
+    CollectingDocs --> CollectingDocs: ## !var
+    CollectingDocs --> CollectingDocs: ## !alias
+    CollectingDocs --> CategorySet: ## !category
+    CollectingDocs --> FileDoc: ## !file
+    CollectingDocs --> Idle: target line
+
+    CategorySet --> CollectingDocs: ## doc line
+    CategorySet --> CategorySet: ## !category
+    CategorySet --> Idle: target line
+
+    FileDoc --> Idle: content line
+    FileDoc --> CollectingDocs: ## doc line
+
+    note right of CollectingDocs
+        Pending state includes
+        pendingDocs, pendingVars,
+        pendingAliases, and
+        currentCategory (sticky)
+    end note
+
+    note right of CategorySet
+        Category is STICKY and
+        applies to all subsequent
+        targets until changed
+    end note

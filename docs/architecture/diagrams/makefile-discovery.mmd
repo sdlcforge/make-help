@@ -1,0 +1,41 @@
+%% Makefile Discovery Algorithm
+%% Shows the sequence of operations for discovering Makefiles and targets
+
+sequenceDiagram
+    participant CLI as CLI
+    participant DS as Discovery Service
+    participant FS as File System
+    participant Make as make command
+
+    CLI->>DS: DiscoverMakefiles(path)
+
+    rect rgb(240, 248, 255)
+        Note over DS,FS: Step 1: Create temp Makefile
+        DS->>FS: Create temp file with<br/>_list_makefiles target
+        FS-->>DS: temp path
+    end
+
+    rect rgb(255, 248, 240)
+        Note over DS,Make: Step 2: Execute make
+        DS->>Make: make -f temp -f Makefile<br/>_list_makefiles
+        Make-->>DS: MAKEFILE_LIST output
+        DS->>FS: Delete temp file
+    end
+
+    rect rgb(240, 255, 240)
+        Note over DS: Step 3: Parse output
+        DS->>DS: Parse file paths<br/>Filter temp file<br/>Resolve to absolute
+    end
+
+    DS-->>CLI: []string file paths
+
+    CLI->>DS: DiscoverTargets(path)
+
+    rect rgb(255, 245, 238)
+        Note over DS,Make: Parse make database
+        DS->>Make: make -p -f Makefile<br/>(with timeout)
+        Make-->>DS: Database output
+        DS->>DS: Extract targets<br/>Parse .PHONY<br/>Parse dependencies
+    end
+
+    DS-->>CLI: DiscoverTargetsResult

@@ -1,0 +1,13 @@
+/.claude/settings.local.json
+/.vscode
+/.yalc
+/dist
+/node_modules
+/qa
+/test-staging
+/yalc.lock
+/worktrees
+/*.log
+/*.pid
+/bin/
+

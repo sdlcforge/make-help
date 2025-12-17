@@ -1,0 +1,21 @@
+Usage: make [<target>...] [<ENV_VAR>=<value>...]
+
+Targets:
+
+Build:
+  - build b: Build the entire project.
+    Vars: CC C compiler to use, CFLAGS Compiler flags
+  - compile c: Compile source files only
+
+Deploy:
+  - deploy: Deploy to environment
+    Vars: ENV Target environment (dev, staging, prod)
+
+Test:
+  - integration: Run integration tests
+  - test t: Run all tests.
+    Vars: TEST_FILTER Filter for test names
+
+Utility:
+  - clean: Clean build artifacts
+  - help h: Show this help
