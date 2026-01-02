@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/sdlcforge/make-help/internal/richtext"
 	"testing"
 
 	"github.com/sdlcforge/make-help/internal/errors"
@@ -205,18 +206,18 @@ func TestHasCategory(t *testing.T) {
 func TestGetTarget(t *testing.T) {
 	model := &HelpModel{
 		Categories: []Category{
-			{Name: "Build", Targets: []Target{{Name: "build", Summary: "Build summary"}}},
-			{Name: "Test", Targets: []Target{{Name: "test", Summary: "Test summary"}}},
+			{Name: "Build", Targets: []Target{{Name: "build", Summary: richtext.FromPlainText("Build summary")}}},
+			{Name: "Test", Targets: []Target{{Name: "test", Summary: richtext.FromPlainText("Test summary")}}},
 		},
 	}
 
 	build := GetTarget(model, "build")
 	require.NotNil(t, build)
-	assert.Equal(t, "Build summary", build.Summary)
+	assert.Equal(t, "Build summary", build.Summary.PlainText())
 
 	test := GetTarget(model, "test")
 	require.NotNil(t, test)
-	assert.Equal(t, "Test summary", test.Summary)
+	assert.Equal(t, "Test summary", test.Summary.PlainText())
 
 	missing := GetTarget(model, "missing")
 	assert.Nil(t, missing)

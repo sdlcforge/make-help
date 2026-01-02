@@ -1,6 +1,7 @@
 package format_test
 
 import (
+	"github.com/sdlcforge/make-help/internal/richtext"
 	"fmt"
 
 	"github.com/sdlcforge/make-help/internal/format"
@@ -32,7 +33,7 @@ func ExampleRenderer() {
 						Name:          "build",
 						Aliases:       []string{"b"},
 						Documentation: []string{"Build the project."},
-						Summary:       "Build the project.",
+						Summary: richtext.FromPlainText("Build the project."),
 						Variables: []model.Variable{
 							{Name: "GOOS", Description: "Target OS"},
 						},

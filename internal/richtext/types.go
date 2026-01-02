@@ -23,6 +23,17 @@ type Segment struct {
 // RichText represents formatted text as a sequence of segments
 type RichText []Segment
 
+// FromPlainText creates RichText from a plain string (no formatting).
+// This is a convenience function for tests and simple cases.
+func FromPlainText(text string) RichText {
+	if text == "" {
+		return nil
+	}
+	return RichText{
+		{Type: SegmentPlain, Content: text},
+	}
+}
+
 // PlainText returns the text with all formatting stripped
 func (rt RichText) PlainText() string {
 	var buf strings.Builder

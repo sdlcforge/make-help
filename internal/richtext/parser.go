@@ -2,6 +2,7 @@ package richtext
 
 import (
 	"regexp"
+	"sort"
 )
 
 const (
@@ -292,14 +293,9 @@ func (p *Parser) buildSegments(text string, matches []match) RichText {
 	return segments
 }
 
-// sortMatches sorts matches by start position (bubble sort for small lists)
+// sortMatches sorts matches by start position using stdlib sort
 func (p *Parser) sortMatches(matches []match) {
-	n := len(matches)
-	for i := 0; i < n-1; i++ {
-		for j := 0; j < n-i-1; j++ {
-			if matches[j].start > matches[j+1].start {
-				matches[j], matches[j+1] = matches[j+1], matches[j]
-			}
-		}
-	}
+	sort.Slice(matches, func(i, j int) bool {
+		return matches[i].start < matches[j].start
+	})
 }

@@ -261,8 +261,9 @@ func TestExtract(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := extractor.Extract(tt.docs)
-			if result != tt.expected {
-				t.Errorf("Extract() = %q, want %q", result, tt.expected)
+			resultText := result.PlainText()
+			if resultText != tt.expected {
+				t.Errorf("Extract().PlainText() = %q, want %q", resultText, tt.expected)
 			}
 		})
 	}

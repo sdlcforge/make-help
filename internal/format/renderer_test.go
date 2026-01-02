@@ -1,6 +1,7 @@
 package format
 
 import (
+	"github.com/sdlcforge/make-help/internal/richtext"
 	"strings"
 	"testing"
 
@@ -110,12 +111,12 @@ func TestRender_BasicTargetsNoCategories(t *testing.T) {
 					{
 						Name:          "build",
 						Documentation: []string{"Build the project. This compiles all source files."},
-						Summary:       "Build the project.",
+						Summary: richtext.FromPlainText("Build the project."),
 					},
 					{
 						Name:          "test",
 						Documentation: []string{"Run all tests."},
-						Summary:       "Run all tests.",
+						Summary: richtext.FromPlainText("Run all tests."),
 					},
 				},
 			},
@@ -145,12 +146,12 @@ func TestRender_WithCategories(t *testing.T) {
 					{
 						Name:          "build",
 						Documentation: []string{"Build the project."},
-						Summary:       "Build the project.",
+						Summary: richtext.FromPlainText("Build the project."),
 					},
 					{
 						Name:          "clean",
 						Documentation: []string{"Clean build artifacts."},
-						Summary:       "Clean build artifacts.",
+						Summary: richtext.FromPlainText("Clean build artifacts."),
 					},
 				},
 			},
@@ -160,7 +161,7 @@ func TestRender_WithCategories(t *testing.T) {
 					{
 						Name:          "test",
 						Documentation: []string{"Run all tests."},
-						Summary:       "Run all tests.",
+						Summary: richtext.FromPlainText("Run all tests."),
 					},
 				},
 			},
@@ -190,7 +191,7 @@ func TestRender_TargetWithAliases(t *testing.T) {
 						Name:          "build",
 						Aliases:       []string{"b", "compile"},
 						Documentation: []string{"Build the project."},
-						Summary:       "Build the project.",
+						Summary: richtext.FromPlainText("Build the project."),
 					},
 				},
 			},
@@ -215,7 +216,7 @@ func TestRender_TargetWithVariables(t *testing.T) {
 					{
 						Name:          "serve",
 						Documentation: []string{"Start the development server."},
-						Summary:       "Start the development server.",
+						Summary: richtext.FromPlainText("Start the development server."),
 						Variables: []model.Variable{
 							{Name: "PORT", Description: "Server port"},
 							{Name: "DEBUG", Description: "Enable debug mode"},
@@ -246,7 +247,7 @@ func TestRender_TargetWithAliasesAndVariables(t *testing.T) {
 						Name:          "serve",
 						Aliases:       []string{"s", "start"},
 						Documentation: []string{"Start the development server."},
-						Summary:       "Start the development server.",
+						Summary: richtext.FromPlainText("Start the development server."),
 						Variables: []model.Variable{
 							{Name: "PORT"},
 						},
@@ -308,7 +309,7 @@ func TestRender_WithColorsEnabled(t *testing.T) {
 						Name:          "build",
 						Aliases:       []string{"b"},
 						Documentation: []string{"Build the project."},
-						Summary:       "Build the project.",
+						Summary: richtext.FromPlainText("Build the project."),
 						Variables: []model.Variable{
 							{Name: "DEBUG"},
 						},
@@ -378,7 +379,7 @@ func TestRender_ComplexHelpModel(t *testing.T) {
 						Name:          "build",
 						Aliases:       []string{"b"},
 						Documentation: []string{"Build the project. Compiles all source files."},
-						Summary:       "Build the project.",
+						Summary: richtext.FromPlainText("Build the project."),
 						Variables: []model.Variable{
 							{Name: "GOOS", Description: "Target OS"},
 							{Name: "GOARCH", Description: "Target architecture"},
@@ -387,7 +388,7 @@ func TestRender_ComplexHelpModel(t *testing.T) {
 					{
 						Name:          "clean",
 						Documentation: []string{"Remove build artifacts."},
-						Summary:       "Remove build artifacts.",
+						Summary: richtext.FromPlainText("Remove build artifacts."),
 					},
 				},
 			},
@@ -398,7 +399,7 @@ func TestRender_ComplexHelpModel(t *testing.T) {
 						Name:          "test",
 						Aliases:       []string{"t"},
 						Documentation: []string{"Run all tests. Uses go test with verbose output."},
-						Summary:       "Run all tests.",
+						Summary: richtext.FromPlainText("Run all tests."),
 					},
 				},
 			},
@@ -536,7 +537,7 @@ func TestRender_SummaryExtraction(t *testing.T) {
 						Documentation: []string{
 							"Run all tests. This includes unit tests, integration tests, and end-to-end tests.",
 						},
-						Summary: "Run all tests.", // Summary is pre-computed by builder
+						Summary: richtext.FromPlainText("Run all tests."), // Summary is pre-computed by builder
 					},
 				},
 			},
@@ -565,7 +566,7 @@ func TestRender_MarkdownInSummary(t *testing.T) {
 						Documentation: []string{
 							"Build the **project** with `make`. See [docs](url) for details.",
 						},
-						Summary: "Build the project with make.", // Markdown stripped by builder
+						Summary: richtext.FromPlainText("Build the project with make."), // Markdown stripped by builder
 					},
 				},
 			},
@@ -712,12 +713,12 @@ func TestRenderForMakefile_BasicTargets(t *testing.T) {
 					{
 						Name:          "build",
 						Documentation: []string{"Build the project."},
-						Summary:       "Build the project.",
+						Summary: richtext.FromPlainText("Build the project."),
 					},
 					{
 						Name:          "test",
 						Documentation: []string{"Run all tests."},
-						Summary:       "Run all tests.",
+						Summary: richtext.FromPlainText("Run all tests."),
 					},
 				},
 			},
@@ -743,7 +744,7 @@ func TestRenderForMakefile_WithCategories(t *testing.T) {
 					{
 						Name:          "build",
 						Documentation: []string{"Build the project."},
-						Summary:       "Build the project.",
+						Summary: richtext.FromPlainText("Build the project."),
 					},
 				},
 			},
@@ -753,7 +754,7 @@ func TestRenderForMakefile_WithCategories(t *testing.T) {
 					{
 						Name:          "test",
 						Documentation: []string{"Run all tests."},
-						Summary:       "Run all tests.",
+						Summary: richtext.FromPlainText("Run all tests."),
 					},
 				},
 			},
@@ -853,7 +854,7 @@ func TestRenderForMakefile_WithAliasesAndVariables(t *testing.T) {
 						Name:          "serve",
 						Aliases:       []string{"s", "start"},
 						Documentation: []string{"Start the development server."},
-						Summary:       "Start the development server.",
+						Summary: richtext.FromPlainText("Start the development server."),
 						Variables: []model.Variable{
 							{Name: "PORT"},
 							{Name: "DEBUG"},
@@ -881,7 +882,7 @@ func TestRenderForMakefile_SpecialCharactersEscaped(t *testing.T) {
 					{
 						Name:          "deploy",
 						Documentation: []string{`Use $VAR and "quotes" in command.`},
-						Summary:       `Use $VAR and "quotes" in command.`,
+						Summary: richtext.FromPlainText(`Use $VAR and "quotes" in command.`),
 					},
 				},
 			},
