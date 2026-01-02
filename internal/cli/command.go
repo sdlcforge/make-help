@@ -30,7 +30,7 @@ func setupFlags(cmd *cobra.Command, config *Config) {
 	cmd.Flags().BoolVar(&config.Fix,
 		"fix", false, "Automatically fix auto-fixable lint issues (requires --lint)")
 	cmd.Flags().StringVar(&config.Target,
-		"target", "", "Show detailed help for a specific target (requires --show-help)")
+		"target", "", "Show detailed help for a specific target (requires --output -)")
 
 	// Input flags
 	cmd.PersistentFlags().StringVar(&config.MakefilePath,
@@ -39,6 +39,10 @@ func setupFlags(cmd *cobra.Command, config *Config) {
 		"help-file-rel-path", "", "Relative path for generated help target file (e.g., help.mk or make/help.mk)")
 
 	// Output/formatting flags
+	cmd.Flags().StringVar(&config.Format,
+		"format", "make", "Output format (make, text, html, markdown)")
+	cmd.Flags().StringVar(&config.Output,
+		"output", "", "Output destination (file path or - for stdout). Default depends on format.")
 	// Note: Color flags are bound to local variables, not config directly,
 	// because they need special processing (mutually exclusive)
 	cmd.PersistentFlags().BoolVar(&forceColor,

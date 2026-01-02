@@ -98,6 +98,15 @@ type Config struct {
 	// Only valid with --lint.
 	Fix bool
 
+	// Format specifies the output format type.
+	// Valid values: "make", "text", "html", "markdown" (and aliases mk, txt, md)
+	Format string
+
+	// Output specifies the output destination.
+	// "-" means stdout, otherwise it's a file path.
+	// Output is empty by default; resolved to format-specific default in PreRunE
+	Output string
+
 	// Derived state (computed at runtime)
 
 	// UseColor is the resolved color setting based on ColorMode and terminal detection.
@@ -114,5 +123,6 @@ func NewConfig() *Config {
 		ColorMode:     ColorAuto,
 		CategoryOrder: []string{},
 		HelpCategory:  "Help",
+		Format:        "make",
 	}
 }

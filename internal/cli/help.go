@@ -117,15 +117,19 @@ func runHelp(config *Config) error {
 		}
 	}
 
-	// Step 7: Render the output
-	renderer := format.NewRenderer(config.UseColor)
-	output, err := renderer.Render(helpModel)
+	// Step 7: Create formatter and render the output
+	formatterConfig := &format.FormatterConfig{
+		UseColor: config.UseColor,
+	}
+	formatter, err := format.NewFormatter(config.Format, formatterConfig)
 	if err != nil {
-		return fmt.Errorf("failed to render help: %w", err)
+		return fmt.Errorf("failed to create formatter: %w", err)
 	}
 
 	// Step 8: Write to stdout
-	fmt.Print(output)
+	if err := formatter.RenderHelp(helpModel, os.Stdout); err != nil {
+		return fmt.Errorf("failed to render help: %w", err)
+	}
 
 	return nil
 }
@@ -214,13 +218,20 @@ func runDetailedHelp(config *Config) error {
 		}
 	}
 
-	// Step 7: Render the output
-	renderer := format.NewRenderer(config.UseColor)
+	// Step 7: Create formatter and render the output
+	formatterConfig := &format.FormatterConfig{
+		UseColor: config.UseColor,
+	}
+	formatter, err := format.NewFormatter(config.Format, formatterConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create formatter: %w", err)
+	}
 
 	if foundTarget != nil && len(foundTarget.Documentation) > 0 {
 		// Target has documentation - use detailed renderer
-		output := renderer.RenderDetailedTarget(foundTarget)
-		fmt.Print(output)
+		if err := formatter.RenderDetailedTarget(foundTarget, os.Stdout); err != nil {
+			return fmt.Errorf("failed to render detailed target: %w", err)
+		}
 	} else {
 		// Target exists but has no documentation - show basic info
 		// If we found it in the model, use its source info; otherwise leave empty
@@ -230,8 +241,9 @@ func runDetailedHelp(config *Config) error {
 			sourceFile = foundTarget.SourceFile
 			lineNumber = foundTarget.LineNumber
 		}
-		output := renderer.RenderBasicTarget(config.Target, sourceFile, lineNumber)
-		fmt.Print(output)
+		if err := formatter.RenderBasicTarget(config.Target, sourceFile, lineNumber, os.Stdout); err != nil {
+			return fmt.Errorf("failed to render basic target: %w", err)
+		}
 	}
 
 	return nil

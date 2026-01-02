@@ -34,8 +34,9 @@ func NewRootCmd() *cobra.Command {
 		Long: `make-help generates formatted help output from Makefile documentation.
 
 Default behavior generates help file. Use flags for other operations:
-  --show-help           Display help dynamically
-  --target <name>       Show detailed help for a target (requires --show-help)
+  --format <type>       Output format (make, text; default: make)
+  --output <path>       Output destination (file path or - for stdout)
+  --target <name>       Show detailed help for a target (requires --output -)
   --remove-help         Remove help targets
 
 Documentation directives (in ## comments):
@@ -54,27 +55,57 @@ Documentation directives (in ## comments):
 			// Capture the raw command line exactly as invoked
 			config.CommandLine = strings.Join(os.Args, " ")
 
-			// --remove-help only allows --verbose and --makefile-path (check this first)
+			// Normalize and validate format
+			validFormats := map[string]string{
+				"make": "make", "mk": "make",
+				"text": "text", "txt": "text",
+				"html": "html",
+				"markdown": "markdown", "md": "markdown",
+			}
+			normalizedFormat, ok := validFormats[config.Format]
+			if !ok {
+				return fmt.Errorf("invalid format: %s (valid: make, text, html, markdown)", config.Format)
+			}
+			config.Format = normalizedFormat
+
+			// Validate supported formats for current modes
+			if config.Format == "html" || config.Format == "markdown" {
+				return fmt.Errorf("--format %s is not yet implemented (supported: make, text)", config.Format)
+			}
+
+			// Resolve output destination
+			if config.Output == "" {
+				// Use format-specific default
+				config.Output = getDefaultOutput(config.Format)
+			}
+
+			// Handle deprecated --show-help
+			if config.ShowHelp {
+				fmt.Fprintln(os.Stderr, "Warning: --show-help is deprecated. Use --format text --output - instead.")
+				config.Output = "-"
+			}
+
+			// --remove-help only allows --verbose and --makefile-path (check this first, before other validations)
 			if config.RemoveHelpTarget {
 				if err := validateRemoveHelpFlags(config); err != nil {
 					return err
 				}
 			}
 
-			// --target only valid with --show-help
-			if config.Target != "" && !config.ShowHelp {
-				return fmt.Errorf("--target can only be used with --show-help")
+			// --target requires --output - (stdout mode)
+			if config.Target != "" && config.Output != "-" {
+				return fmt.Errorf("--target requires --output - (stdout mode)")
 			}
 
-			// --dry-run cannot be used with --show-help
-			if config.DryRun && config.ShowHelp {
-				return fmt.Errorf("--dry-run cannot be used with --show-help")
+			// --dry-run cannot be used with stdout mode
+			if config.DryRun && config.Output == "-" {
+				return fmt.Errorf("--dry-run cannot be used with --output -")
 			}
 
 			// --lint validations
 			if config.Lint {
-				if config.ShowHelp {
-					return fmt.Errorf("--lint cannot be used with --show-help")
+				if config.Output == "-" {
+					return fmt.Errorf("--lint cannot be used with --output -")
 				}
 				if config.RemoveHelpTarget {
 					return fmt.Errorf("--lint cannot be used with --remove-help")
@@ -103,15 +134,16 @@ Documentation directives (in ## comments):
 			// Dispatch to appropriate handler
 			if config.Lint {
 				return runLint(config)
-			} else if config.ShowHelp {
-				if config.Target != "" {
-					return runDetailedHelp(config)
-				}
-				return runHelp(config)
 			} else if config.RemoveHelpTarget {
 				return runRemoveHelpTarget(config)
+			} else if config.Target != "" {
+				// Detailed target help (requires stdout mode)
+				return runDetailedHelp(config)
+			} else if config.Output == "-" {
+				// Stdout mode (replaces --show-help)
+				return runHelp(config)
 			} else {
-				// Default behavior: generate help file
+				// File generation mode
 				return runCreateHelpTarget(config)
 			}
 		},
@@ -131,6 +163,8 @@ Documentation directives (in ## comments):
 	annotateFlag(rootCmd, "makefile-path", inputGroupLabel)
 	annotateFlag(rootCmd, "help-file-rel-path", inputGroupLabel)
 
+	annotateFlag(rootCmd, "format", outputGroupLabel)
+	annotateFlag(rootCmd, "output", outputGroupLabel)
 	annotateFlag(rootCmd, "color", outputGroupLabel)
 	annotateFlag(rootCmd, "no-color", outputGroupLabel)
 	annotateFlag(rootCmd, "include-target", outputGroupLabel)
@@ -171,6 +205,8 @@ func validateRemoveHelpFlags(config *Config) error {
 		{config.KeepOrderFiles, "--keep-order-files"},
 		{len(config.CategoryOrder) > 0, "--category-order"},
 		{config.DefaultCategory != "", "--default-category"},
+		{config.Format != "make", "--format"},
+		{config.Output != "" && config.Output != getDefaultOutput("make"), "--output"},
 	}
 
 	for _, flag := range incompatibleFlags {
@@ -297,6 +333,22 @@ func flagGroupsFunc(cmd *cobra.Command) string {
 	}
 
 	return strings.TrimSuffix(sb.String(), "\n")
+}
+
+// getDefaultOutput returns the default output path for the specified format.
+func getDefaultOutput(format string) string {
+	switch format {
+	case "make":
+		return "./make/help.mk"
+	case "text":
+		return "-" // stdout by default for text
+	case "html":
+		return "./make-help.html"
+	case "markdown":
+		return "./make-help.md"
+	default:
+		return "-"
+	}
 }
 
 // formatFlagUsage formats a single flag for display in the help output.
