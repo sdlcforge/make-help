@@ -23,6 +23,7 @@ func TestRunDetailedHelp_DocumentedTarget(t *testing.T) {
 		MakefilePath: absPath,
 		Target:       "build",
 		UseColor:     false,
+		Format:       "text",
 	}
 
 	err = runDetailedHelp(config)
@@ -40,6 +41,7 @@ func TestRunDetailedHelp_UndocumentedTarget(t *testing.T) {
 		MakefilePath: absPath,
 		Target:       "undocumented",
 		UseColor:     false,
+		Format:       "text",
 	}
 
 	err = runDetailedHelp(config)
@@ -85,6 +87,7 @@ func TestRunDetailedHelp_WithColor(t *testing.T) {
 		MakefilePath: absPath,
 		Target:       "build",
 		UseColor:     true, // Enable colors
+		Format:       "text",
 	}
 
 	err = runDetailedHelp(config)

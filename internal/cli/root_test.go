@@ -896,13 +896,13 @@ func TestDryRunFlagValidation(t *testing.T) {
 			name:           "dry-run with show-help",
 			args:           []string{"--dry-run", "--show-help"},
 			expectError:    true,
-			expectedErrMsg: "--dry-run cannot be used with --show-help",
+			expectedErrMsg: "--dry-run cannot be used with --output -",
 		},
 		{
 			name:           "dry-run with show-help and target flag",
 			args:           []string{"--dry-run", "--show-help", "--target", "build"},
 			expectError:    true,
-			expectedErrMsg: "--dry-run cannot be used with --show-help",
+			expectedErrMsg: "--dry-run cannot be used with --output -",
 		},
 		{
 			name:           "dry-run with default mode (generation) - should work",
@@ -995,7 +995,7 @@ func TestTargetRequiresShowHelp(t *testing.T) {
 			name:           "target without show-help",
 			args:           []string{"--target", "build"},
 			expectError:    true,
-			expectedErrMsg: "--target can only be used with --show-help",
+			expectedErrMsg: "--target requires --output - (stdout mode)",
 		},
 		{
 			name:           "target with show-help",
