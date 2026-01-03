@@ -378,3 +378,125 @@ build:
 	assert.True(t, containsStartMarker, "Should contain start marker for file content")
 	assert.True(t, containsEndMarker, "Should contain end marker")
 }
+
+func TestFilterOutHelpFiles(t *testing.T) {
+	tests := []struct {
+		name      string
+		makefiles []string
+		helpFiles []string
+		want      []string
+	}{
+		{
+			name: "filter single help file",
+			makefiles: []string{
+				"/path/to/Makefile",
+				"/path/to/make/help.mk",
+				"/path/to/make/build.mk",
+			},
+			helpFiles: []string{"/path/to/make/help.mk"},
+			want: []string{
+				"/path/to/Makefile",
+				"/path/to/make/build.mk",
+			},
+		},
+		{
+			name: "filter multiple help files",
+			makefiles: []string{
+				"/path/to/Makefile",
+				"/path/to/make/help.mk",
+				"/path/to/make/old-help.mk",
+				"/path/to/make/build.mk",
+			},
+			helpFiles: []string{"/path/to/make/help.mk", "/path/to/make/old-help.mk"},
+			want: []string{
+				"/path/to/Makefile",
+				"/path/to/make/build.mk",
+			},
+		},
+		{
+			name: "no help files to filter",
+			makefiles: []string{
+				"/path/to/Makefile",
+				"/path/to/make/build.mk",
+			},
+			helpFiles: []string{},
+			want: []string{
+				"/path/to/Makefile",
+				"/path/to/make/build.mk",
+			},
+		},
+		{
+			name: "empty string in help files",
+			makefiles: []string{
+				"/path/to/Makefile",
+				"/path/to/make/help.mk",
+				"/path/to/make/build.mk",
+			},
+			helpFiles: []string{"", "/path/to/make/help.mk"},
+			want: []string{
+				"/path/to/Makefile",
+				"/path/to/make/build.mk",
+			},
+		},
+		{
+			name: "path normalization",
+			makefiles: []string{
+				"/path/to/Makefile",
+				"/path/to/make/help.mk",
+				"/path/to/make/build.mk",
+			},
+			helpFiles: []string{"/path/to/make/../make/help.mk"},
+			want: []string{
+				"/path/to/Makefile",
+				"/path/to/make/build.mk",
+			},
+		},
+		{
+			name: "duplicate help files",
+			makefiles: []string{
+				"/path/to/Makefile",
+				"/path/to/make/help.mk",
+				"/path/to/make/build.mk",
+			},
+			helpFiles: []string{"/path/to/make/help.mk", "/path/to/make/help.mk"},
+			want: []string{
+				"/path/to/Makefile",
+				"/path/to/make/build.mk",
+			},
+		},
+		{
+			name:      "empty makefiles list",
+			makefiles: []string{},
+			helpFiles: []string{"/path/to/make/help.mk"},
+			want:      []string{},
+		},
+		{
+			name: "help file not in makefiles list",
+			makefiles: []string{
+				"/path/to/Makefile",
+				"/path/to/make/build.mk",
+			},
+			helpFiles: []string{"/path/to/make/help.mk"},
+			want: []string{
+				"/path/to/Makefile",
+				"/path/to/make/build.mk",
+			},
+		},
+		{
+			name: "all makefiles are help files",
+			makefiles: []string{
+				"/path/to/make/help.mk",
+				"/path/to/make/old-help.mk",
+			},
+			helpFiles: []string{"/path/to/make/help.mk", "/path/to/make/old-help.mk"},
+			want:      []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := filterOutHelpFiles(tt.makefiles, tt.helpFiles...)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
