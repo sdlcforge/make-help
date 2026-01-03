@@ -44,7 +44,7 @@ type FormatterConfig struct {
 
 // NewFormatter creates a formatter for the specified format type.
 // This is the factory function that replaces direct renderer construction.
-// Supported format types: "make", "mk", "text", "txt", "html", "markdown", "md"
+// Supported format types: "make", "mk", "text", "txt", "html", "markdown", "md", "json"
 func NewFormatter(formatType string, config *FormatterConfig) (Formatter, error) {
 	switch formatType {
 	case "make", "mk":
@@ -55,7 +55,9 @@ func NewFormatter(formatType string, config *FormatterConfig) (Formatter, error)
 		return NewHTMLFormatter(config), nil
 	case "markdown", "md":
 		return NewMarkdownFormatter(config), nil
+	case "json":
+		return NewJSONFormatter(config), nil
 	default:
-		return nil, fmt.Errorf("unknown format type: %s (supported: make, text, html, markdown)", formatType)
+		return nil, fmt.Errorf("unknown format type: %s (supported: make, text, html, markdown, json)", formatType)
 	}
 }

@@ -57,6 +57,12 @@ func TestNewFormatter(t *testing.T) {
 			wantErr:    false,
 		},
 		{
+			name:       "json format",
+			formatType: "json",
+			wantType:   "*format.JSONFormatter",
+			wantErr:    false,
+		},
+		{
 			name:        "unknown format",
 			formatType:  "invalid",
 			wantErr:     true,
@@ -111,6 +117,10 @@ func TestNewFormatter(t *testing.T) {
 				if _, ok := formatter.(*MarkdownFormatter); !ok {
 					t.Errorf("NewFormatter() returned %T, want %s", formatter, tt.wantType)
 				}
+			case "*format.JSONFormatter":
+				if _, ok := formatter.(*JSONFormatter); !ok {
+					t.Errorf("NewFormatter() returned %T, want %s", formatter, tt.wantType)
+				}
 			}
 		})
 	}
@@ -126,6 +136,7 @@ func TestFormatterInterface(t *testing.T) {
 		NewTextFormatter(config),
 		NewHTMLFormatter(config),
 		NewMarkdownFormatter(config),
+		NewJSONFormatter(config),
 	}
 
 	for _, f := range formatters {
@@ -176,6 +187,12 @@ func TestFormatterContentTypes(t *testing.T) {
 			wantContent: "text/markdown",
 			wantExt:     ".md",
 		},
+		{
+			name:        "JSONFormatter",
+			formatter:   NewJSONFormatter(&FormatterConfig{}),
+			wantContent: "application/json",
+			wantExt:     ".json",
+		},
 	}
 
 	for _, tt := range tests {
@@ -217,6 +234,13 @@ func TestFormatterNilConfig(t *testing.T) {
 		formatter := NewMarkdownFormatter(nil)
 		if formatter == nil {
 			t.Error("NewMarkdownFormatter(nil) should not return nil")
+		}
+	})
+
+	t.Run("NewJSONFormatter with nil config", func(t *testing.T) {
+		formatter := NewJSONFormatter(nil)
+		if formatter == nil {
+			t.Error("NewJSONFormatter(nil) should not return nil")
 		}
 	})
 }

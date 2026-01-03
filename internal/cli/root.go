@@ -61,10 +61,11 @@ Documentation directives (in ## comments):
 				"text": "text", "txt": "text",
 				"html": "html",
 				"markdown": "markdown", "md": "markdown",
+				"json": "json",
 			}
 			normalizedFormat, ok := validFormats[config.Format]
 			if !ok {
-				return fmt.Errorf("invalid format: %s (valid: make, text, html, markdown)", config.Format)
+				return fmt.Errorf("invalid format: %s (valid: make, text, html, markdown, json)", config.Format)
 			}
 			config.Format = normalizedFormat
 
@@ -334,6 +335,8 @@ func getDefaultOutput(format string) string {
 		return "./make/help.mk"
 	case "text":
 		return "-" // stdout by default for text
+	case "json":
+		return "-" // stdout by default for programmatic consumption
 	case "html":
 		return "./make-help.html"
 	case "markdown":
