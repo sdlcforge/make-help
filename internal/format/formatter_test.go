@@ -39,22 +39,22 @@ func TestNewFormatter(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:        "html format (not implemented)",
-			formatType:  "html",
-			wantErr:     true,
-			errContains: "not yet implemented",
+			name:       "html format",
+			formatType: "html",
+			wantType:   "*format.HTMLFormatter",
+			wantErr:    false,
 		},
 		{
-			name:        "markdown format (not implemented)",
-			formatType:  "markdown",
-			wantErr:     true,
-			errContains: "not yet implemented",
+			name:       "markdown format",
+			formatType: "markdown",
+			wantType:   "*format.MarkdownFormatter",
+			wantErr:    false,
 		},
 		{
-			name:        "md alias (not implemented)",
-			formatType:  "md",
-			wantErr:     true,
-			errContains: "not yet implemented",
+			name:       "md alias",
+			formatType: "md",
+			wantType:   "*format.MarkdownFormatter",
+			wantErr:    false,
 		},
 		{
 			name:        "unknown format",
@@ -103,6 +103,14 @@ func TestNewFormatter(t *testing.T) {
 				if _, ok := formatter.(*TextFormatter); !ok {
 					t.Errorf("NewFormatter() returned %T, want %s", formatter, tt.wantType)
 				}
+			case "*format.HTMLFormatter":
+				if _, ok := formatter.(*HTMLFormatter); !ok {
+					t.Errorf("NewFormatter() returned %T, want %s", formatter, tt.wantType)
+				}
+			case "*format.MarkdownFormatter":
+				if _, ok := formatter.(*MarkdownFormatter); !ok {
+					t.Errorf("NewFormatter() returned %T, want %s", formatter, tt.wantType)
+				}
 			}
 		})
 	}
@@ -116,6 +124,8 @@ func TestFormatterInterface(t *testing.T) {
 	formatters := []Formatter{
 		NewMakeFormatter(config),
 		NewTextFormatter(config),
+		NewHTMLFormatter(config),
+		NewMarkdownFormatter(config),
 	}
 
 	for _, f := range formatters {
@@ -154,6 +164,18 @@ func TestFormatterContentTypes(t *testing.T) {
 			wantContent: "text/plain",
 			wantExt:     ".txt",
 		},
+		{
+			name:        "HTMLFormatter",
+			formatter:   NewHTMLFormatter(&FormatterConfig{}),
+			wantContent: "text/html",
+			wantExt:     ".html",
+		},
+		{
+			name:        "MarkdownFormatter",
+			formatter:   NewMarkdownFormatter(&FormatterConfig{}),
+			wantContent: "text/markdown",
+			wantExt:     ".md",
+		},
 	}
 
 	for _, tt := range tests {
@@ -181,6 +203,20 @@ func TestFormatterNilConfig(t *testing.T) {
 		formatter := NewTextFormatter(nil)
 		if formatter == nil {
 			t.Error("NewTextFormatter(nil) should not return nil")
+		}
+	})
+
+	t.Run("NewHTMLFormatter with nil config", func(t *testing.T) {
+		formatter := NewHTMLFormatter(nil)
+		if formatter == nil {
+			t.Error("NewHTMLFormatter(nil) should not return nil")
+		}
+	})
+
+	t.Run("NewMarkdownFormatter with nil config", func(t *testing.T) {
+		formatter := NewMarkdownFormatter(nil)
+		if formatter == nil {
+			t.Error("NewMarkdownFormatter(nil) should not return nil")
 		}
 	})
 }

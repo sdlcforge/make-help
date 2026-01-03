@@ -68,11 +68,6 @@ Documentation directives (in ## comments):
 			}
 			config.Format = normalizedFormat
 
-			// Validate supported formats for current modes
-			if config.Format == "html" || config.Format == "markdown" {
-				return fmt.Errorf("--format %s is not yet implemented (supported: make, text)", config.Format)
-			}
-
 			// Resolve output destination
 			if config.Output == "" {
 				// Use format-specific default
