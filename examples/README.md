@@ -2,7 +2,7 @@
 
 This directory contains working examples demonstrating different features and use cases of `make-help`. Each example is a self-contained project with its own Makefile and generated static help file.
 
-## Quick Start
+## Quick start
 
 Each example directory includes a generated `help.mk` file with embedded help text. To see the help output:
 
@@ -74,9 +74,9 @@ Complete showcase of all available directives and features:
 
 Best as a reference implementation when you need to use advanced features or see examples of complex documentation patterns.
 
-## Running Examples
+## Running examples
 
-### View Help Output
+### View help output
 
 From any example directory:
 
@@ -84,7 +84,7 @@ From any example directory:
 make help
 ```
 
-### View Detailed Help for a Specific Target
+### View detailed help for a specific target
 
 ```bash
 make help-<target-name>
@@ -93,7 +93,7 @@ make help-<target-name>
 make help-build
 ```
 
-### Generate Fresh Help File
+### Generate fresh help file
 
 If you modify a Makefile, regenerate the help file:
 
@@ -103,7 +103,7 @@ make-help
 
 The help file will also auto-regenerate when you run `make help` if the source Makefile is newer than the help file.
 
-## Example Comparison
+## Example comparison
 
 | Feature | uncategorized | categorized | filtering | full-featured |
 |---------|---------------|-------------|-----------|---------------|
@@ -116,7 +116,7 @@ The help file will also auto-regenerate when you run `make help` if the source M
 | Complexity | Simple | Medium | Medium | Complex |
 | Target count | 5 | 11 | 8 | 13 |
 
-## Using Examples as Templates
+## Using examples as templates
 
 To use an example as a starting point for your project:
 
@@ -129,13 +129,13 @@ To use an example as a starting point for your project:
    make-help
    ```
 
-## Common Patterns
+## Common patterns
 
-### Minimal Setup (uncategorized-targets)
+### Minimal setup (uncategorized-targets)
 
 Start here if you just need basic help output without categories.
 
-### Standard Project (categorized-project)
+### Standard project (categorized-project)
 
 Use this pattern for most projects. Common categories include:
 - **Core/Build**: Compilation and building
@@ -144,7 +144,7 @@ Use this pattern for most projects. Common categories include:
 - **Deployment/Release**: Production deployment
 - **Maintenance/Cleanup**: Housekeeping tasks
 
-### Advanced Documentation (full-featured)
+### Advanced documentation (full-featured)
 
 Use multi-line documentation when targets need detailed explanations, prerequisites, or step-by-step instructions.
 

@@ -2,7 +2,7 @@
 
 Error classification, types, and handling strategies in make-help.
 
-## Table of Contents
+## Table of contents
 
 - [Error Classification](#error-classification)
 - [Error Types](#error-types)
@@ -25,7 +25,7 @@ Error classification, types, and handling strategies in make-help.
 | Duplicate help target | WARNING | Ask user to remove with --remove-help-target first |
 | File write failure | CRITICAL | Exit with error message |
 
-### 2 Error Types and Messages
+### 2 Error types and messages
 
 ```go
 package errors
@@ -66,7 +66,7 @@ func (e *MakeExecutionError) Error() string {
 }
 ```
 
-### 3 Error Scenarios and Handling
+### 3 Error scenarios and handling
 
 **Scenario 1: Mixed Categorization**
 ```

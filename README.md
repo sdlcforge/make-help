@@ -87,7 +87,7 @@ This generates `./make/help.mk` (or `./make/00-help.mk` if numbered files exist)
 - `make help-<target>` - detailed help for each documented target
 - Run `make update-help` or add 'update-help' to your 'build' target to regenerate the help when source files change
 
-### 3. Use the Help System
+### 3. Use the help system
 
 Now you can run:
 - `make help` - displays help summary
@@ -143,7 +143,7 @@ To get detailed help for a particular target:
 make-help --show-help --target build   # Full docs for 'build' target
 ```
 
-### Target Filtering
+### Target filtering
 
 By default, only documented targets appear in help output.
 
@@ -153,7 +153,7 @@ make-help --include-target foo,bar     # Include multiple (comma-separated)
 make-help --include-all-phony          # Include all .PHONY targets
 ```
 
-### Remove Help Files
+### Remove help files
 
 ```bash
 make-help --remove-help                # Remove generated help files
@@ -214,7 +214,7 @@ Use `!file` to add file-level documentation. The entry point Makefile's `!file` 
 
 **File ordering**: By default, included files are sorted alphabetically in the "Included Files:" section. Use `--keep-order-files` to preserve the discovery order instead.
 
-### Target Documentation
+### Target documentation
 
 Document targets with `##` comments immediately before the target:
 
@@ -373,7 +373,7 @@ Both files are processed and targets are grouped by category.
 
 ## Uninstalling
 
-### Removing Generated Help Files
+### Removing generated help files
 
 To remove the generated help files and artifacts created by `make-help`:
 
@@ -390,7 +390,7 @@ make-help --remove-help
 - The `bin/` directory (where the binary is built locally during development)
 - Your documentation comments (`##` comments in your Makefiles)
 
-### Removing the Binary
+### Removing the binary
 
 The `--remove-help` flag only removes generated help files, not the `make-help` binary itself.
 
@@ -421,7 +421,7 @@ make clean    # Removes ./bin/make-help
 
 ## Troubleshooting
 
-### Mixed Categorization Error
+### Mixed categorization error
 
 **Error**: `mixed categorization: found both categorized and uncategorized targets`
 
@@ -431,13 +431,13 @@ make clean    # Removes ./bin/make-help
 make-help --default-category Miscellaneous
 ```
 
-### Unknown Category Error
+### Unknown category error
 
 **Error**: `unknown category "Foo" in --category-order`
 
 **Solution**: Check the available categories in your Makefile. The error message lists all available categories.
 
-### Makefile Not Found
+### Makefile not found
 
 **Error**: `Makefile not found: ./Makefile`
 
@@ -447,7 +447,7 @@ make-help --default-category Miscellaneous
 make-help --makefile-path path/to/your/Makefile
 ```
 
-### Make Command Timeout
+### Make command timeout
 
 If your Makefile is very complex or has expensive operations during parsing, you may encounter timeouts. The default timeout is 30 seconds.
 

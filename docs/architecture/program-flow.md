@@ -2,7 +2,7 @@
 
 Step-by-step flows for each operation mode in make-help.
 
-## Table of Contents
+## Table of contents
 
 - [Static Help File Generation Flow (Default)](#static-help-file-generation-flow-default)
 - [Dynamic Help Display Flow](#dynamic-help-display-flow)

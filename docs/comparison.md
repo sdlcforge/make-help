@@ -19,7 +19,7 @@
 
 ---
 
-## Executive Summary
+## Executive summary
 
 This report compares `make-help` with other tools and patterns specifically designed to document Makefiles and generate help output. All tools in this comparison work **with** Makefiles rather than replacing Make.
 
@@ -29,7 +29,7 @@ This report compares `make-help` with other tools and patterns specifically desi
 
 The most common approach uses inline AWK/grep/sed to parse `##` comments.
 
-### Simple Pattern (Most Popular)
+### Simple pattern (most popular)
 ```makefile
 help:
     @grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -39,7 +39,7 @@ build: ## Build the project
     go build ./...
 ```
 
-### Grouped Pattern (with Categories)
+### Grouped pattern (with categories)
 ```makefile
 help:
     @awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
@@ -80,7 +80,7 @@ test: ## Run tests
 
 A wrapper around `make` that adds features. Requires aliasing: `alias make=mmake`
 
-### How It Works
+### How it works
 ```makefile
 # Build the project for production
 build:
@@ -93,7 +93,7 @@ _internal:
 
 Run `mmake help` to see formatted output. Comments starting with `-` are hidden.
 
-### Unique Features
+### Unique features
 - **Remote includes**: Include Makefiles from GitHub URLs
 - **Glob patterns**: Filter help with `mmake help 'build*'`
 - **Verbose mode**: `mmake help -v`
@@ -117,7 +117,7 @@ Run `mmake help` to see formatted output. Comments starting with `-` are hidden.
 **npm:** `makefile-help`
 **Language:** Makefile
 
-### How It Works
+### How it works
 Install via npm, then include in your Makefile:
 ```makefile
 ifneq ($(wildcard ./node_modules),)
@@ -161,7 +161,7 @@ Several other tools exist with lower adoption or specialized use cases:
 **Language:** Go
 **Install:** `npm install -g @sdlcforge/make-help` or `go install`
 
-### How It Works
+### How it works
 ```makefile
 ## !file
 ## My Project Build System
@@ -177,7 +177,7 @@ build:
 
 Run `make-help` to generate `./make/help.mk` with static help.
 
-### Unique Features
+### Unique features
 - **Static generation**: Help embedded as `@echo` statements
 - **Auto-regeneration**: Help file rebuilds when Makefiles change
 - **Rich syntax**: `!file`, `!category`, `!var`, `!alias` directives
@@ -201,7 +201,7 @@ Run `make-help` to generate `./make/help.mk` with static help.
 
 ---
 
-## Feature Comparison Matrix
+## Feature comparison matrix
 
 | Feature | AWK Pattern | mmake | makefile-help | makefile-parser | makehelp | TangoMan | make-help |
 |---------|-------------|-------|---------------|-----------------|----------|----------|-----------|
@@ -220,7 +220,7 @@ Run `make-help` to generate `./make/help.mk` with static help.
 
 ---
 
-## Recommendations by Use Case
+## Recommendations by use case
 
 | Use Case | Recommended Tool |
 |----------|------------------|
@@ -233,7 +233,7 @@ Run `make-help` to generate `./make/help.mk` with static help.
 
 ---
 
-## Competitive Position of make-help
+## Competitive position of make-help
 
 make-help is the only tool combining categories, variables, aliases, detailed help, static generation, and auto-regeneration. Unlike AWK patterns, it provides structured documentation; unlike mmake/makefile-help, it works without runtime wrappers.
 
@@ -250,7 +250,7 @@ make-help is the only tool combining categories, variables, aliases, detailed he
 - [ryanvolpe/makehelp](https://github.com/ryanvolpe/makehelp) - Shell-based with static mode
 - [TangoMan75/makefile-generator](https://github.com/TangoMan75/makefile-generator) - Template generator
 
-### Patterns & Tutorials
+### Patterns & tutorials
 - [Marmelab: Self-Documented Makefile](https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html)
 - [Well-Documented Makefiles](https://www.thapaliya.com/en/writings/well-documented-makefiles/)
 - [klmr's Self-documenting Makefile Gist](https://gist.github.com/klmr/575726c7e05d8780505a)

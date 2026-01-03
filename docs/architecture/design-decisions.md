@@ -2,7 +2,7 @@
 
 This document records the key architectural and design decisions made in the make-help project. Each decision explains the context, rationale, alternatives considered, and consequences.
 
-## Table of Contents
+## Table of contents
 
 - [CLI Design](#cli-design)
   - [Flags Instead of Subcommands](#flags-instead-of-subcommands)
@@ -26,9 +26,9 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-## CLI Design
+## CLI design
 
-### Flags Instead of Subcommands
+### Flags instead of subcommands
 
 **Decision**: Use flags (`--create-help-target`, `--remove-help-target`, `--target`) instead of subcommands (`make-help add-target`, `make-help remove-target`).
 
@@ -59,9 +59,9 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-## Parsing and Processing
+## Parsing and processing
 
-### Stateful Single-Pass Parsing
+### Stateful single-pass parsing
 
 **Decision**: Maintain parser state (`currentCategory`, `pendingDocs`) across lines instead of using multiple passes over the file.
 
@@ -89,7 +89,7 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-### Discovery Order Tracking
+### Discovery order tracking
 
 **Decision**: Track the order in which targets and categories are discovered (via `DiscoveryOrder` field) rather than using file position or line numbers for ordering.
 
@@ -118,7 +118,7 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-### Line-Order Merging in Model Builder
+### Line-order merging in model builder
 
 **Decision**: Use a two-pointer algorithm in `processFile()` to merge directives and targets in line-number order rather than processing them separately.
 
@@ -149,7 +149,7 @@ This document records the key architectural and design decisions made in the mak
 
 ## Security
 
-### Temporary Files for MAKEFILE_LIST Discovery
+### Temporary files for MAKEFILE_LIST discovery
 
 **Decision**: Use temporary physical files instead of bash process substitution (`<(...)`) when discovering included Makefiles.
 
@@ -177,7 +177,7 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-### Command Timeouts
+### Command timeouts
 
 **Decision**: All `make` command executions use `context.WithTimeout` (30 seconds) to prevent indefinite hangs.
 
@@ -205,7 +205,7 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-### Atomic File Writes
+### Atomic file writes
 
 **Decision**: All file modifications use atomic writes (write to temp file, sync, rename) instead of direct writes.
 
@@ -233,7 +233,7 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-### Makefile Validation Before Modification
+### Makefile validation before modification
 
 **Decision**: Run `make -n` (dry-run) to validate Makefile syntax before any modifications.
 
@@ -261,9 +261,9 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-## Code Organization
+## Code organization
 
-### All Packages in internal/
+### All packages in internal/
 
 **Decision**: Place all code in `internal/` directory rather than exporting public packages.
 
@@ -290,7 +290,7 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-### Cobra as Only External Dependency
+### Cobra as only external dependency
 
 **Decision**: Use only Cobra for CLI framework; everything else uses Go standard library.
 
@@ -320,7 +320,7 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-### Interface-Based Command Execution
+### Interface-based command execution
 
 **Decision**: Use `CommandExecutor` interface for all external command execution instead of calling `exec.Command` directly.
 
@@ -348,9 +348,9 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-## User Experience
+## User experience
 
-### All-or-Nothing Categorization
+### All-or-nothing categorization
 
 **Decision**: Enforce that either all targets are categorized or none are (unless `--default-category` is provided).
 
@@ -379,9 +379,9 @@ This document records the key architectural and design decisions made in the mak
 
 ---
 
-## Output and Generation
+## Output and generation
 
-### Static vs Dynamic Help Generation
+### Static vs dynamic help generation
 
 **Decision**: Default behavior generates static help files with embedded help text instead of displaying help dynamically.
 

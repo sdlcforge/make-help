@@ -4,7 +4,7 @@ Comprehensive testing approach for make-help.
 
 > **Note:** The code examples in this document are **illustrative patterns**, not exact copies of the implementation. They demonstrate the testing approach and structure. For the actual test implementations, see the source files in `internal/*/` and `test/integration/`.
 
-## Table of Contents
+## Table of contents
 
 - [Unit Testing Approach](#unit-testing-approach)
 - [Integration Testing Approach](#integration-testing-approach)
@@ -319,7 +319,7 @@ test/fixtures/
     └── 01-help.mk                 # Expected help target file
 ```
 
-### 3 Mock Strategy
+### 3 Mock strategy
 
 **CommandExecutor Mock** (for testing discovery without executing make)
 ```go
@@ -349,7 +349,7 @@ func TestDiscoverMakefiles(t *testing.T) {
 }
 ```
 
-### 4 Test Coverage Goals
+### 4 Test coverage goals
 
 | Package | Coverage Target | Focus Areas |
 |---------|----------------|-------------|

@@ -2,7 +2,7 @@
 
 Core algorithms and their implementations in make-help.
 
-## Table of Contents
+## Table of contents
 
 - [File Discovery via MAKEFILE_LIST](#file-discovery-via-makefile_list)
 - [Documentation Parsing](#documentation-parsing)

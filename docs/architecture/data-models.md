@@ -2,7 +2,7 @@
 
 Core data structures used throughout the make-help system.
 
-## Table of Contents
+## Table of contents
 
 - [Makefile Documentation Model](#makefile-documentation-model)
 - [Configuration Model](#configuration-model)

@@ -2,7 +2,7 @@
 
 Detailed specifications for each major component in the make-help system.
 
-## Table of Contents
+## Table of contents
 
 - [CLI Parser (Cobra-based)](#cli-parser-cobra-based)
 - [Discovery Service](#discovery-service)

@@ -2,11 +2,11 @@
 
 Quick reference for AI agents working on this codebase. For comprehensive details, see the documentation links below.
 
-## What This Project Does
+## What this project does
 
 `make-help` is a Go CLI tool that generates static help files for Makefiles from specially-formatted comments. By default, it creates `./make/help.mk` (with automatic directory creation and include directive insertion) with embedded help text. It can also display help dynamically. The tool processes Makefiles through a pipeline: CLI → Discovery → Parser → Model Builder → Ordering → Summary → Formatter → Output.
 
-## Essential Commands
+## Essential commands
 
 ```bash
 # Build and run
@@ -27,21 +27,21 @@ go test -tags=integration ./test/integration/...  # Integration tests only
 ./bin/make-help --output - --verbose       # Debug dynamic help display
 ```
 
-## Key Entry Points
+## Key entry points
 
 - **`internal/cli/root.go`**: CLI flag registration and command routing (uses Cobra)
 - **`internal/cli/help.go`**: Main orchestration in `runHelp()` function
 - **`cmd/make-help/main.go`**: Binary entry point (thin wrapper)
 
-## Architecture Quick Reference
+## Architecture quick reference
 
-### Processing Pipeline
+### Processing pipeline
 
 ```
 CLI Layer → Discovery → Parser → Model Builder → Ordering → Summary → Formatter → Output
 ```
 
-### Package Map (what does what)
+### Package map (what does what)
 
 | Package | Purpose | Key Type/Function |
 |---------|---------|-------------------|
@@ -54,7 +54,7 @@ CLI Layer → Discovery → Parser → Model Builder → Ordering → Summary �
 | `internal/format/` | Format help output in multiple formats | `Formatter.RenderHelp()`, `NewFormatter()` |
 | `internal/target/` | Generate/remove help targets | `AddService`, `RemoveService` |
 
-### Important Design Patterns
+### Important design patterns
 
 1. **Static help generation by default**: Running `make-help` generates `./make/help.mk` with embedded help text (use `--output -` for dynamic display)
 2. **Smart file placement**: Defaults to `./make/help.mk` with automatic directory creation, numbered prefix detection, and include directive insertion
@@ -64,7 +64,7 @@ CLI Layer → Discovery → Parser → Model Builder → Ordering → Summary �
 6. **Stateful parser**: `parser.Scanner` maintains state across lines to associate docs with targets
 7. **Immutable model**: `HelpModel` is built once, not mutated
 
-## Documentation Syntax (for parser)
+## Documentation syntax (for parser)
 
 ```makefile
 ## !file                     # File-level docs (entry point: before targets; included: in "Included Files:" section)
@@ -97,13 +97,13 @@ standalone:
 - **Reset syntax**: Use `!category _` to reset to uncategorized state
 - **Mixed categorization error**: Can't mix categorized and uncategorized targets (use `--default-category` to resolve)
 
-## Test Fixtures
+## Test fixtures
 
 - **Input Makefiles**: `test/fixtures/makefiles/*.mk`
 - **Expected outputs**: `test/fixtures/expected/*.txt`
 - **Integration tests**: `test/integration/cli_test.go` (builds binary, runs against fixtures)
 
-## Common Development Tasks
+## Common development tasks
 
 ### Adding a new directive type
 1. Update `internal/parser/directive.go` (add constant to DirectiveType)
@@ -126,7 +126,7 @@ standalone:
 4. Add integration test coverage
 5. Update `README.md` flags table and `docs/architecture/components.md`
 
-## Critical Context for AI Agents
+## Critical context for AI agents
 
 - **All code is in `internal/`**: Not a library, prevents API commitment
 - **Only Cobra is an external dependency**: Everything else uses stdlib
@@ -141,7 +141,7 @@ standalone:
 - **Auto-add include directive**: If no `include make/*.mk` pattern exists, one is automatically added to the Makefile
 - **Fixed warnings are hidden**: When using `--lint --fix`, only unfixed warnings are displayed in output
 
-## Comprehensive Documentation
+## Comprehensive documentation
 
 | Document | Purpose |
 |----------|---------|
@@ -155,7 +155,7 @@ standalone:
 | [docs/architecture/testing-strategy.md](../docs/architecture/testing-strategy.md) | Testing approach |
 | [docs/developer-brief.md](../docs/developer-brief.md) | Contributor guide with common tasks |
 
-## Quick Troubleshooting
+## Quick troubleshooting
 
 **Mixed categorization error**: Use `--default-category Misc`
 **Tests failing after changes**: Regenerate fixtures by running binary manually and saving output

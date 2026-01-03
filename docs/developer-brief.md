@@ -2,7 +2,7 @@
 
 A practical guide for contributors and maintainers.
 
-## Table of Contents
+## Table of contents
 
 - [Quick Start for Developers](#quick-start-for-developers)
 - [Contributing Guidelines](#contributing-guidelines)
@@ -12,7 +12,7 @@ A practical guide for contributors and maintainers.
 - [Debugging Tips](#debugging-tips)
 - [Design Document Reference](#design-document-reference)
 
-## Quick Start for Developers
+## Quick start for developers
 
 ### Prerequisites
 
@@ -20,7 +20,7 @@ A practical guide for contributors and maintainers.
 - GNU Make 4.x installed
 - Familiarity with Makefile syntax
 
-### Building and Testing
+### Building and testing
 
 ```bash
 # Build the binary (outputs to ./bin/make-help)
@@ -45,9 +45,9 @@ go test ./test/integration/...
 ./bin/make-help --makefile-path path/to/Makefile
 ```
 
-## Contributing Guidelines
+## Contributing guidelines
 
-### Code Conventions
+### Code conventions
 
 Follow these conventions when contributing:
 
@@ -57,7 +57,7 @@ Follow these conventions when contributing:
 4. **Add tests for new functionality** - Aim for >90% coverage on new code
 5. **Update documentation** - Keep README.md, design.md, and this file in sync
 
-### Pull Request Process
+### Pull request process
 
 1. **Fork the repository** and create a feature branch
 2. **Write tests first** for new functionality (TDD approach)
@@ -65,16 +65,16 @@ Follow these conventions when contributing:
 4. **Update documentation** if adding features or changing behavior
 5. **Submit a pull request** with a clear description of changes
 
-### Testing Standards
+### Testing standards
 
 - **Unit tests:** Cover individual functions and edge cases
 - **Integration tests:** Use fixtures in `test/fixtures/`
 - **Coverage target:** >90% overall, 95%+ for critical packages (parser, summary)
 - **Test naming:** Use descriptive names that explain the scenario
 
-## Architecture Overview
+## Architecture overview
 
-### Processing Pipeline
+### Processing pipeline
 
 ```
 CLI → Discovery → Parser → Model Builder → Ordering → Summary → Formatter → Output
@@ -82,7 +82,7 @@ CLI → Discovery → Parser → Model Builder → Ordering → Summary → Form
 
 Each stage is independent and testable. See [design.md](design.md) for detailed architecture.
 
-### Key Design Principles
+### Key design principles
 
 1. **Separation of concerns** - Each package has a single, well-defined responsibility
 2. **Testability first** - External commands use `CommandExecutor` interface for mocking
@@ -90,7 +90,7 @@ Each stage is independent and testable. See [design.md](design.md) for detailed 
 4. **Clear error boundaries** - Custom error types with actionable messages
 5. **Security-conscious** - No shell injection, atomic file writes, command timeouts
 
-## Project Structure
+## Project structure
 
 ```
 make-help/
@@ -122,7 +122,7 @@ make-help/
 
 All code lives in `internal/` because `make-help` is a CLI tool, not a library. This prevents accidental API commitment and allows freedom to refactor without breaking external dependencies.
 
-### Package Responsibilities
+### Package responsibilities
 
 | Package | Responsibility | Key Types | External Dependencies |
 |---------|---------------|-----------|---------------------|
@@ -140,7 +140,7 @@ All code lives in `internal/` because `make-help` is a CLI tool, not a library. 
 
 **Key insight:** Only `cli` has external dependencies. All other packages use only stdlib.
 
-### Test Organization
+### Test organization
 
 ```
 test/
@@ -162,9 +162,9 @@ test/
 3. Save output to `fixtures/expected/`
 4. Add test case to `cli_test.go`
 
-## Common Development Tasks
+## Common development tasks
 
-### Adding a New Directive Type
+### Adding a new directive type
 
 1. **Define the directive** in `internal/parser/directive.go`:
    - Add constant to `DirectiveType` enum
@@ -185,14 +185,14 @@ test/
    - README.md "Documentation Syntax" section
    - design.md data structures section
 
-### Changing Output Format
+### Changing output format
 
 1. **Modify templates** in `internal/format/renderer.go`
 2. **Update color scheme** in `internal/format/color.go` if needed
 3. **Update integration test fixtures** in `test/fixtures/expected/`
 4. **Regenerate example outputs** in `examples/*/help.mk`
 
-### Adding a New CLI Flag
+### Adding a new CLI flag
 
 1. **Add to Config struct** in `internal/cli/config.go`
 2. **Register flag** in `internal/cli/root.go` `NewRootCmd()`
@@ -203,13 +203,13 @@ test/
    - `docs/architecture/components.md` CLI Parser section
    - `.claude/CLAUDE.md` if it affects common development tasks
 
-### Modifying Ordering Behavior
+### Modifying ordering behavior
 
 1. **Update logic** in `internal/ordering/service.go`
 2. **Add test cases** in `internal/ordering/service_test.go`
 3. **Update design.md** algorithm section if significantly changed
 
-### Adding a New Lint Check
+### Adding a new lint check
 
 1. **Define the check** in `internal/lint/checks.go`:
    - Create CheckFunc that scans for issues
@@ -225,9 +225,9 @@ test/
    - Add to lint check list in README.md
    - Update architecture docs if introducing new concepts
 
-## Debugging Tips
+## Debugging tips
 
-### Enable Verbose Output
+### Enable verbose output
 
 ```bash
 ./make-help --verbose --makefile-path test.mk
@@ -238,7 +238,7 @@ This shows:
 - Discovered targets from `make -p`
 - File operations during --create-help-target/--remove-help-target
 
-### Common Issues
+### Common issues
 
 **Issue:** "Makefile not found"
 - Check current directory
@@ -265,7 +265,7 @@ This shows:
 - Check that warnings are fixable (some are error-only)
 - Use `--fix --dry-run` to preview changes first
 
-### Useful Development Commands
+### Useful development commands
 
 ```bash
 # Run specific test
@@ -297,7 +297,7 @@ golangci-lint run
 ./bin/make-help --version
 ```
 
-## Design Document Reference
+## Design document reference
 
 For detailed information on:
 - Component architecture and data flow

@@ -2,7 +2,7 @@
 
 Comprehensive architecture documentation for the make-help CLI tool.
 
-## Table of Contents
+## Table of contents
 
 - [Overview](#overview)
 - [Design Principles](#design-principles)
@@ -18,7 +18,7 @@ Comprehensive architecture documentation for the make-help CLI tool.
 
 make-help is a CLI tool that generates formatted help output from specially-formatted Makefile comments. The system processes Makefiles through a pipeline of discovery, parsing, model building, ordering, and formatting stages.
 
-## Design Principles
+## Design principles
 
 | Principle | Implementation |
 |-----------|---------------|
@@ -28,7 +28,7 @@ make-help is a CLI tool that generates formatted help output from specially-form
 | **Usability** | Clear error messages; actionable suggestions; verbose mode |
 | **Performance** | Single-pass parsing; pre-compiled regex; minimal allocations |
 
-## System Architecture
+## System architecture
 
 ![Processing Pipeline Overview](architecture/diagrams/pipeline-overview.svg)
 
@@ -115,7 +115,7 @@ make-help is a CLI tool that generates formatted help output from specially-form
                      └────────────────────────────────────────────┘
 ```
 
-## Component Responsibilities
+## Component responsibilities
 
 | Component | Responsibility | Key Inputs | Key Outputs |
 |-----------|---------------|------------|-------------|
@@ -131,7 +131,7 @@ make-help is a CLI tool that generates formatted help output from specially-form
 | Lint Service | Validate documentation quality and apply auto-fixes | Makefile content | Warnings, fixes |
 | Version Package | Provide build-time version information via ldflags | Build flags | Version string |
 
-## Package Structure
+## Package structure
 
 ```
 make-help/
@@ -154,7 +154,7 @@ make-help/
 └── docs/                    # Architecture documentation
 ```
 
-### Package Design Rationale
+### Package design rationale
 
 - **`internal/`**: All code is internal (not intended as library) to prevent API commitment
 - **`internal/cli/`**: Thin layer, delegates to services; uses Cobra for consistency with Go ecosystem
@@ -169,7 +169,7 @@ make-help/
 - **`internal/version/`**: Version information injected at build time via ldflags
 - **`internal/errors/`**: Centralized error definitions for consistent handling
 
-## Key Design Decisions
+## Key design decisions
 
 1. **Security - No Shell Injection:** MAKEFILE_LIST discovery uses temporary physical files instead of bash process substitution `<(...)` to eliminate command injection risk.
 
@@ -187,7 +187,7 @@ make-help/
 
 ---
 
-## Detailed Documentation
+## Detailed documentation
 
 For in-depth information on specific aspects of the architecture:
 
@@ -202,7 +202,7 @@ For in-depth information on specific aspects of the architecture:
 
 ---
 
-## Architecture Review Summary
+## Architecture review summary
 
 This design follows Go idioms and emphasizes:
 
