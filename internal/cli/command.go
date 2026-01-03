@@ -19,8 +19,6 @@ func setupFlags(cmd *cobra.Command, config *Config) {
 	var keepOrderAll bool
 
 	// Mode flags
-	cmd.Flags().BoolVar(&config.ShowHelp,
-		"show-help", false, "Display help dynamically instead of generating a help file")
 	cmd.Flags().BoolVar(&config.RemoveHelpTarget,
 		"remove-help", false, "Remove help target from Makefile")
 	cmd.Flags().BoolVar(&config.DryRun,
@@ -142,7 +140,7 @@ func ParseCommandLineFromHelpFile(cmdLine string, config *Config) error {
 	cmd.SetArgs(args)
 
 	// Check for disallowed mode flags before parsing
-	disallowedFlags := []string{"--show-help", "--remove-help", "--dry-run", "--lint", "--fix", "--target"}
+	disallowedFlags := []string{"--remove-help", "--dry-run", "--lint", "--fix", "--target"}
 	for _, arg := range args {
 		for _, disallowed := range disallowedFlags {
 			if arg == disallowed || strings.HasPrefix(arg, disallowed+"=") {

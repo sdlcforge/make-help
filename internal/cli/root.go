@@ -74,12 +74,6 @@ Documentation directives (in ## comments):
 				config.Output = getDefaultOutput(config.Format)
 			}
 
-			// Handle deprecated --show-help
-			if config.ShowHelp {
-				fmt.Fprintln(os.Stderr, "Warning: --show-help is deprecated. Use --format text --output - instead.")
-				config.Output = "-"
-			}
-
 			// --remove-help only allows --verbose and --makefile-path (check this first, before other validations)
 			if config.RemoveHelpTarget {
 				if err := validateRemoveHelpFlags(config); err != nil {
@@ -126,6 +120,11 @@ Documentation directives (in ## comments):
 			// Resolve color mode
 			config.UseColor = ResolveColorMode(config)
 
+			// When outputting to stdout, default to text format unless explicitly set
+			if config.Output == "-" && !cmd.Flags().Changed("format") {
+				config.Format = "text"
+			}
+
 			// Dispatch to appropriate handler
 			if config.Lint {
 				return runLint(config)
@@ -135,7 +134,7 @@ Documentation directives (in ## comments):
 				// Detailed target help (requires stdout mode)
 				return runDetailedHelp(config)
 			} else if config.Output == "-" {
-				// Stdout mode (replaces --show-help)
+				// Stdout mode (dynamic help output)
 				return runHelp(config)
 			} else {
 				// File generation mode
@@ -148,7 +147,6 @@ Documentation directives (in ## comments):
 	setupFlags(rootCmd, config)
 
 	// Annotate flags with their groups for custom help display
-	annotateFlag(rootCmd, "show-help", modeGroupLabel)
 	annotateFlag(rootCmd, "remove-help", modeGroupLabel)
 	annotateFlag(rootCmd, "dry-run", modeGroupLabel)
 	annotateFlag(rootCmd, "lint", modeGroupLabel)
@@ -191,7 +189,6 @@ func validateRemoveHelpFlags(config *Config) error {
 		{config.Target != "", "--target"},
 		{len(config.IncludeTargets) > 0, "--include-target"},
 		{config.IncludeAllPhony, "--include-all-phony"},
-		{config.ShowHelp, "--show-help"},
 		{config.DryRun, "--dry-run"},
 		{config.Lint, "--lint"},
 		{config.HelpFileRelPath != "", "--help-file-rel-path"},

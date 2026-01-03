@@ -12,19 +12,19 @@ Quick reference for AI agents working on this codebase. For comprehensive detail
 # Build and run
 go build ./cmd/make-help
 ./bin/make-help                            # Generate ./make/help.mk (default)
-./bin/make-help --show-help                # Display help dynamically
-./bin/make-help --show-help --target build # Show detailed target help
+./bin/make-help --output -                 # Display help dynamically to stdout
+./bin/make-help --output - --target build  # Show detailed target help
 ./bin/make-help --version                  # Display version information
 
 # Testing
 go test ./...                          # All tests
 go test -cover ./...                   # With coverage
 go test ./internal/parser/... -run TestScanFile  # Specific test
-go test ./test/integration/...         # Integration tests only
+go test -tags=integration ./test/integration/...  # Integration tests only
 
 # Development
 ./bin/make-help --verbose                  # Debug mode (generates ./make/help.mk)
-./bin/make-help --show-help --verbose      # Debug dynamic help display
+./bin/make-help --output - --verbose       # Debug dynamic help display
 ```
 
 ## Key Entry Points
@@ -51,14 +51,14 @@ CLI Layer → Discovery → Parser → Model Builder → Ordering → Summary �
 | `internal/model/` | Build & validate help model | `Builder.Build()`, `HelpModel` |
 | `internal/ordering/` | Sort categories/targets | `Service.ApplyOrdering()` |
 | `internal/summary/` | Extract first sentence (strip markdown) | `Extractor.Extract()` |
-| `internal/format/` | Render with optional ANSI colors | `Renderer.Render()` |
+| `internal/format/` | Format help output in multiple formats | `Formatter.RenderHelp()`, `NewFormatter()` |
 | `internal/target/` | Generate/remove help targets | `AddService`, `RemoveService` |
 
 ### Important Design Patterns
 
-1. **Static help generation by default**: Running `make-help` generates `./make/help.mk` with embedded help text (use `--show-help` for dynamic display)
+1. **Static help generation by default**: Running `make-help` generates `./make/help.mk` with embedded help text (use `--output -` for dynamic display)
 2. **Smart file placement**: Defaults to `./make/help.mk` with automatic directory creation, numbered prefix detection, and include directive insertion
-3. **CLI uses flags, not subcommands**: Mode detection via flag combinations (`--show-help`, `--remove-help`, `--target <name>`)
+3. **CLI uses flags, not subcommands**: Mode detection via flag combinations (`--output -`, `--remove-help`, `--target <name>`)
 4. **Testability via interfaces**: `CommandExecutor` interface for mocking `make` commands
 5. **Security-first**: No shell injection; atomic file writes; 30s command timeouts
 6. **Stateful parser**: `parser.Scanner` maintains state across lines to associate docs with targets
@@ -109,13 +109,13 @@ standalone:
 1. Update `internal/parser/directive.go` (add constant to DirectiveType)
 2. Add parsing logic in `internal/parser/scanner.go` `parseDirective()` method
 3. Handle in `internal/model/builder.go` `processFile()` method (around line 197)
-4. Update formatter if needed (`internal/format/renderer.go`)
+4. Update formatter if needed (`internal/format/make_formatter.go` or appropriate formatter)
 5. Add tests (parser unit test + integration fixture)
 6. Update `README.md` and `docs/architecture.md`
 
 ### Changing output format
-1. Modify templates in `internal/format/renderer.go`
-2. Update static help generation in `internal/target/generator.go` (for embedded @echo statements)
+1. Modify templates in the appropriate formatter (e.g., `internal/format/make_formatter.go`, `text_formatter.go`)
+2. Update static help generation in `internal/target/generator.go` (for embedded @printf statements)
 3. Update integration test fixtures in `test/fixtures/expected/`
 4. Regenerate example outputs in `examples/*/help.mk`
 
@@ -161,8 +161,8 @@ standalone:
 **Tests failing after changes**: Regenerate fixtures by running binary manually and saving output
 **Need to debug discovery**: Use `--verbose` flag to see Makefile resolution and target discovery
 **Target not appearing in help**: Check if it's .PHONY (use --include-all-phony or --include-target)
-**Want dynamic help instead of file generation**: Use `--show-help` flag
-**Need detailed target help**: Use `--show-help --target <name>`
+**Want dynamic help instead of file generation**: Use `--output -` flag
+**Need detailed target help**: Use `--output - --target <name>`
 **Generated help not regenerating**: Check that `./make/help.mk` (or custom location) has the auto-regeneration target
 **"make command timed out"**: Check for infinite recursion in Makefile includes
 **Help file in wrong location**: Default is now `./make/help.mk`; use `--help-file-rel-path` to override
@@ -170,4 +170,4 @@ standalone:
 **Lint shows fixed warnings**: With `--lint --fix`, only unfixed warnings should appear; fixed ones are hidden
 **Check version**: Use `--version` flag to display version information
 
-Last reviewed: 2025-12-25T16:43Z
+Last reviewed: 2026-01-03T00:00Z

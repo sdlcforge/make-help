@@ -48,8 +48,10 @@ type GeneratorConfig struct {
 func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	var buf strings.Builder
 
-	// Create renderer with color configuration
-	renderer := format.NewRenderer(config.UseColor)
+	// Create formatter with color configuration
+	formatter := format.NewMakeFormatter(&format.FormatterConfig{
+		UseColor: config.UseColor,
+	})
 
 	// Header with new format
 	buf.WriteString("# generated-by: make-help\n")
@@ -98,7 +100,7 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	buf.WriteString("\tdone\n")
 
 	// Render help content
-	helpLines, err := renderer.RenderForMakefile(config.HelpModel)
+	helpLines, err := formatter.RenderHelpLines(config.HelpModel)
 	if err != nil {
 		return "", fmt.Errorf("failed to render help content: %w", err)
 	}
@@ -114,7 +116,7 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 			buf.WriteString(fmt.Sprintf(".PHONY: help-%s\n", target.Name))
 			buf.WriteString(fmt.Sprintf("help-%s:\n", target.Name))
 
-			detailedLines := renderer.RenderDetailedForMakefile(&target)
+			detailedLines := formatter.RenderDetailedTargetLines(&target)
 			for _, line := range detailedLines {
 				buf.WriteString(fmt.Sprintf("\t@printf '%%b\\n' \"%s\"\n", line))
 			}

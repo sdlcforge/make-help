@@ -1,12 +1,42 @@
-// Package format renders HelpModel as formatted text output.
+// Package format provides formatters for rendering HelpModel in various output formats.
 //
-// It supports colorized output using ANSI escape codes, with automatic
-// detection of terminal capabilities. Colors can be forced on or off
-// via --color and --no-color flags respectively.
+// The package implements a Formatter interface that supports multiple output formats:
+//   - Make format: Generates Makefile content with embedded help targets
+//   - Text format: Plain text or ANSI-colored terminal output
+//   - HTML format: Browser-ready HTML with embedded styles
+//   - Markdown format: GitHub-flavored markdown documentation
 //
-// # Output Format
+// # Architecture
 //
-// The standard help output format is:
+// Each format is implemented by a dedicated formatter type:
+//   - MakeFormatter: Generates @printf statements for Makefile inclusion
+//   - TextFormatter: Produces human-readable text output
+//   - HTMLFormatter: Creates styled HTML pages
+//   - MarkdownFormatter: Outputs structured markdown documentation
+//
+// All formatters implement the Formatter interface:
+//
+//	type Formatter interface {
+//	    RenderHelp(model *HelpModel, w io.Writer) error
+//	    RenderDetailedTarget(target *Target, w io.Writer) error
+//	    RenderBasicTarget(name, sourceFile string, lineNumber int, w io.Writer) error
+//	    ContentType() string
+//	    DefaultExtension() string
+//	}
+//
+// # Color Support
+//
+// Text and Make formatters support ANSI color output, controlled via FormatterConfig.
+// Colors can be forced on/off via --color and --no-color flags. The default color scheme:
+//   - Bold Cyan for category names
+//   - Bold Green for target names
+//   - Yellow for aliases
+//   - Magenta for variable names
+//   - White for documentation text
+//
+// # Standard Output Format
+//
+// The basic help output structure (used by Text and Make formatters):
 //
 //	Usage: make [<target>...] [<ENV_VAR>=<value>...]
 //
@@ -17,19 +47,4 @@
 //	[Category Name:]
 //	  - <target>[ <alias1>, ...]: <summary>
 //	    [Vars: <VAR1>, <VAR2>...]
-//
-// # Color Scheme
-//
-// The default color scheme uses:
-//   - Bold Cyan for category names
-//   - Bold Green for target names
-//   - Yellow for aliases
-//   - Magenta for variable names
-//   - White for documentation text
-//
-// # Rendering
-//
-// The Renderer type uses a template-like approach with string builders
-// for efficient concatenation. All color codes are injected conditionally
-// based on the UseColor configuration.
 package format

@@ -716,10 +716,10 @@ func TestRemoveHelpFlagRestrictions(t *testing.T) {
 			expectedErrMsg: "--remove-help cannot be used with --include-all-phony",
 		},
 		{
-			name:           "remove-help with show-help",
-			args:           []string{"--remove-help", "--show-help"},
+			name:           "remove-help with output stdout",
+			args:           []string{"--remove-help", "--output", "-"},
 			expectError:    true,
-			expectedErrMsg: "--remove-help cannot be used with --show-help",
+			expectedErrMsg: "--remove-help cannot be used with --output",
 		},
 		{
 			name:           "remove-help with help-file-rel-path",
@@ -785,21 +785,23 @@ func TestRemoveHelpFlagRestrictions(t *testing.T) {
 func TestNewFlags(t *testing.T) {
 	cmd := NewRootCmd()
 
-	// Check that new flags are registered
+	// Check that current flags are registered
 	flags := cmd.Flags()
 
-	assert.NotNil(t, flags.Lookup("show-help"))
 	assert.NotNil(t, flags.Lookup("remove-help"))
 	assert.NotNil(t, flags.Lookup("include-target"))
 	assert.NotNil(t, flags.Lookup("include-all-phony"))
 	assert.NotNil(t, flags.Lookup("target"))
 	assert.NotNil(t, flags.Lookup("help-file-rel-path"))
 	assert.NotNil(t, flags.Lookup("dry-run"))
+	assert.NotNil(t, flags.Lookup("format"))
+	assert.NotNil(t, flags.Lookup("output"))
 
-	// Verify old flags are removed
+	// Verify deprecated/removed flags are not present
 	assert.Nil(t, flags.Lookup("create-help-target"))
 	assert.Nil(t, flags.Lookup("remove-help-target"))
 	assert.Nil(t, flags.Lookup("version"))
+	assert.Nil(t, flags.Lookup("show-help"))
 }
 
 func TestIncludeTargetFlag(t *testing.T) {
@@ -819,19 +821,19 @@ all:
 	}{
 		{
 			name: "single include-target",
-			args: []string{"--show-help", "--makefile-path", makefilePath, "--include-target", "foo", "--no-color"},
+			args: []string{"--output", "-", "--makefile-path", makefilePath, "--include-target", "foo", "--no-color"},
 		},
 		{
 			name: "comma-separated include-target",
-			args: []string{"--show-help", "--makefile-path", makefilePath, "--include-target", "foo,bar", "--no-color"},
+			args: []string{"--output", "-", "--makefile-path", makefilePath, "--include-target", "foo,bar", "--no-color"},
 		},
 		{
 			name: "multiple include-target flags",
-			args: []string{"--show-help", "--makefile-path", makefilePath, "--include-target", "foo", "--include-target", "bar", "--no-color"},
+			args: []string{"--output", "-", "--makefile-path", makefilePath, "--include-target", "foo", "--include-target", "bar", "--no-color"},
 		},
 		{
 			name: "mixed include-target",
-			args: []string{"--show-help", "--makefile-path", makefilePath, "--include-target", "foo,bar", "--include-target", "baz", "--no-color"},
+			args: []string{"--output", "-", "--makefile-path", makefilePath, "--include-target", "foo,bar", "--include-target", "baz", "--no-color"},
 		},
 	}
 
@@ -859,11 +861,11 @@ build:
 	require.NoError(t, err)
 
 	cmd := NewRootCmd()
-	cmd.SetArgs([]string{"--makefile-path", makefilePath, "--show-help", "--target", "build", "--no-color"})
+	cmd.SetArgs([]string{"--makefile-path", makefilePath, "--output", "-", "--target", "build", "--no-color"})
 
-	// The --target flag requires --show-help and should work without error
+	// The --target flag requires --output - (stdout mode) and should work without error
 	err = cmd.Execute()
-	require.NoError(t, err, "should successfully run with --show-help and --target flags")
+	require.NoError(t, err, "should successfully run with --output - and --target flags")
 }
 
 func TestIncludeAllPhonyFlag(t *testing.T) {
@@ -878,7 +880,7 @@ all:
 	require.NoError(t, err)
 
 	cmd := NewRootCmd()
-	cmd.SetArgs([]string{"--show-help", "--makefile-path", makefilePath, "--include-all-phony", "--no-color"})
+	cmd.SetArgs([]string{"--output", "-", "--makefile-path", makefilePath, "--include-all-phony", "--no-color"})
 
 	err = cmd.Execute()
 	// Should succeed (filtering not yet implemented, but flag should work)
@@ -893,14 +895,14 @@ func TestDryRunFlagValidation(t *testing.T) {
 		expectedErrMsg string
 	}{
 		{
-			name:           "dry-run with show-help",
-			args:           []string{"--dry-run", "--show-help"},
+			name:           "dry-run with output stdout",
+			args:           []string{"--dry-run", "--output", "-"},
 			expectError:    true,
 			expectedErrMsg: "--dry-run cannot be used with --output -",
 		},
 		{
-			name:           "dry-run with show-help and target flag",
-			args:           []string{"--dry-run", "--show-help", "--target", "build"},
+			name:           "dry-run with output stdout and target flag",
+			args:           []string{"--dry-run", "--output", "-", "--target", "build"},
 			expectError:    true,
 			expectedErrMsg: "--dry-run cannot be used with --output -",
 		},
@@ -941,7 +943,7 @@ func TestDryRunFlag(t *testing.T) {
 	assert.False(t, dryRun)
 }
 
-func TestShowHelpFlag(t *testing.T) {
+func TestOutputStdoutFlag(t *testing.T) {
 	// Create a temp Makefile for the test
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -958,13 +960,13 @@ build:
 		expectError bool
 	}{
 		{
-			name:        "show-help without target",
-			args:        []string{"--show-help", "--makefile-path", makefilePath, "--no-color"},
+			name:        "output stdout without target",
+			args:        []string{"--output", "-", "--makefile-path", makefilePath, "--no-color"},
 			expectError: false,
 		},
 		{
-			name:        "show-help with target",
-			args:        []string{"--show-help", "--target", "build", "--makefile-path", makefilePath, "--no-color"},
+			name:        "output stdout with target",
+			args:        []string{"--output", "-", "--target", "build", "--makefile-path", makefilePath, "--no-color"},
 			expectError: false,
 		},
 	}
@@ -984,7 +986,7 @@ build:
 	}
 }
 
-func TestTargetRequiresShowHelp(t *testing.T) {
+func TestTargetRequiresStdout(t *testing.T) {
 	tests := []struct {
 		name           string
 		args           []string
@@ -992,14 +994,14 @@ func TestTargetRequiresShowHelp(t *testing.T) {
 		expectedErrMsg string
 	}{
 		{
-			name:           "target without show-help",
+			name:           "target without output stdout",
 			args:           []string{"--target", "build"},
 			expectError:    true,
 			expectedErrMsg: "--target requires --output - (stdout mode)",
 		},
 		{
-			name:           "target with show-help",
-			args:           []string{"--show-help", "--target", "build"},
+			name:           "target with output stdout",
+			args:           []string{"--output", "-", "--target", "build"},
 			expectError:    true, // Will error due to missing Makefile, not validation
 			expectedErrMsg: "Makefile not found",
 		},

@@ -40,7 +40,7 @@ func (f *MakeFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 		return fmt.Errorf("help model cannot be nil")
 	}
 
-	lines, err := f.renderHelpLines(helpModel)
+	lines, err := f.RenderHelpLines(helpModel)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (f *MakeFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) 
 		return fmt.Errorf("target cannot be nil")
 	}
 
-	lines := f.renderDetailedTargetLines(target)
+	lines := f.RenderDetailedTargetLines(target)
 
 	for _, line := range lines {
 		if _, err := fmt.Fprintf(w, "\t@printf '%%b\\n' \"%s\"\n", line); err != nil {
@@ -94,10 +94,11 @@ func (f *MakeFormatter) DefaultExtension() string {
 	return ".mk"
 }
 
-// renderHelpLines generates help output lines suitable for Makefile @printf statements.
+// RenderHelpLines generates help output lines suitable for Makefile @printf statements.
 // Returns a slice of strings, each representing one line to be printed.
 // Each line is properly escaped for shell/Makefile context.
-func (f *MakeFormatter) renderHelpLines(helpModel *model.HelpModel) ([]string, error) {
+// This is a public API for use by generator code that needs the raw lines.
+func (f *MakeFormatter) RenderHelpLines(helpModel *model.HelpModel) ([]string, error) {
 	var lines []string
 
 	// Usage line
@@ -227,8 +228,9 @@ func (f *MakeFormatter) renderTargetLines(target *model.Target) []string {
 	return lines
 }
 
-// renderDetailedTargetLines renders detailed help for a single target suitable for Makefile @printf.
-func (f *MakeFormatter) renderDetailedTargetLines(target *model.Target) []string {
+// RenderDetailedTargetLines renders detailed help for a single target suitable for Makefile @printf.
+// This is a public API for use by generator code that needs the raw lines.
+func (f *MakeFormatter) RenderDetailedTargetLines(target *model.Target) []string {
 	var lines []string
 
 	// Target name
