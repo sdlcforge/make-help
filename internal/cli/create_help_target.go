@@ -14,6 +14,27 @@ import (
 	"github.com/sdlcforge/make-help/internal/target"
 )
 
+// filterOutHelpFiles removes help file paths from the makefiles list.
+// This ensures MAKE_HELP_MAKEFILES only contains source files, not the generated output.
+func filterOutHelpFiles(makefiles []string, helpFiles ...string) []string {
+	// Create a set of help file paths to exclude (cleaned/normalized)
+	exclude := make(map[string]bool)
+	for _, hf := range helpFiles {
+		if hf != "" {
+			exclude[filepath.Clean(hf)] = true
+		}
+	}
+
+	// Initialize with empty slice to ensure non-nil return value
+	filtered := make([]string, 0, len(makefiles))
+	for _, mf := range makefiles {
+		if !exclude[filepath.Clean(mf)] {
+			filtered = append(filtered, mf)
+		}
+	}
+	return filtered
+}
+
 // runCreateHelpTarget generates and writes the help target file.
 func runCreateHelpTarget(config *Config) error {
 	// Recursion detection: if MAKE_HELP_GENERATING is set, we're being called
@@ -176,11 +197,18 @@ func runCreateHelpTarget(config *Config) error {
 		// Note: We continue anyway - the user may want to move/rename the help file
 	}
 
+	// Filter out help files from the makefiles list
+	filteredMakefiles := filterOutHelpFiles(makefiles, targetFile, existingFile)
+
+	if config.Verbose {
+		fmt.Fprintf(os.Stderr, "Total makefiles discovered: %d, after filtering help files: %d\n", len(makefiles), len(filteredMakefiles))
+	}
+
 	// 10. Generate help file content
 	// Use the raw command line (always captured from os.Args in PreRunE)
 	genConfig := &target.GeneratorConfig{
 		UseColor:            config.UseColor,
-		Makefiles:           makefiles,
+		Makefiles:           filteredMakefiles,
 		HelpModel:           helpModel,
 		MakefileDir:         filepath.Dir(makefilePath),
 		KeepOrderCategories: config.KeepOrderCategories,
