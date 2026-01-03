@@ -52,11 +52,9 @@ func NewFormatter(formatType string, config *FormatterConfig) (Formatter, error)
 	case "text", "txt":
 		return NewTextFormatter(config), nil
 	case "html":
-		// HTML formatter not yet implemented
-		return nil, fmt.Errorf("html format not yet implemented")
+		return NewHTMLFormatter(config), nil
 	case "markdown", "md":
-		// Markdown formatter not yet implemented
-		return nil, fmt.Errorf("markdown format not yet implemented")
+		return NewMarkdownFormatter(config), nil
 	default:
 		return nil, fmt.Errorf("unknown format type: %s (supported: make, text, html, markdown)", formatType)
 	}
