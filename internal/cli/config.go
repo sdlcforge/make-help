@@ -71,9 +71,6 @@ type Config struct {
 	// Must be a relative path (no leading '/'). If empty, location is determined automatically.
 	HelpFileRelPath string
 
-	// ShowHelp displays help dynamically instead of generating a help file.
-	ShowHelp bool
-
 	// RemoveHelpTarget indicates whether to remove help target from Makefile.
 	RemoveHelpTarget bool
 
