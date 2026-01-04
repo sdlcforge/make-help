@@ -296,7 +296,7 @@ Usage: make [<target>...] [<ENV_VAR>=<value>...]
 
 [Entry point Makefile's !file documentation - full text, if present]
 
-[Included Files:
+[Included files:
   path/to/file.mk
     Full documentation from the file's !file directive
     Can be multiple lines
@@ -306,7 +306,7 @@ Usage: make [<target>...] [<ENV_VAR>=<value>...]
 
 Targets:
 
-[Category Name:]
+[Category name:]
   - <target> [<alias1>, <alias2>...]: <summary>
     [Vars: <VAR1> <description1>, <VAR2> <description2>...]
 ```
