@@ -412,7 +412,7 @@ This document records the key architectural and design decisions made in the mak
 - ⚠️ Help file can become stale if not regenerated
 - ⚠️ Larger file size (help text duplicated for each target detail view)
 - ⚠️ Colors must be stripped for static output (cannot detect terminal at runtime)
-- ✅ `--show-help` flag available for dynamic display when needed
+- ✅ `--output -` flag available for dynamic display when needed
 
 **Implementation**: See `internal/target/generator.go` for static file generation and `internal/cli/help.go` for mode routing.
 

@@ -38,7 +38,7 @@ function NewRootCmd():
             3. dispatches to appropriate handler based on flags
 
     register flags organized by category:
-        - Mode: --show-help, --remove-help, --dry-run, --lint, --target
+        - Mode: --output, --remove-help, --dry-run, --lint, --target
         - Input: --makefile-path, --help-file-rel-path
         - Output: --color, --no-color, --include-target, ordering flags
         - Misc: --verbose
@@ -55,8 +55,8 @@ function NewRootCmd():
 
 **Mode Flags:**
 1. **Default (no flags)**: Generate static help file via `runCreateHelpTarget()`
-2. **`--show-help`**: Display help dynamically via `runHelp()`
-3. **`--show-help --target <name>`**: Display detailed help for single target via `runDetailedHelp()`
+2. **`--output -`**: Display help dynamically via `runHelp()`
+3. **`--output - --target <name>`**: Display detailed help for single target via `runDetailedHelp()`
 4. **`--remove-help`**: Remove generated help files via `runRemoveHelpTarget()`
 5. **`--lint`**: Run lint checks (with optional `--fix` and `--dry-run`)
 
@@ -76,7 +76,7 @@ When generating a help file (default mode), creates a Makefile include with:
 - Fallback chain: tries `make-help`, then `npx make-help`, then shows error
 
 **Error Handling:**
-- Invalid flag combinations (e.g., `--target` without `--show-help`)
+- Invalid flag combinations (e.g., `--target` without `--output -`)
 - File path validation via `ResolveMakefilePath()` and `ValidateMakefileExists()`
 - Conflicting color flags (`--color` + `--no-color`)
 - Mode flag restrictions (enforced in PreRunE validation)
@@ -357,7 +357,7 @@ function Render(model):
     return formatted string
 
 function RenderDetailedTarget(target):
-    // Detailed help for single target (--show-help --target <name>)
+    // Detailed help for single target (--output - --target <name>)
     1. write "Target: " + colored target name
     2. if aliases: write "Aliases: " + aliases
     3. if variables: write "Variables:" + detailed list

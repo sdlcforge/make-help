@@ -110,7 +110,7 @@ Step-by-step flows for each operation mode in make-help.
 
 ```
 1. CLI Parsing
-   ├─> Parse --show-help flag
+   ├─> Parse --output flag
    ├─> Validate flag combinations
    └─> Build Config object
 
@@ -138,8 +138,8 @@ Step-by-step flows for each operation mode in make-help.
 
 ```
 1. CLI Parsing
-   ├─> Parse --show-help and --target flags
-   ├─> Validate that --target requires --show-help
+   ├─> Parse --output and --target flags
+   ├─> Validate that --target requires --output -
    └─> Build Config object
 
 2-6. [Same as Dynamic Help Display Flow steps 2-6]

@@ -78,38 +78,16 @@ deploy:
 ### 2. Generate static help file
 
 ```bash
-make-help
+make-help # generates './make/help.mk' or './make/00-help.mk' and includes it from 'Makefile'
 ```
 
-This generates `./make/help.mk` (or `./make/00-help.mk` if numbered files exist) and automatically adds `-include make/*.mk` to your Makefile if needed.
-
-- `make help` - displays help summary
-- `make help-<target>` - detailed help for each documented target
-- Run `make update-help` or add 'update-help' to your 'build' target to regenerate the help when source files change
+Run `make update-help` or add 'update-help' to your 'build' target to regenerate the help when source files change.
 
 ### 3. Use the help system
 
 Now you can run:
 - `make help` - displays help summary
 - `make help-build` - detailed documentation for the build target
-
-Output from `make help` (coloration not shown):
-
-```
-Usage: make [<target>...] [<ENV_VAR>=<value>...]
-
-Targets:
-
-Build:
-  - build: Build the application
-
-Deploy:
-  - deploy: Deploy the application
-    Vars: ENV Target environment (dev, staging, prod)
-
-Test:
-  - test: Run all tests
-```
 
 ## Usage
 
@@ -133,14 +111,14 @@ make-help --lint --fix  # fix what can be automatically fixed and report the res
 To see help output without generating a file:
 
 ```bash
-make-help --show-help                  # Show help for ./Makefile
-make-help --show-help --makefile-path path/to/Makefile
+make-help --output -                   # Show help for ./Makefile
+make-help --output - --makefile-path path/to/Makefile
 ```
 
 To get detailed help for a particular target:
 
 ```bash
-make-help --show-help --target build   # Full docs for 'build' target
+make-help --output - --target build    # Full docs for 'build' target
 ```
 
 ### Target filtering
@@ -156,7 +134,7 @@ make-help --include-all-phony          # Include all .PHONY targets
 ### Remove help files
 
 ```bash
-make-help --remove-help                # Remove generated help files
+make-help --remove-help                # Remove generated help files and incldue
 ```
 
 ## CLI reference
@@ -164,10 +142,9 @@ make-help --remove-help                # Remove generated help files
 **Mode:**
 - `--dry-run` - Preview changes without making them
 - `--fix` - Auto-fix lint issues (requires `--lint`)
-- `--lint` - Check documentation quality and report warning
+- `--lint` - Check documentation quality and report issues
 - `--remove-help` - Remove generated help files
-- `--show-help` - Display help dynamically instead of generating file
-- `--target <name>` - Show detailed help for specific target (requires `--show-help`)
+- `--target <name>` - Show detailed help for specific target (requires `--output -`)
 
 **Input:**
 - `--help-file-rel-path <path>` - Relative path for generated help file (default: `make/help.mk`)
@@ -177,6 +154,7 @@ make-help --remove-help                # Remove generated help files
 - `--category-order <list>` - Explicit category order (comma-separated)
 - `--color` / `--no-color` - Force or disable colored output
 - `--default-category <name>` - Default category for uncategorized targets
+- `--format <type>` - Output format: make, text, html, markdown (default: make)
 - `--help-category <name>` - Category for generated help targets (default: `Help`)
 - `--include-all-phony` - Include all .PHONY targets
 - `--include-target <list>` - Include undocumented targets (comma-separated, repeatable)
@@ -184,8 +162,10 @@ make-help --remove-help                # Remove generated help files
 - `--keep-order-categories` - Preserve category discovery order
 - `--keep-order-files` - Preserve file discovery order (default: alphabetical)
 - `--keep-order-targets` - Preserve target discovery order
+- `--output <path>` - Output destination (file path or `-` for stdout)
 
 **Misc:**
+- `--help` - Displays `make-help` help
 - `--verbose` - Enable verbose output
 - `--version` - Display version information
 

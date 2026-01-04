@@ -20,7 +20,7 @@ make-help
 Or display help dynamically without generating a file:
 
 ```bash
-make-help --show-help --makefile-path examples/<example-name>/Makefile
+make-help --output - --makefile-path examples/<example-name>/Makefile
 ```
 
 ## Examples
