@@ -177,12 +177,13 @@ make-help --remove-help                # Remove generated help files and incldue
   - `!file` to identify file level documentation.
   - `!category` to specify the category for the following targets within the source file.
   - `!alias` explicitly names another target as an alias for the target being documented. Aliases can usually be inferred and the use of this directive may not be necessary.
-  - `!noalias` keeps the next alias looking target as not an alias.
+  - `!noalias` marks a phony `X: Y` construct as a non-alias.
   - `!var` documents environment variables affecting the target behavior.
 
 ### File-level documentation
 
-Use `!file` to add file-level documentation. The entry point Makefile's `!file` documentation appears at the top of the help output (after the usage line). Documentation from included files appears in an "Included Files:" section.
+- In entry point Makefile,  `!file` is used to add top level summary at the top of the help output after th "Usage" section.
+- In included files, `!file` creates an entry in the "Included files" section of the help output.
 
 ```makefile
 ## !file
@@ -190,9 +191,9 @@ Use `!file` to add file-level documentation. The entry point Makefile's `!file` 
 ## This Makefile handles building, testing, and deploying the application.
 ```
 
-**Multiple `!file` directives**: You can have multiple `!file` directives in the same file. They will be concatenated with a blank line between them.
-
-**File ordering**: By default, included files are sorted alphabetically in the "Included Files:" section. Use `--keep-order-files` to preserve the discovery order instead.
+- **Multiple `!file` directives**: You can have multiple `!file` directives in the same file. They will be concatenated with a blank line between them.
+- **File ordering**: By default, included files are sorted alphabetically in the "Included Files:" section. Use `--keep-order-files` to preserve the discovery order instead.
+- All file-level documents are included, not just a sumamry.
 
 ### Target documentation
 
@@ -209,7 +210,7 @@ The first sentence becomes the summary in the help output.
 
 ### Categories
 
-Group related targets using `!category`. The `!category` directive acts as a **switch** that applies to all subsequent targets until changed:
+Group related targets using `!category`. The `!category` directive applies to all subsequent targets until changed:
 
 ```makefile
 ## !category Build
@@ -295,13 +296,13 @@ Usage: make [<target>...] [<ENV_VAR>=<value>...]
 
 [Entry point Makefile's !file documentation - full text, if present]
 
-Included Files:
+[Included Files:
   path/to/file.mk
     Full documentation from the file's !file directive
     Can be multiple lines
 
   path/to/another.mk
-    Documentation here
+    Documentation here]
 
 Targets:
 
@@ -309,11 +310,6 @@ Targets:
   - <target> [<alias1>, <alias2>...]: <summary>
     [Vars: <VAR1> <description1>, <VAR2> <description2>...]
 ```
-
-**Key behaviors**:
-- Entry point's `!file` docs appear first (full text, not just summary)
-- Included files' `!file` docs appear in the "Included Files:" section (full text)
-- Files are sorted alphabetically by default (use `--keep-order-files` to preserve discovery order)
 
 ### Color scheme
 
@@ -371,8 +367,6 @@ make-help --remove-help
 - Your documentation comments (`##` comments in your Makefiles)
 
 ### Removing the binary
-
-The `--remove-help` flag only removes generated help files, not the `make-help` binary itself.
 
 **If installed via Homebrew**:
 ```bash
@@ -451,4 +445,4 @@ The summary extraction algorithm is a Go port of the [extract-topic](https://www
 - **Issues**: Report bugs and request features via GitHub Issues
 - **Discussions**: Ask questions in GitHub Discussions
 
-Last reviewed: 2025-12-25T16:43Z
+Last reviewed: 2026-01-04T00:27Z
