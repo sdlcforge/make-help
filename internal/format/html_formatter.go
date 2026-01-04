@@ -91,7 +91,7 @@ func (f *HTMLFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 
 		if len(includedFiles) > 0 {
 			buf.WriteString("  <section class=\"included-files\">\n")
-			buf.WriteString("    <h2>Included Files</h2>\n")
+			buf.WriteString("    <h2>Included files</h2>\n")
 			for _, fileDoc := range includedFiles {
 				buf.WriteString("    <div class=\"file\">\n")
 				buf.WriteString("      <h3>")

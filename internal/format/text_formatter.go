@@ -72,7 +72,7 @@ func (f *TextFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 		}
 
 		if len(includedFiles) > 0 {
-			buf.WriteString("\nIncluded Files:\n")
+			buf.WriteString("\nIncluded files:\n")
 			for _, fileDoc := range includedFiles {
 				// File path
 				buf.WriteString("  ")

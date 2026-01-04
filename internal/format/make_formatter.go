@@ -127,7 +127,7 @@ func (f *MakeFormatter) RenderHelpLines(helpModel *model.HelpModel) ([]string, e
 
 		if len(includedFiles) > 0 {
 			lines = append(lines, escapeForMakefileEcho(""))
-			lines = append(lines, escapeForMakefileEcho("Included Files:"))
+			lines = append(lines, escapeForMakefileEcho("Included files:"))
 			for _, fileDoc := range includedFiles {
 				// File path
 				lines = append(lines, escapeForMakefileEcho("  "+fileDoc.SourceFile))

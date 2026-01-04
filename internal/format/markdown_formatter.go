@@ -83,7 +83,7 @@ func (f *MarkdownFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) 
 		}
 
 		if len(includedFiles) > 0 {
-			buf.WriteString("## Included Files\n\n")
+			buf.WriteString("## Included files\n\n")
 			for _, fileDoc := range includedFiles {
 				buf.WriteString("### ")
 				buf.WriteString(escapeMarkdown(fileDoc.SourceFile))
