@@ -42,10 +42,26 @@ type FormatterConfig struct {
 	ColorScheme *ColorScheme
 }
 
+// Validate checks that the FormatterConfig is valid.
+// Returns an error if the configuration is invalid.
+func (c *FormatterConfig) Validate() error {
+	if c.UseColor && c.ColorScheme == nil {
+		return fmt.Errorf("UseColor is true but ColorScheme is nil")
+	}
+	return nil
+}
+
 // NewFormatter creates a formatter for the specified format type.
 // This is the factory function that replaces direct renderer construction.
 // Supported format types: "make", "mk", "text", "txt", "html", "markdown", "md", "json"
 func NewFormatter(formatType string, config *FormatterConfig) (Formatter, error) {
+	// Validate config if provided
+	if config != nil {
+		if err := config.Validate(); err != nil {
+			return nil, err
+		}
+	}
+
 	switch formatType {
 	case "make", "mk":
 		return NewMakeFormatter(config), nil
