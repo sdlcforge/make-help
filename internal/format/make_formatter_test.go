@@ -166,6 +166,10 @@ func TestMakeFormatter_RenderHelp_SpecialCharactersEscaped(t *testing.T) {
 						Name:    "deploy",
 						Summary: richtext.FromPlainText(`Use $VAR and "quotes" in command.`),
 					},
+					{
+						Name:    "inject",
+						Summary: richtext.FromPlainText("Line1\nLine2\rLine3\tTabbed"),
+					},
 				},
 			},
 		},
@@ -184,6 +188,15 @@ func TestMakeFormatter_RenderHelp_SpecialCharactersEscaped(t *testing.T) {
 	}
 	if !strings.Contains(output, "\\\"quotes\\\"") {
 		t.Error("Output should escape double quotes")
+	}
+	if !strings.Contains(output, "\\n") {
+		t.Error("Output should escape newline as \\n")
+	}
+	if !strings.Contains(output, "\\r") {
+		t.Error("Output should escape carriage return as \\r")
+	}
+	if !strings.Contains(output, "\\t") {
+		t.Error("Output should escape tab as \\t")
 	}
 }
 
@@ -335,8 +348,8 @@ func TestMakeFormatter_WithIncludedFiles(t *testing.T) {
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, "Included Files:") {
-		t.Error("Output should contain 'Included Files:' header")
+	if !strings.Contains(output, "Included files:") {
+		t.Error("Output should contain 'Included files:' header")
 	}
 	if !strings.Contains(output, "make/build.mk") {
 		t.Error("Output should contain included file path")

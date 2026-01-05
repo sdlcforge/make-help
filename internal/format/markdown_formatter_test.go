@@ -180,8 +180,8 @@ func TestMarkdownFormatter_RenderHelp_WithIncludedFiles(t *testing.T) {
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, "## Included Files") {
-		t.Error("Output should contain Included Files heading")
+	if !strings.Contains(output, "## Included files") {
+		t.Error("Output should contain Included files heading")
 	}
 	if !strings.Contains(output, "### make/build.mk") {
 		t.Error("Output should contain included file path as h3")

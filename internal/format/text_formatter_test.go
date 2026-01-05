@@ -334,8 +334,8 @@ func TestTextFormatter_WithIncludedFiles(t *testing.T) {
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, "Included Files:") {
-		t.Error("Output should contain 'Included Files:' header")
+	if !strings.Contains(output, "Included files:") {
+		t.Error("Output should contain 'Included files:' header")
 	}
 	if !strings.Contains(output, "make/build.mk") {
 		t.Error("Output should contain included file path")
