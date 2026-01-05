@@ -83,7 +83,7 @@ type jsonBasicTarget struct {
 // RenderHelp generates the complete help output from a HelpModel in JSON format.
 func (f *JSONFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) error {
 	if helpModel == nil {
-		return fmt.Errorf("help model cannot be nil")
+		return fmt.Errorf("json formatter: help model cannot be nil")
 	}
 
 	output := jsonHelpOutput{
@@ -158,7 +158,7 @@ func (f *JSONFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 // RenderDetailedTarget renders a detailed view of a single target in JSON format.
 func (f *JSONFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) error {
 	if target == nil {
-		return fmt.Errorf("target cannot be nil")
+		return fmt.Errorf("json formatter: target cannot be nil")
 	}
 
 	output := jsonDetailedTarget{

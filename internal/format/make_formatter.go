@@ -37,7 +37,7 @@ func NewMakeFormatter(config *FormatterConfig) *MakeFormatter {
 // For Make format, this generates @printf statements that echo the help text.
 func (f *MakeFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) error {
 	if helpModel == nil {
-		return fmt.Errorf("help model cannot be nil")
+		return fmt.Errorf("make formatter: help model cannot be nil")
 	}
 
 	lines, err := f.RenderHelpLines(helpModel)
@@ -57,7 +57,7 @@ func (f *MakeFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 // RenderDetailedTarget generates detailed help for a single target.
 func (f *MakeFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) error {
 	if target == nil {
-		return fmt.Errorf("target cannot be nil")
+		return fmt.Errorf("make formatter: target cannot be nil")
 	}
 
 	lines := f.RenderDetailedTargetLines(target)

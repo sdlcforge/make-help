@@ -332,3 +332,68 @@ func TestNewFormatterWithInvalidConfig(t *testing.T) {
 		})
 	}
 }
+
+// TestFormatterErrorMessages verifies that error messages include the formatter name
+func TestFormatterErrorMessages(t *testing.T) {
+	tests := []struct {
+		name           string
+		formatter      Formatter
+		expectedPrefix string
+	}{
+		{
+			name:           "TextFormatter",
+			formatter:      NewTextFormatter(&FormatterConfig{}),
+			expectedPrefix: "text formatter:",
+		},
+		{
+			name:           "MakeFormatter",
+			formatter:      NewMakeFormatter(&FormatterConfig{}),
+			expectedPrefix: "make formatter:",
+		},
+		{
+			name:           "HTMLFormatter",
+			formatter:      NewHTMLFormatter(&FormatterConfig{}),
+			expectedPrefix: "html formatter:",
+		},
+		{
+			name:           "MarkdownFormatter",
+			formatter:      NewMarkdownFormatter(&FormatterConfig{}),
+			expectedPrefix: "markdown formatter:",
+		},
+		{
+			name:           "JSONFormatter",
+			formatter:      NewJSONFormatter(&FormatterConfig{}),
+			expectedPrefix: "json formatter:",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name+" RenderHelp nil model", func(t *testing.T) {
+			err := tt.formatter.RenderHelp(nil, nil)
+			if err == nil {
+				t.Error("RenderHelp(nil, nil) should return error")
+				return
+			}
+			if !strings.Contains(err.Error(), tt.expectedPrefix) {
+				t.Errorf("RenderHelp(nil, nil) error = %q, want error containing %q", err.Error(), tt.expectedPrefix)
+			}
+			if !strings.Contains(err.Error(), "help model cannot be nil") {
+				t.Errorf("RenderHelp(nil, nil) error = %q, want error containing %q", err.Error(), "help model cannot be nil")
+			}
+		})
+
+		t.Run(tt.name+" RenderDetailedTarget nil target", func(t *testing.T) {
+			err := tt.formatter.RenderDetailedTarget(nil, nil)
+			if err == nil {
+				t.Error("RenderDetailedTarget(nil, nil) should return error")
+				return
+			}
+			if !strings.Contains(err.Error(), tt.expectedPrefix) {
+				t.Errorf("RenderDetailedTarget(nil, nil) error = %q, want error containing %q", err.Error(), tt.expectedPrefix)
+			}
+			if !strings.Contains(err.Error(), "target cannot be nil") {
+				t.Errorf("RenderDetailedTarget(nil, nil) error = %q, want error containing %q", err.Error(), "target cannot be nil")
+			}
+		})
+	}
+}

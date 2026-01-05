@@ -41,7 +41,7 @@ func NewTextFormatter(config *FormatterConfig) *TextFormatter {
 //   - Targets section with categories (if applicable)
 func (f *TextFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) error {
 	if helpModel == nil {
-		return fmt.Errorf("help model cannot be nil")
+		return fmt.Errorf("text formatter: help model cannot be nil")
 	}
 
 	var buf strings.Builder
@@ -178,7 +178,7 @@ func (f *TextFormatter) renderTarget(buf *strings.Builder, target *model.Target)
 // It includes the full documentation, not just the summary.
 func (f *TextFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) error {
 	if target == nil {
-		return fmt.Errorf("target cannot be nil")
+		return fmt.Errorf("text formatter: target cannot be nil")
 	}
 
 	var buf strings.Builder
