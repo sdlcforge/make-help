@@ -115,7 +115,7 @@ func (f *MarkdownFormatter) renderCategory(buf *strings.Builder, category *model
 	// Render category name (if present)
 	if category.Name != model.UncategorizedCategoryName {
 		buf.WriteString("### ")
-		buf.WriteString(category.Name)
+		buf.WriteString(escapeMarkdown(category.Name))
 		buf.WriteString("\n\n")
 	}
 
