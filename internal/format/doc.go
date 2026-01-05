@@ -5,6 +5,7 @@
 //   - Text format: Plain text or ANSI-colored terminal output
 //   - HTML format: Browser-ready HTML with embedded styles
 //   - Markdown format: GitHub-flavored markdown documentation
+//   - JSON format: Structured JSON for programmatic consumption
 //
 // # Architecture
 //
@@ -13,6 +14,7 @@
 //   - TextFormatter: Produces human-readable text output
 //   - HTMLFormatter: Creates styled HTML pages
 //   - MarkdownFormatter: Outputs structured markdown documentation
+//   - JSONFormatter: Produces structured JSON output
 //
 // All formatters implement the Formatter interface:
 //
