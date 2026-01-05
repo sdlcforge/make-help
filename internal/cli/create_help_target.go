@@ -211,6 +211,7 @@ func runCreateHelpTarget(config *Config) error {
 		Makefiles:           filteredMakefiles,
 		HelpModel:           helpModel,
 		MakefileDir:         filepath.Dir(makefilePath),
+		HelpFilename:        filepath.Base(targetFile),
 		KeepOrderCategories: config.KeepOrderCategories,
 		KeepOrderTargets:    config.KeepOrderTargets,
 		CategoryOrder:       config.CategoryOrder,

@@ -12,9 +12,10 @@ import (
 
 func TestGenerateHelpFile_Basic(t *testing.T) {
 	config := &GeneratorConfig{
-		UseColor:    true,
-		Makefiles:   []string{"/path/to/Makefile"},
-		MakefileDir: "/path/to",
+		UseColor:     true,
+		Makefiles:    []string{"/path/to/Makefile"},
+		MakefileDir:  "/path/to",
+		HelpFilename: "help.mk",
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
 				{
@@ -106,9 +107,10 @@ func TestGenerateHelpFile_Basic(t *testing.T) {
 
 func TestGenerateHelpFile_NoColor(t *testing.T) {
 	config := &GeneratorConfig{
-		UseColor:    false,
-		Makefiles:   []string{"/path/to/Makefile"},
-		MakefileDir: "/path/to",
+		UseColor:     false,
+		Makefiles:    []string{"/path/to/Makefile"},
+		MakefileDir:  "/path/to",
+		HelpFilename: "help.mk",
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
 				{
@@ -142,9 +144,10 @@ func TestGenerateHelpFile_NoColor(t *testing.T) {
 
 func TestGenerateHelpFile_WithColor(t *testing.T) {
 	config := &GeneratorConfig{
-		UseColor:    true,
-		Makefiles:   []string{"/path/to/Makefile"},
-		MakefileDir: "/path/to",
+		UseColor:     true,
+		Makefiles:    []string{"/path/to/Makefile"},
+		MakefileDir:  "/path/to",
+		HelpFilename: "help.mk",
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
 				{
@@ -188,6 +191,7 @@ func TestGenerateHelpFile_AllOptions(t *testing.T) {
 		HelpCategory:        "Utilities",
 		Makefiles:           []string{"/path/to/Makefile", "/path/to/make/build.mk"},
 		MakefileDir:         "/path/to",
+		HelpFilename:        "help.mk",
 		HelpModel: &model.HelpModel{
 			HasCategories: true,
 			Categories: []model.Category{
@@ -242,9 +246,10 @@ func TestGenerateHelpFile_AllOptions(t *testing.T) {
 
 func TestGenerateHelpFile_MultipleTargets(t *testing.T) {
 	config := &GeneratorConfig{
-		UseColor:    false,
-		Makefiles:   []string{"/path/to/Makefile"},
-		MakefileDir: "/path/to",
+		UseColor:     false,
+		Makefiles:    []string{"/path/to/Makefile"},
+		MakefileDir:  "/path/to",
+		HelpFilename: "help.mk",
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
 				{
@@ -301,7 +306,8 @@ func TestGenerateHelpFile_MultipleMakefiles(t *testing.T) {
 			"/path/to/make/build.mk",
 			"/path/to/make/test.mk",
 		},
-		MakefileDir: "/path/to",
+		MakefileDir:  "/path/to",
+		HelpFilename: "help.mk",
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
 				{
@@ -336,9 +342,10 @@ func TestGenerateHelpFile_MultipleMakefiles(t *testing.T) {
 
 func TestGenerateHelpFile_TargetWithAliases(t *testing.T) {
 	config := &GeneratorConfig{
-		UseColor:    false,
-		Makefiles:   []string{"/path/to/Makefile"},
-		MakefileDir: "/path/to",
+		UseColor:     false,
+		Makefiles:    []string{"/path/to/Makefile"},
+		MakefileDir:  "/path/to",
+		HelpFilename: "help.mk",
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
 				{
@@ -369,9 +376,10 @@ func TestGenerateHelpFile_TargetWithAliases(t *testing.T) {
 
 func TestGenerateHelpFile_TargetWithVariables(t *testing.T) {
 	config := &GeneratorConfig{
-		UseColor:    false,
-		Makefiles:   []string{"/path/to/Makefile"},
-		MakefileDir: "/path/to",
+		UseColor:     false,
+		Makefiles:    []string{"/path/to/Makefile"},
+		MakefileDir:  "/path/to",
+		HelpFilename: "help.mk",
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
 				{
@@ -412,9 +420,10 @@ func TestGenerateHelpFile_ValidMakefile(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	config := &GeneratorConfig{
-		UseColor:    false,
-		Makefiles:   []string{filepath.Join(tmpDir, "Makefile")},
-		MakefileDir: tmpDir,
+		UseColor:     false,
+		Makefiles:    []string{filepath.Join(tmpDir, "Makefile")},
+		MakefileDir:  tmpDir,
+		HelpFilename: "help.mk",
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
 				{
@@ -604,10 +613,11 @@ func TestBuildRegenerateFlags(t *testing.T) {
 
 func TestGenerateRegenerationTarget(t *testing.T) {
 	config := &GeneratorConfig{
-		UseColor:    false,
-		Makefiles:   []string{"/path/to/Makefile"},
-		MakefileDir: "/path/to",
-		HelpModel:   &model.HelpModel{},
+		UseColor:     false,
+		Makefiles:    []string{"/path/to/Makefile"},
+		MakefileDir:  "/path/to",
+		HelpFilename: "help.mk",
+		HelpModel:    &model.HelpModel{},
 	}
 
 	result := generateRegenerationTarget(config)
@@ -640,6 +650,7 @@ func TestGenerateRegenerationTarget_WithFlags(t *testing.T) {
 		DefaultCategory:     "Other",
 		Makefiles:           []string{"/path/to/Makefile"},
 		MakefileDir:         "/path/to",
+		HelpFilename:        "help.mk",
 		HelpModel:           &model.HelpModel{},
 	}
 
@@ -655,5 +666,47 @@ func TestGenerateRegenerationTarget_WithFlags(t *testing.T) {
 	// Should NOT include --no-color since UseColor is true
 	if strings.Contains(result, "--no-color") {
 		t.Error("Should not have --no-color when UseColor is true")
+	}
+}
+
+func TestGenerateHelpFile_CustomHelpFilename(t *testing.T) {
+	config := &GeneratorConfig{
+		UseColor:     false,
+		Makefiles:    []string{"/path/to/Makefile"},
+		MakefileDir:  "/path/to",
+		HelpFilename: "00-help.mk",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// Check that the custom filename is used in the staleness check
+	if !strings.Contains(result, "if [ \"$$f\" -nt \"$(MAKE_HELP_DIR)00-help.mk\" ]") {
+		t.Error("Staleness check should use custom filename '00-help.mk'")
+	}
+
+	// Check that the warning message uses the custom filename
+	if !strings.Contains(result, "is newer than 00-help.mk") {
+		t.Error("Warning message should reference custom filename '00-help.mk'")
+	}
+
+	// Should NOT contain the default "help.mk" in staleness check
+	if strings.Contains(result, "if [ \"$$f\" -nt \"$(MAKE_HELP_DIR)help.mk\" ]") {
+		t.Error("Should not use default 'help.mk' when custom filename is provided")
 	}
 }
