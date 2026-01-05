@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -1021,4 +1022,210 @@ func TestTargetRequiresStdout(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetDefaultOutput(t *testing.T) {
+	tests := []struct {
+		format   string
+		expected string
+	}{
+		{
+			format:   "make",
+			expected: "./make/help.mk",
+		},
+		{
+			format:   "text",
+			expected: "-",
+		},
+		{
+			format:   "json",
+			expected: "-",
+		},
+		{
+			format:   "html",
+			expected: "./make-help.html",
+		},
+		{
+			format:   "markdown",
+			expected: "./make-help.md",
+		},
+		{
+			format:   "unknown",
+			expected: "-",
+		},
+		{
+			format:   "",
+			expected: "-",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.format, func(t *testing.T) {
+			result := getDefaultOutput(tt.format)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestFormatFlagUsage(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    func() *pflag.Flag
+		contains []string
+	}{
+		{
+			name: "boolean flag without shorthand",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.Bool("verbose", false, "Enable verbose output")
+				return fs.Lookup("verbose")
+			},
+			contains: []string{"--verbose", "Enable verbose output"},
+		},
+		{
+			name: "boolean flag with shorthand",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.BoolP("verbose", "v", false, "Enable verbose output")
+				return fs.Lookup("verbose")
+			},
+			contains: []string{"-v,", "--verbose", "Enable verbose output"},
+		},
+		{
+			name: "string flag",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.String("output", "default.txt", "Output file path")
+				return fs.Lookup("output")
+			},
+			contains: []string{"--output", "string", "Output file path", "(default default.txt)"},
+		},
+		{
+			name: "string flag with empty default",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.String("makefile-path", "", "Path to Makefile")
+				return fs.Lookup("makefile-path")
+			},
+			contains: []string{"--makefile-path", "string", "Path to Makefile"},
+		},
+		{
+			name: "string slice flag",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.StringSlice("include-target", []string{}, "Include targets")
+				return fs.Lookup("include-target")
+			},
+			contains: []string{"--include-target", "strings", "Include targets"},
+		},
+		{
+			name: "int flag with default",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.Int("count", 42, "Number of items")
+				return fs.Lookup("count")
+			},
+			contains: []string{"--count", "int", "Number of items", "(default 42)"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			flag := tt.setup()
+			result := formatFlagUsage(flag)
+
+			for _, substring := range tt.contains {
+				assert.Contains(t, result, substring)
+			}
+		})
+	}
+}
+
+func TestShouldShowDefault(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    func() *pflag.Flag
+		expected bool
+	}{
+		{
+			name: "empty string default",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.String("flag", "", "description")
+				return fs.Lookup("flag")
+			},
+			expected: false,
+		},
+		{
+			name: "false boolean default",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.Bool("flag", false, "description")
+				return fs.Lookup("flag")
+			},
+			expected: false,
+		},
+		{
+			name: "true boolean default",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.Bool("flag", true, "description")
+				return fs.Lookup("flag")
+			},
+			expected: true,
+		},
+		{
+			name: "empty slice default",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.StringSlice("flag", []string{}, "description")
+				return fs.Lookup("flag")
+			},
+			expected: false,
+		},
+		{
+			name: "non-empty string default",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.String("flag", "value", "description")
+				return fs.Lookup("flag")
+			},
+			expected: true,
+		},
+		{
+			name: "int default",
+			setup: func() *pflag.Flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.Int("flag", 42, "description")
+				return fs.Lookup("flag")
+			},
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			flag := tt.setup()
+			result := shouldShowDefault(flag)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestFlagGroupsFunc(t *testing.T) {
+	cmd := NewRootCmd()
+
+	// Call flagGroupsFunc to exercise the function
+	output := flagGroupsFunc(cmd)
+
+	// Should contain group headers (check actual case used in output)
+	assert.Contains(t, output, "Mode:")
+	assert.Contains(t, output, "Input:")
+	assert.Contains(t, output, "Output/formatting:")
+	assert.Contains(t, output, "Misc:")
+
+	// Should contain some expected flags
+	assert.Contains(t, output, "--remove-help")
+	assert.Contains(t, output, "--makefile-path")
+	assert.Contains(t, output, "--verbose")
 }
