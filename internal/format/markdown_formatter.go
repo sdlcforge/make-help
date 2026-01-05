@@ -45,7 +45,7 @@ func escapeMarkdown(s string) string {
 // RenderHelp generates the complete help output from a HelpModel in Markdown format.
 func (f *MarkdownFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) error {
 	if helpModel == nil {
-		return fmt.Errorf("help model cannot be nil")
+		return fmt.Errorf("markdown formatter: help model cannot be nil")
 	}
 
 	var buf strings.Builder
@@ -171,7 +171,7 @@ func (f *MarkdownFormatter) renderTarget(buf *strings.Builder, target *model.Tar
 // RenderDetailedTarget renders a detailed view of a single target in Markdown.
 func (f *MarkdownFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) error {
 	if target == nil {
-		return fmt.Errorf("target cannot be nil")
+		return fmt.Errorf("markdown formatter: target cannot be nil")
 	}
 
 	var buf strings.Builder

@@ -29,7 +29,7 @@ func NewHTMLFormatter(config *FormatterConfig) *HTMLFormatter {
 // RenderHelp generates the complete help output from a HelpModel in HTML format.
 func (f *HTMLFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) error {
 	if helpModel == nil {
-		return fmt.Errorf("help model cannot be nil")
+		return fmt.Errorf("html formatter: help model cannot be nil")
 	}
 
 	var buf strings.Builder
@@ -203,7 +203,7 @@ func (f *HTMLFormatter) renderTarget(buf *strings.Builder, target *model.Target)
 // RenderDetailedTarget renders a detailed view of a single target in HTML.
 func (f *HTMLFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) error {
 	if target == nil {
-		return fmt.Errorf("target cannot be nil")
+		return fmt.Errorf("html formatter: target cannot be nil")
 	}
 
 	var buf strings.Builder
