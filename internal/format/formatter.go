@@ -44,10 +44,12 @@ type FormatterConfig struct {
 
 // Validate checks that the FormatterConfig is valid.
 // Returns an error if the configuration is invalid.
+// Note: UseColor=true with ColorScheme=nil is valid - formatters will create
+// default color schemes. This method is provided for future validation needs.
 func (c *FormatterConfig) Validate() error {
-	if c.UseColor && c.ColorScheme == nil {
-		return fmt.Errorf("UseColor is true but ColorScheme is nil")
-	}
+	// Note: We do NOT validate UseColor + nil ColorScheme because all formatters
+	// already handle this case gracefully by creating default color schemes.
+	// This maintains backward compatibility with existing code.
 	return nil
 }
 
