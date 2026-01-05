@@ -36,6 +36,9 @@ type GeneratorConfig struct {
 	// MakefileDir is the directory containing the main Makefile (for relative paths)
 	MakefileDir string
 
+	// HelpFilename is the basename of the help file (e.g., "help.mk", "00-help.mk")
+	HelpFilename string
+
 	// CommandLine is the full command line used to generate this file (for restoration)
 	CommandLine string
 }
@@ -89,12 +92,16 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	buf.WriteString("help:\n")
 
 	// Add timestamp check to warn if help.mk may be stale
+	helpFilename := config.HelpFilename
+	if helpFilename == "" {
+		helpFilename = "help.mk"
+	}
 	buf.WriteString("\t@for f in $(MAKE_HELP_MAKEFILES); do \\\n")
-	buf.WriteString("\t  if [ \"$$f\" -nt \"$(MAKE_HELP_DIR)help.mk\" ]; then \\\n")
+	buf.WriteString(fmt.Sprintf("\t  if [ \"$$f\" -nt \"$(MAKE_HELP_DIR)%s\" ]; then \\\n", helpFilename))
 	if config.UseColor {
-		buf.WriteString("\t    printf '\\033[0;33mWarning: %s is newer than help.mk. Run make update-help to refresh.\\033[0m\\n' \"$$f\"; \\\n")
+		buf.WriteString(fmt.Sprintf("\t    printf '\\033[0;33mWarning: %%s is newer than %s. Run make update-help to refresh.\\033[0m\\n' \"$$f\"; \\\n", helpFilename))
 	} else {
-		buf.WriteString("\t    printf 'Warning: %s is newer than help.mk. Run make update-help to refresh.\\n' \"$$f\"; \\\n")
+		buf.WriteString(fmt.Sprintf("\t    printf 'Warning: %%s is newer than %s. Run make update-help to refresh.\\n' \"$$f\"; \\\n", helpFilename))
 	}
 	buf.WriteString("\t  fi; \\\n")
 	buf.WriteString("\tdone\n")
