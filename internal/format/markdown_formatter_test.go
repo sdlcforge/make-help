@@ -500,6 +500,87 @@ func TestMarkdownFormatter_RenderHelp_SpecialCharacters(t *testing.T) {
 	}
 }
 
+// TestMarkdownFormatter_RenderHelp_CategoryNamesEscaped tests that category names are escaped
+func TestMarkdownFormatter_RenderHelp_CategoryNamesEscaped(t *testing.T) {
+	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
+	helpModel := &model.HelpModel{
+		HasCategories: true,
+		Categories: []model.Category{
+			{
+				Name: "Config [Advanced]",
+				Targets: []model.Target{
+					{
+						Name:    "configure",
+						Summary: richtext.FromPlainText("Configure settings."),
+					},
+				},
+			},
+			{
+				Name: "Tasks_With_Underscores",
+				Targets: []model.Target{
+					{
+						Name:    "task1",
+						Summary: richtext.FromPlainText("First task."),
+					},
+				},
+			},
+			{
+				Name: "Special*Chars#Here",
+				Targets: []model.Target{
+					{
+						Name:    "task2",
+						Summary: richtext.FromPlainText("Second task."),
+					},
+				},
+			},
+			{
+				Name: "Code`With`Backticks",
+				Targets: []model.Target{
+					{
+						Name:    "task3",
+						Summary: richtext.FromPlainText("Third task."),
+					},
+				},
+			},
+			{
+				Name: "Parens(Test)",
+				Targets: []model.Target{
+					{
+						Name:    "task4",
+						Summary: richtext.FromPlainText("Fourth task."),
+					},
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+	err := formatter.RenderHelp(helpModel, &buf)
+
+	if err != nil {
+		t.Fatalf("RenderHelp() error = %v", err)
+	}
+
+	output := buf.String()
+
+	// Test category names are escaped (only characters that escapeMarkdown handles: * _ ` [ ] ( ) #)
+	if !strings.Contains(output, `### Config \[Advanced\]`) {
+		t.Error("Category name with brackets should be escaped")
+	}
+	if !strings.Contains(output, `### Tasks\_With\_Underscores`) {
+		t.Error("Category name with underscores should be escaped")
+	}
+	if !strings.Contains(output, `### Special\*Chars\#Here`) {
+		t.Error("Category name with asterisk and hash should be escaped")
+	}
+	if !strings.Contains(output, "### Code\\`With\\`Backticks") {
+		t.Error("Category name with backticks should be escaped")
+	}
+	if !strings.Contains(output, `### Parens\(Test\)`) {
+		t.Error("Category name with parentheses should be escaped")
+	}
+}
+
 // TestMarkdownFormatter_ComplexModel tests a complex help model
 func TestMarkdownFormatter_ComplexModel(t *testing.T) {
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
