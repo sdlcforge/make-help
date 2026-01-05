@@ -244,3 +244,91 @@ func TestFormatterNilConfig(t *testing.T) {
 		}
 	})
 }
+
+// TestFormatterConfigValidate tests the FormatterConfig Validate method
+func TestFormatterConfigValidate(t *testing.T) {
+	tests := []struct {
+		name        string
+		config      *FormatterConfig
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name: "valid config with UseColor false",
+			config: &FormatterConfig{
+				UseColor:    false,
+				ColorScheme: nil,
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid config with UseColor true and ColorScheme",
+			config: &FormatterConfig{
+				UseColor:    true,
+				ColorScheme: &ColorScheme{},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid config with UseColor true but ColorScheme nil",
+			config: &FormatterConfig{
+				UseColor:    true,
+				ColorScheme: nil,
+			},
+			wantErr:     true,
+			errContains: "UseColor is true but ColorScheme is nil",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.config.Validate()
+
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("Validate() error = nil, wantErr %v", tt.wantErr)
+					return
+				}
+				if tt.errContains != "" {
+					if !strings.Contains(err.Error(), tt.errContains) {
+						t.Errorf("Validate() error = %v, want error containing %q", err, tt.errContains)
+					}
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("Validate() unexpected error = %v", err)
+			}
+		})
+	}
+}
+
+// TestNewFormatterWithInvalidConfig tests that NewFormatter returns error for invalid config
+func TestNewFormatterWithInvalidConfig(t *testing.T) {
+	invalidConfig := &FormatterConfig{
+		UseColor:    true,
+		ColorScheme: nil,
+	}
+
+	formatTypes := []string{"make", "text", "html", "markdown", "json"}
+
+	for _, formatType := range formatTypes {
+		t.Run("NewFormatter "+formatType+" with invalid config", func(t *testing.T) {
+			formatter, err := NewFormatter(formatType, invalidConfig)
+
+			if err == nil {
+				t.Errorf("NewFormatter() error = nil, want error for invalid config")
+				return
+			}
+
+			if formatter != nil {
+				t.Errorf("NewFormatter() returned non-nil formatter with invalid config")
+			}
+
+			if !strings.Contains(err.Error(), "UseColor is true but ColorScheme is nil") {
+				t.Errorf("NewFormatter() error = %v, want error containing 'UseColor is true but ColorScheme is nil'", err)
+			}
+		})
+	}
+}
