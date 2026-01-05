@@ -333,6 +333,45 @@ func (f *HTMLFormatter) DefaultExtension() string {
 	return ".html"
 }
 
+// isValidURL validates that a URL uses a safe scheme.
+// Only http://, https://, and relative URLs (starting with / or without a colon) are allowed.
+// This prevents javascript: and other potentially dangerous URL schemes.
+func isValidURL(url string) bool {
+	if url == "" {
+		return false
+	}
+
+	// Normalize to lowercase to prevent case-sensitivity bypass
+	normalizedURL := strings.ToLower(url)
+
+	// Check for common safe prefixes
+	if strings.HasPrefix(normalizedURL, "http://") || strings.HasPrefix(normalizedURL, "https://") {
+		return true
+	}
+
+	// Allow relative URLs starting with /
+	if strings.HasPrefix(url, "/") {
+		return true
+	}
+
+	// Allow relative URLs without a scheme (no colon before any slash or end of string)
+	colonIndex := strings.Index(normalizedURL, ":")
+	slashIndex := strings.Index(normalizedURL, "/")
+
+	// No colon = relative path
+	if colonIndex == -1 {
+		return true
+	}
+
+	// Colon after slash = relative path with colon in filename
+	if slashIndex != -1 && colonIndex > slashIndex {
+		return true
+	}
+
+	// Colon before any slash = scheme present, and it's not http/https
+	return false
+}
+
 // renderRichText converts RichText segments to HTML.
 func (f *HTMLFormatter) renderRichText(rt richtext.RichText) string {
 	var buf strings.Builder
@@ -351,11 +390,17 @@ func (f *HTMLFormatter) renderRichText(rt richtext.RichText) string {
 			buf.WriteString(html.EscapeString(seg.Content))
 			buf.WriteString("</code>")
 		case richtext.SegmentLink:
-			buf.WriteString("<a href=\"")
-			buf.WriteString(html.EscapeString(seg.URL))
-			buf.WriteString("\">")
-			buf.WriteString(html.EscapeString(seg.Content))
-			buf.WriteString("</a>")
+			// Only render as link if URL scheme is safe
+			if isValidURL(seg.URL) {
+				buf.WriteString("<a href=\"")
+				buf.WriteString(html.EscapeString(seg.URL))
+				buf.WriteString("\">")
+				buf.WriteString(html.EscapeString(seg.Content))
+				buf.WriteString("</a>")
+			} else {
+				// Render as plain text if URL is unsafe
+				buf.WriteString(html.EscapeString(seg.Content))
+			}
 		default:
 			buf.WriteString(html.EscapeString(seg.Content))
 		}

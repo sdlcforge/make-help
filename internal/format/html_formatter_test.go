@@ -524,3 +524,189 @@ func TestHTMLFormatter_NilTarget(t *testing.T) {
 		t.Errorf("Error should mention nil, got: %v", err)
 	}
 }
+
+// TestIsValidURL tests URL scheme validation
+func TestIsValidURL(t *testing.T) {
+	tests := []struct {
+		name     string
+		url      string
+		expected bool
+	}{
+		// Safe URLs - should be allowed
+		{name: "http URL", url: "http://example.com", expected: true},
+		{name: "https URL", url: "https://example.com", expected: true},
+		{name: "https URL with path", url: "https://example.com/path/to/page", expected: true},
+		{name: "http URL with query", url: "http://example.com?query=value", expected: true},
+		{name: "http URL uppercase", url: "HTTP://example.com", expected: true},
+		{name: "https URL uppercase", url: "HTTPS://example.com", expected: true},
+		{name: "https URL mixed case", url: "HtTpS://example.com", expected: true},
+		{name: "absolute path", url: "/docs/guide", expected: true},
+		{name: "relative path", url: "docs/guide", expected: true},
+		{name: "relative path with dot", url: "./docs/guide", expected: true},
+		{name: "relative path with double dot", url: "../docs/guide", expected: true},
+		{name: "filename only", url: "README.md", expected: true},
+		{name: "relative path with colon in filename", url: "docs/file:name.txt", expected: true},
+		{name: "path with colon after slash", url: "/path/to/file:test.txt", expected: true},
+
+		// Unsafe URLs - should be blocked
+		{name: "javascript URL", url: "javascript:alert('XSS')", expected: false},
+		{name: "javascript URL with whitespace", url: "javascript: alert('XSS')", expected: false},
+		{name: "javascript URL uppercase", url: "JAVASCRIPT:alert(1)", expected: false},
+		{name: "javascript URL mixed case", url: "JaVaScRiPt:alert(1)", expected: false},
+		{name: "data URL", url: "data:text/html,<script>alert('XSS')</script>", expected: false},
+		{name: "data URL uppercase", url: "DATA:text/html,<script>alert('XSS')</script>", expected: false},
+		{name: "vbscript URL", url: "vbscript:msgbox('XSS')", expected: false},
+		{name: "vbscript URL uppercase", url: "VBSCRIPT:msgbox('XSS')", expected: false},
+		{name: "file URL", url: "file:///etc/passwd", expected: false},
+		{name: "file URL uppercase", url: "FILE:///etc/passwd", expected: false},
+		{name: "ftp URL", url: "ftp://example.com/file", expected: false},
+		{name: "empty URL", url: "", expected: false},
+
+		// Edge cases
+		{name: "just colon", url: ":", expected: false},
+		{name: "scheme-like but not real", url: "notascheme:value", expected: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isValidURL(tt.url)
+			if result != tt.expected {
+				t.Errorf("isValidURL(%q) = %v, want %v", tt.url, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestHTMLFormatter_UnsafeURLsRenderedAsPlainText tests that unsafe URLs are not rendered as links
+func TestHTMLFormatter_UnsafeURLsRenderedAsPlainText(t *testing.T) {
+	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
+	helpModel := &model.HelpModel{
+		Categories: []model.Category{
+			{
+				Name: model.UncategorizedCategoryName,
+				Targets: []model.Target{
+					{
+						Name: "dangerous",
+						Summary: richtext.RichText{
+							{Type: richtext.SegmentPlain, Content: "Click "},
+							{Type: richtext.SegmentLink, Content: "here", URL: "javascript:alert('XSS')"},
+							{Type: richtext.SegmentPlain, Content: " for more."},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+	err := formatter.RenderHelp(helpModel, &buf)
+
+	if err != nil {
+		t.Fatalf("RenderHelp() error = %v", err)
+	}
+
+	output := buf.String()
+
+	// Should NOT contain the link tag with javascript URL
+	if strings.Contains(output, "<a href=") && strings.Contains(output, "javascript") {
+		t.Error("Output should not contain javascript: link")
+	}
+
+	// Should contain the link text as plain text
+	if !strings.Contains(output, "here") {
+		t.Error("Output should contain link text 'here'")
+	}
+
+	// Should NOT have href attribute for the dangerous link
+	if strings.Contains(output, "href=\"javascript:") {
+		t.Error("Output should not have href with javascript: scheme")
+	}
+}
+
+// TestHTMLFormatter_SafeURLsRenderedAsLinks tests that safe URLs are rendered as links
+func TestHTMLFormatter_SafeURLsRenderedAsLinks(t *testing.T) {
+	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
+	helpModel := &model.HelpModel{
+		Categories: []model.Category{
+			{
+				Name: model.UncategorizedCategoryName,
+				Targets: []model.Target{
+					{
+						Name: "safe",
+						Summary: richtext.RichText{
+							{Type: richtext.SegmentPlain, Content: "Visit "},
+							{Type: richtext.SegmentLink, Content: "our site", URL: "https://example.com"},
+							{Type: richtext.SegmentPlain, Content: " or "},
+							{Type: richtext.SegmentLink, Content: "docs", URL: "/docs/guide"},
+							{Type: richtext.SegmentPlain, Content: "."},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+	err := formatter.RenderHelp(helpModel, &buf)
+
+	if err != nil {
+		t.Fatalf("RenderHelp() error = %v", err)
+	}
+
+	output := buf.String()
+
+	// Should contain proper links for safe URLs
+	if !strings.Contains(output, "<a href=\"https://example.com\">our site</a>") {
+		t.Error("Output should contain https link")
+	}
+
+	if !strings.Contains(output, "<a href=\"/docs/guide\">docs</a>") {
+		t.Error("Output should contain relative link")
+	}
+}
+
+// TestHTMLFormatter_MixedURLs tests rendering with both safe and unsafe URLs
+func TestHTMLFormatter_MixedURLs(t *testing.T) {
+	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
+	helpModel := &model.HelpModel{
+		Categories: []model.Category{
+			{
+				Name: model.UncategorizedCategoryName,
+				Targets: []model.Target{
+					{
+						Name: "mixed",
+						Summary: richtext.RichText{
+							{Type: richtext.SegmentLink, Content: "safe", URL: "https://example.com"},
+							{Type: richtext.SegmentPlain, Content: " and "},
+							{Type: richtext.SegmentLink, Content: "unsafe", URL: "javascript:void(0)"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+	err := formatter.RenderHelp(helpModel, &buf)
+
+	if err != nil {
+		t.Fatalf("RenderHelp() error = %v", err)
+	}
+
+	output := buf.String()
+
+	// Safe link should be rendered as link
+	if !strings.Contains(output, "<a href=\"https://example.com\">safe</a>") {
+		t.Error("Output should contain safe link")
+	}
+
+	// Unsafe link should be rendered as plain text
+	if strings.Contains(output, "javascript:") {
+		t.Error("Output should not contain javascript: URL")
+	}
+
+	// Unsafe link text should still be present
+	if !strings.Contains(output, "unsafe") {
+		t.Error("Output should contain 'unsafe' text")
+	}
+}
