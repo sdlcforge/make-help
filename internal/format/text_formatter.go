@@ -19,15 +19,9 @@ type TextFormatter struct {
 func NewTextFormatter(config *FormatterConfig) *TextFormatter {
 	config = normalizeConfig(config)
 
-	// Use provided color scheme if available, otherwise create one
-	colors := config.ColorScheme
-	if colors == nil {
-		colors = NewColorScheme(config.UseColor)
-	}
-
 	return &TextFormatter{
 		config: config,
-		colors: colors,
+		colors: initColorScheme(config),
 	}
 }
 
@@ -39,7 +33,7 @@ func NewTextFormatter(config *FormatterConfig) *TextFormatter {
 //   - Targets section with categories (if applicable)
 func (f *TextFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) error {
 	if helpModel == nil {
-		return fmt.Errorf("text formatter: help model cannot be nil")
+		return errNilHelpModel("text")
 	}
 
 	var buf strings.Builder
@@ -50,25 +44,17 @@ func (f *TextFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 	// File documentation
 	if len(helpModel.FileDocs) > 0 {
 		// Render entry point file docs first
-		for _, fileDoc := range helpModel.FileDocs {
-			if fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
+		entryPointDocs := extractEntryPointDocs(helpModel.FileDocs)
+		if entryPointDocs != nil {
+			buf.WriteString("\n")
+			for _, line := range entryPointDocs {
+				buf.WriteString(line)
 				buf.WriteString("\n")
-				for _, line := range fileDoc.Documentation {
-					buf.WriteString(line)
-					buf.WriteString("\n")
-				}
-				break
 			}
 		}
 
 		// Render included files section
-		var includedFiles []model.FileDoc
-		for _, fileDoc := range helpModel.FileDocs {
-			if !fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
-				includedFiles = append(includedFiles, fileDoc)
-			}
-		}
-
+		includedFiles := extractIncludedFiles(helpModel.FileDocs)
 		if len(includedFiles) > 0 {
 			buf.WriteString("\nIncluded files:\n")
 			for _, fileDoc := range includedFiles {
@@ -175,7 +161,7 @@ func (f *TextFormatter) renderTarget(buf *strings.Builder, target *model.Target)
 // It includes the full documentation, not just the summary.
 func (f *TextFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) error {
 	if target == nil {
-		return fmt.Errorf("text formatter: target cannot be nil")
+		return errNilTarget("text")
 	}
 
 	var buf strings.Builder

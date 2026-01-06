@@ -22,15 +22,9 @@ var _ LineRenderer = (*MakeFormatter)(nil)
 func NewMakeFormatter(config *FormatterConfig) *MakeFormatter {
 	config = normalizeConfig(config)
 
-	// Use provided color scheme if available, otherwise create one
-	colors := config.ColorScheme
-	if colors == nil {
-		colors = NewColorScheme(config.UseColor)
-	}
-
 	return &MakeFormatter{
 		config: config,
-		colors: colors,
+		colors: initColorScheme(config),
 	}
 }
 
@@ -38,7 +32,7 @@ func NewMakeFormatter(config *FormatterConfig) *MakeFormatter {
 // For Make format, this generates @printf statements that echo the help text.
 func (f *MakeFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) error {
 	if helpModel == nil {
-		return fmt.Errorf("make formatter: help model cannot be nil")
+		return errNilHelpModel("make")
 	}
 
 	lines, err := f.RenderHelpLines(helpModel)
@@ -58,7 +52,7 @@ func (f *MakeFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 // RenderDetailedTarget generates detailed help for a single target.
 func (f *MakeFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) error {
 	if target == nil {
-		return fmt.Errorf("make formatter: target cannot be nil")
+		return errNilTarget("make")
 	}
 
 	lines := f.RenderDetailedTargetLines(target)
@@ -109,24 +103,16 @@ func (f *MakeFormatter) RenderHelpLines(helpModel *model.HelpModel) ([]string, e
 	// File documentation
 	if len(helpModel.FileDocs) > 0 {
 		// Render entry point file docs first
-		for _, fileDoc := range helpModel.FileDocs {
-			if fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
-				lines = append(lines, escapeForMakefileEcho(""))
-				for _, line := range fileDoc.Documentation {
-					lines = append(lines, escapeForMakefileEcho(line))
-				}
-				break
+		entryPointDocs := extractEntryPointDocs(helpModel.FileDocs)
+		if entryPointDocs != nil {
+			lines = append(lines, escapeForMakefileEcho(""))
+			for _, line := range entryPointDocs {
+				lines = append(lines, escapeForMakefileEcho(line))
 			}
 		}
 
 		// Render included files section
-		var includedFiles []model.FileDoc
-		for _, fileDoc := range helpModel.FileDocs {
-			if !fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
-				includedFiles = append(includedFiles, fileDoc)
-			}
-		}
-
+		includedFiles := extractIncludedFiles(helpModel.FileDocs)
 		if len(includedFiles) > 0 {
 			lines = append(lines, escapeForMakefileEcho(""))
 			lines = append(lines, escapeForMakefileEcho("Included files:"))
