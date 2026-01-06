@@ -409,6 +409,8 @@ func (f *HTMLFormatter) renderRichText(rt richtext.RichText) string {
 }
 
 // cachedHTMLCSS contains the embedded CSS stylesheet (cached at package level for performance).
+// The color scheme is inspired by the Flat UI Colors palette (https://flatuicolors.com)
+// to provide consistent, accessible styling with good contrast ratios.
 var cachedHTMLCSS = `    body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       max-width: 1000px;
@@ -418,18 +420,18 @@ var cachedHTMLCSS = `    body {
       color: #333;
     }
     h1 {
-      color: #2c3e50;
-      border-bottom: 2px solid #3498db;
+      color: #2c3e50;  /* Midnight Blue - main heading */
+      border-bottom: 2px solid #3498db;  /* Peter River - accent for main heading */
       padding-bottom: 0.5em;
     }
     h2 {
-      color: #34495e;
+      color: #34495e;  /* Wet Asphalt - section headings (categories, files) */
       margin-top: 1.5em;
-      border-bottom: 1px solid #ecf0f1;
+      border-bottom: 1px solid #ecf0f1;  /* Clouds - subtle divider */
       padding-bottom: 0.3em;
     }
     h3 {
-      color: #34495e;
+      color: #34495e;  /* Wet Asphalt - subsection headings */
       margin-top: 1em;
     }
     pre {
@@ -455,23 +457,23 @@ var cachedHTMLCSS = `    body {
     }
     .target-name {
       font-weight: bold;
-      color: #27ae60;
+      color: #27ae60;  /* Nephritis - make target names (green indicates actionable) */
     }
     .alias {
-      color: #f39c12;
+      color: #f39c12;  /* Orange - target aliases (distinctive color for alternative names) */
       font-style: italic;
     }
     .summary {
-      color: #555;
+      color: #555;  /* Dark gray - summary text */
     }
     .variables {
-      color: #7f8c8d;
+      color: #7f8c8d;  /* Asbestos - variable section labels (muted gray) */
       font-size: 0.9em;
       margin-left: 1.5em;
       margin-top: 0.2em;
     }
     .variable {
-      color: #9b59b6;
+      color: #9b59b6;  /* Amethyst - environment variable names (purple for configurables) */
     }
     .description p {
       margin: 0.5em 0;
@@ -484,11 +486,11 @@ var cachedHTMLCSS = `    body {
     }
     .source {
       margin-top: 1em;
-      color: #7f8c8d;
+      color: #7f8c8d;  /* Asbestos - source file references (muted gray for metadata) */
       font-size: 0.9em;
     }
     .no-docs {
-      color: #95a5a6;
+      color: #95a5a6;  /* Concrete - placeholder text for undocumented items (light gray) */
       font-style: italic;
     }
     ul {
