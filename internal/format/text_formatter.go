@@ -17,9 +17,7 @@ type TextFormatter struct {
 
 // NewTextFormatter creates a new TextFormatter with the given configuration.
 func NewTextFormatter(config *FormatterConfig) *TextFormatter {
-	if config == nil {
-		config = &FormatterConfig{UseColor: false}
-	}
+	config = normalizeConfig(config)
 
 	// Use provided color scheme if available, otherwise create one
 	colors := config.ColorScheme

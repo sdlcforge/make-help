@@ -15,9 +15,7 @@ type MarkdownFormatter struct {
 
 // NewMarkdownFormatter creates a new MarkdownFormatter with the given configuration.
 func NewMarkdownFormatter(config *FormatterConfig) *MarkdownFormatter {
-	if config == nil {
-		config = &FormatterConfig{UseColor: false}
-	}
+	config = normalizeConfig(config)
 
 	return &MarkdownFormatter{
 		config: config,

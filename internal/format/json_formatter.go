@@ -17,9 +17,7 @@ type JSONFormatter struct {
 
 // NewJSONFormatter creates a new JSONFormatter with the given configuration.
 func NewJSONFormatter(config *FormatterConfig) *JSONFormatter {
-	if config == nil {
-		config = &FormatterConfig{UseColor: false}
-	}
+	config = normalizeConfig(config)
 
 	return &JSONFormatter{
 		config: config,

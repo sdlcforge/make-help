@@ -17,9 +17,7 @@ type MakeFormatter struct {
 
 // NewMakeFormatter creates a new MakeFormatter with the given configuration.
 func NewMakeFormatter(config *FormatterConfig) *MakeFormatter {
-	if config == nil {
-		config = &FormatterConfig{UseColor: false}
-	}
+	config = normalizeConfig(config)
 
 	// Use provided color scheme if available, otherwise create one
 	colors := config.ColorScheme
