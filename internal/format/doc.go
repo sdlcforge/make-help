@@ -49,4 +49,23 @@
 //	[Category Name:]
 //	  - <target>[ <alias1>, ...]: <summary>
 //	    [Vars: <VAR1>, <VAR2>...]
+//
+// # Rich Text Rendering
+//
+// Different formatters handle rich text (markdown formatting in documentation)
+// differently based on their output context:
+//
+//   - HTMLFormatter: Preserves markdown formatting by converting it to HTML
+//     elements (bold becomes <strong>, italic becomes <em>, etc.)
+//   - MarkdownFormatter: Preserves original markdown formatting unchanged
+//     (e.g., **bold**, *italic*, `code`)
+//   - TextFormatter: Strips markdown to plain text for clean terminal output
+//   - MakeFormatter: Strips markdown to plain text for Makefile embedding
+//   - JSONFormatter: Strips markdown to plain text for programmatic consumers
+//
+// This design is intentional: terminal and file-based outputs benefit from
+// plain text readability, while web and document outputs benefit from rich
+// formatting. The richtext package provides both PlainText() and Markdown()
+// methods, allowing formatters to choose the appropriate representation for
+// their output context.
 package format

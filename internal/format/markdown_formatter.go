@@ -144,7 +144,7 @@ func (f *MarkdownFormatter) renderTarget(buf *strings.Builder, target *model.Tar
 		buf.WriteString(")_")
 	}
 
-	// Summary (preserve markdown formatting)
+	// Summary: Preserve markdown formatting for markdown output
 	summaryMarkdown := target.Summary.Markdown()
 	if summaryMarkdown != "" {
 		buf.WriteString(": ")

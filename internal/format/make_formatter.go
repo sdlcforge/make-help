@@ -200,7 +200,7 @@ func (f *MakeFormatter) renderTargetLines(target *model.Target) []string {
 		buf.WriteString(f.colors.Reset)
 	}
 
-	// Summary (pre-computed during model building)
+	// Summary: Use plain text for Makefile embedding (strips markdown formatting)
 	summaryText := target.Summary.PlainText()
 	if summaryText != "" {
 		buf.WriteString(": ")

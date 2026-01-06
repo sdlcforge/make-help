@@ -148,7 +148,7 @@ func (f *TextFormatter) renderTarget(buf *strings.Builder, target *model.Target)
 		buf.WriteString(f.colors.Reset)
 	}
 
-	// Summary (pre-computed during model building)
+	// Summary: Use plain text for terminal output (strips markdown formatting)
 	summaryText := target.Summary.PlainText()
 	if summaryText != "" {
 		buf.WriteString(": ")

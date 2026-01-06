@@ -172,7 +172,7 @@ func (f *HTMLFormatter) renderTarget(buf *strings.Builder, target *model.Target)
 		buf.WriteString(")</span>")
 	}
 
-	// Summary
+	// Summary: Convert markdown formatting to HTML elements
 	summaryHTML := f.renderRichText(target.Summary)
 	if summaryHTML != "" {
 		buf.WriteString(": <span class=\"summary\">")
