@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/sdlcforge/make-help/internal/model"
-	"github.com/sdlcforge/make-help/internal/richtext"
 )
 
 // TestMarkdownFormatter_RenderHelp_EmptyModel tests rendering an empty help model
@@ -46,11 +45,11 @@ func TestMarkdownFormatter_RenderHelp_WithTargets(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "build",
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 					{
 						Name:    "test",
-						Summary: richtext.FromPlainText("Run all tests."),
+						Summary: []string{"Run all tests."},
 					},
 				},
 			},
@@ -87,7 +86,7 @@ func TestMarkdownFormatter_RenderHelp_WithCategories(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "build",
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 				},
 			},
@@ -96,7 +95,7 @@ func TestMarkdownFormatter_RenderHelp_WithCategories(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "test",
-						Summary: richtext.FromPlainText("Run all tests."),
+						Summary: []string{"Run all tests."},
 					},
 				},
 			},
@@ -201,7 +200,7 @@ func TestMarkdownFormatter_RenderHelp_WithVariables(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "serve",
-						Summary: richtext.FromPlainText("Start server."),
+						Summary: []string{"Start server."},
 						Variables: []model.Variable{
 							{Name: "PORT"},
 							{Name: "DEBUG"},
@@ -236,7 +235,7 @@ func TestMarkdownFormatter_RenderHelp_WithAliases(t *testing.T) {
 					{
 						Name:    "build",
 						Aliases: []string{"b", "compile"},
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 				},
 			},
@@ -266,16 +265,7 @@ func TestMarkdownFormatter_RenderHelp_WithRichText(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name: "build",
-						Summary: richtext.RichText{
-							{Type: richtext.SegmentPlain, Content: "Build with "},
-							{Type: richtext.SegmentBold, Content: "bold"},
-							{Type: richtext.SegmentPlain, Content: ", "},
-							{Type: richtext.SegmentItalic, Content: "italic"},
-							{Type: richtext.SegmentPlain, Content: ", "},
-							{Type: richtext.SegmentCode, Content: "code"},
-							{Type: richtext.SegmentPlain, Content: ", and "},
-							{Type: richtext.SegmentLink, Content: "link", URL: "https://example.com"},
-						},
+						Summary: []string{"Build with **bold**, *italic*, `code`, and [link](https://example.com)"},
 					},
 				},
 			},
@@ -446,7 +436,7 @@ func TestMarkdownFormatter_RenderHelp_SpecialCharacters(t *testing.T) {
 					{
 						Name:    "build*test",
 						Aliases: []string{"b_uild", "test**break"},
-						Summary: richtext.FromPlainText("Build with asterisks."),
+						Summary: []string{"Build with asterisks."},
 						Variables: []model.Variable{
 							{Name: "VAR_WITH_`BACKTICKS`"},
 							{Name: "VAR#WITH#HASH"},
@@ -454,7 +444,7 @@ func TestMarkdownFormatter_RenderHelp_SpecialCharacters(t *testing.T) {
 					},
 					{
 						Name:    "test_underscore",
-						Summary: richtext.FromPlainText("Test with underscores."),
+						Summary: []string{"Test with underscores."},
 					},
 				},
 			},
@@ -511,7 +501,7 @@ func TestMarkdownFormatter_RenderHelp_CategoryNamesEscaped(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "configure",
-						Summary: richtext.FromPlainText("Configure settings."),
+						Summary: []string{"Configure settings."},
 					},
 				},
 			},
@@ -520,7 +510,7 @@ func TestMarkdownFormatter_RenderHelp_CategoryNamesEscaped(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "task1",
-						Summary: richtext.FromPlainText("First task."),
+						Summary: []string{"First task."},
 					},
 				},
 			},
@@ -529,7 +519,7 @@ func TestMarkdownFormatter_RenderHelp_CategoryNamesEscaped(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "task2",
-						Summary: richtext.FromPlainText("Second task."),
+						Summary: []string{"Second task."},
 					},
 				},
 			},
@@ -538,7 +528,7 @@ func TestMarkdownFormatter_RenderHelp_CategoryNamesEscaped(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "task3",
-						Summary: richtext.FromPlainText("Third task."),
+						Summary: []string{"Third task."},
 					},
 				},
 			},
@@ -547,7 +537,7 @@ func TestMarkdownFormatter_RenderHelp_CategoryNamesEscaped(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "task4",
-						Summary: richtext.FromPlainText("Fourth task."),
+						Summary: []string{"Fourth task."},
 					},
 				},
 			},
@@ -601,7 +591,7 @@ func TestMarkdownFormatter_ComplexModel(t *testing.T) {
 					{
 						Name:    "build",
 						Aliases: []string{"b"},
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 						Variables: []model.Variable{
 							{Name: "GOOS"},
 							{Name: "GOARCH"},
@@ -615,7 +605,7 @@ func TestMarkdownFormatter_ComplexModel(t *testing.T) {
 					{
 						Name:    "test",
 						Aliases: []string{"t"},
-						Summary: richtext.FromPlainText("Run all tests."),
+						Summary: []string{"Run all tests."},
 					},
 				},
 			},

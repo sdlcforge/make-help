@@ -201,11 +201,10 @@ func (f *MakeFormatter) renderTargetLines(target *model.Target) []string {
 	}
 
 	// Summary (pre-computed during model building)
-	summaryText := target.Summary.PlainText()
-	if summaryText != "" {
+	if len(target.Summary) > 0 && target.Summary[0] != "" {
 		buf.WriteString(": ")
 		buf.WriteString(f.colors.Documentation)
-		buf.WriteString(summaryText)
+		buf.WriteString(target.Summary[0])
 		buf.WriteString(f.colors.Reset)
 	}
 

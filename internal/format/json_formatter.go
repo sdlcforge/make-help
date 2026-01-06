@@ -120,9 +120,15 @@ func (f *JSONFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 		}
 
 		for _, target := range category.Targets {
+			// Extract summary text (first element of Summary slice)
+			summaryText := ""
+			if len(target.Summary) > 0 {
+				summaryText = target.Summary[0]
+			}
+
 			jsonTgt := jsonTarget{
 				Name:       target.Name,
-				Summary:    target.Summary.PlainText(), // Use plain text for JSON consumers
+				Summary:    summaryText, // Use plain text for JSON consumers
 				SourceFile: target.SourceFile,
 				LineNumber: target.LineNumber,
 			}
@@ -161,9 +167,15 @@ func (f *JSONFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) 
 		return fmt.Errorf("json formatter: target cannot be nil")
 	}
 
+	// Extract summary text (first element of Summary slice)
+	summaryText := ""
+	if len(target.Summary) > 0 {
+		summaryText = target.Summary[0]
+	}
+
 	output := jsonDetailedTarget{
 		Name:          target.Name,
-		Summary:       target.Summary.PlainText(),
+		Summary:       summaryText,
 		Documentation: target.Documentation,
 		SourceFile:    target.SourceFile,
 		LineNumber:    target.LineNumber,

@@ -1,7 +1,6 @@
 package format
 
 import (
-	"github.com/sdlcforge/make-help/internal/richtext"
 	"bytes"
 	"strings"
 	"testing"
@@ -40,11 +39,11 @@ func TestMakeFormatter_RenderHelp_WithTargets(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "build",
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 					{
 						Name:    "test",
-						Summary: richtext.FromPlainText("Run all tests."),
+						Summary: []string{"Run all tests."},
 					},
 				},
 			},
@@ -81,7 +80,7 @@ func TestMakeFormatter_RenderHelp_WithCategories(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "build",
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 				},
 			},
@@ -90,7 +89,7 @@ func TestMakeFormatter_RenderHelp_WithCategories(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "test",
-						Summary: richtext.FromPlainText("Run all tests."),
+						Summary: []string{"Run all tests."},
 					},
 				},
 			},
@@ -124,7 +123,7 @@ func TestMakeFormatter_RenderHelp_WithColors(t *testing.T) {
 					{
 						Name:    "build",
 						Aliases: []string{"b"},
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 				},
 			},
@@ -164,11 +163,11 @@ func TestMakeFormatter_RenderHelp_SpecialCharactersEscaped(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "deploy",
-						Summary: richtext.FromPlainText(`Use $VAR and "quotes" in command.`),
+						Summary: []string{`Use $VAR and "quotes" in command.`},
 					},
 					{
 						Name:    "inject",
-						Summary: richtext.FromPlainText("Line1\nLine2\rLine3\tTabbed"),
+						Summary: []string{"Line1\nLine2\rLine3\tTabbed"},
 					},
 				},
 			},
@@ -369,7 +368,7 @@ func TestMakeFormatter_WithVariables(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "serve",
-						Summary: richtext.FromPlainText("Start server."),
+						Summary: []string{"Start server."},
 						Variables: []model.Variable{
 							{Name: "PORT"},
 							{Name: "DEBUG"},

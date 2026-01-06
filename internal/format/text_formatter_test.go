@@ -1,7 +1,6 @@
 package format
 
 import (
-	"github.com/sdlcforge/make-help/internal/richtext"
 	"bytes"
 	"strings"
 	"testing"
@@ -40,11 +39,11 @@ func TestTextFormatter_RenderHelp_WithTargets(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "build",
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 					{
 						Name:    "test",
-						Summary: richtext.FromPlainText("Run all tests."),
+						Summary: []string{"Run all tests."},
 					},
 				},
 			},
@@ -81,7 +80,7 @@ func TestTextFormatter_RenderHelp_WithCategories(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "build",
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 				},
 			},
@@ -90,7 +89,7 @@ func TestTextFormatter_RenderHelp_WithCategories(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "test",
-						Summary: richtext.FromPlainText("Run all tests."),
+						Summary: []string{"Run all tests."},
 					},
 				},
 			},
@@ -124,7 +123,7 @@ func TestTextFormatter_RenderHelp_WithColors(t *testing.T) {
 					{
 						Name:    "build",
 						Aliases: []string{"b"},
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 				},
 			},
@@ -165,7 +164,7 @@ func TestTextFormatter_RenderHelp_NoColors(t *testing.T) {
 					{
 						Name:    "build",
 						Aliases: []string{"b"},
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 				},
 			},
@@ -356,7 +355,7 @@ func TestTextFormatter_WithVariables(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "serve",
-						Summary: richtext.FromPlainText("Start server."),
+						Summary: []string{"Start server."},
 						Variables: []model.Variable{
 							{Name: "PORT"},
 							{Name: "DEBUG"},
@@ -391,7 +390,7 @@ func TestTextFormatter_WithAliases(t *testing.T) {
 					{
 						Name:    "build",
 						Aliases: []string{"b", "compile"},
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 				},
 			},
@@ -431,7 +430,7 @@ func TestTextFormatter_ComplexModel(t *testing.T) {
 					{
 						Name:    "build",
 						Aliases: []string{"b"},
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 						Variables: []model.Variable{
 							{Name: "GOOS"},
 							{Name: "GOARCH"},
@@ -445,7 +444,7 @@ func TestTextFormatter_ComplexModel(t *testing.T) {
 					{
 						Name:    "test",
 						Aliases: []string{"t"},
-						Summary: richtext.FromPlainText("Run all tests."),
+						Summary: []string{"Run all tests."},
 					},
 				},
 			},

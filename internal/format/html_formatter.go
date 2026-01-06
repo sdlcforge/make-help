@@ -13,6 +13,7 @@ import (
 // HTMLFormatter generates HTML output for web display or documentation sites.
 type HTMLFormatter struct {
 	config *FormatterConfig
+	parser *richtext.Parser
 }
 
 // NewHTMLFormatter creates a new HTMLFormatter with the given configuration.
@@ -23,6 +24,7 @@ func NewHTMLFormatter(config *FormatterConfig) *HTMLFormatter {
 
 	return &HTMLFormatter{
 		config: config,
+		parser: richtext.NewParser(),
 	}
 }
 
@@ -172,12 +174,15 @@ func (f *HTMLFormatter) renderTarget(buf *strings.Builder, target *model.Target)
 		buf.WriteString(")</span>")
 	}
 
-	// Summary
-	summaryHTML := f.renderRichText(target.Summary)
-	if summaryHTML != "" {
-		buf.WriteString(": <span class=\"summary\">")
-		buf.WriteString(summaryHTML)
-		buf.WriteString("</span>")
+	// Summary - parse from []string to RichText
+	if len(target.Summary) > 0 && target.Summary[0] != "" {
+		summaryRichText := f.parser.Parse(target.Summary[0])
+		summaryHTML := f.renderRichText(summaryRichText)
+		if summaryHTML != "" {
+			buf.WriteString(": <span class=\"summary\">")
+			buf.WriteString(summaryHTML)
+			buf.WriteString("</span>")
+		}
 	}
 
 	buf.WriteString("\n")

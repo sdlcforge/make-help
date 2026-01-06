@@ -51,6 +51,9 @@ func NewExtractor() *Extractor {
 // parse the original text to preserve formatting in the output.
 //
 // HTML is stripped, markdown formatting is preserved via RichText.
+//
+// Deprecated: Use ExtractPlainText instead. This method is kept for backward compatibility
+// with formatters that need RichText directly.
 func (e *Extractor) Extract(documentation []string) richtext.RichText {
 	if len(documentation) == 0 {
 		return nil
@@ -77,6 +80,36 @@ func (e *Extractor) Extract(documentation []string) richtext.RichText {
 
 	// Parse the original first sentence to preserve formatting as RichText
 	return e.parser.Parse(originalFirstSentence)
+}
+
+// ExtractPlainText generates summary text from full documentation and returns
+// the first sentence with markdown formatting preserved (but not parsed to RichText).
+// This allows the model layer to remain format-agnostic.
+func (e *Extractor) ExtractPlainText(documentation []string) string {
+	if len(documentation) == 0 {
+		return ""
+	}
+
+	// Join all documentation lines
+	fullText := strings.Join(documentation, " ")
+
+	// Strip markdown headers
+	fullText = e.stripMarkdownHeaders(fullText)
+
+	// For sentence boundary detection, we need to strip formatting
+	// Otherwise "**Build.** Next sentence." would not detect "Build." correctly
+	strippedText := e.stripMarkdownFormatting(fullText)
+	strippedText = e.stripHTMLTags(strippedText)
+	strippedText = e.normalizeWhitespace(strippedText)
+
+	// Find the first sentence boundary using stripped text
+	firstSentence := e.extractFirstSentence(strippedText)
+
+	// Now find the same sentence in the original text to preserve formatting
+	// We need to extract the corresponding portion from fullText
+	originalFirstSentence := e.extractMatchingPortion(fullText, firstSentence)
+
+	return originalFirstSentence
 }
 
 // stripMarkdownHeaders removes # headers (uses pre-compiled regex)

@@ -9,6 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// getSummaryText is a helper function to extract the summary text from []string
+func getSummaryText(summary []string) string {
+	if len(summary) > 0 {
+		return summary[0]
+	}
+	return ""
+}
+
 func TestNewBuilder(t *testing.T) {
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
@@ -91,7 +99,7 @@ func TestBuild_BasicTargetWithDocs(t *testing.T) {
 	assert.Len(t, uncategorized.Targets, 1)
 	assert.Equal(t, "build", uncategorized.Targets[0].Name)
 	assert.Len(t, uncategorized.Targets[0].Documentation, 2)
-	assert.Equal(t, "Build the project.", uncategorized.Targets[0].Summary.PlainText())
+	assert.Equal(t, "Build the project.", getSummaryText(uncategorized.Targets[0].Summary))
 }
 
 func TestBuild_TargetWithCategory(t *testing.T) {
@@ -439,7 +447,7 @@ func TestBuild_SummaryExtraction(t *testing.T) {
 	require.Len(t, model.Categories[0].Targets, 1)
 
 	// Summary should be first sentence only
-	assert.Equal(t, "Build the project.", model.Categories[0].Targets[0].Summary.PlainText())
+	assert.Equal(t, "Build the project.", getSummaryText(model.Categories[0].Targets[0].Summary))
 }
 
 func TestBuild_TargetSourceTracking(t *testing.T) {
@@ -1145,7 +1153,7 @@ func TestBuild_DuplicateTargetInMultipleFiles(t *testing.T) {
 	assert.Equal(t, "Makefile", target.SourceFile)
 	assert.Len(t, target.Documentation, 1)
 	assert.Equal(t, "First documentation for build target.", target.Documentation[0])
-	assert.Equal(t, "First documentation for build target.", target.Summary.PlainText())
+	assert.Equal(t, "First documentation for build target.", getSummaryText(target.Summary))
 
 	// Verify variables are from the first file only
 	assert.Len(t, target.Variables, 1)
@@ -1238,19 +1246,19 @@ func TestBuild_UndocumentedPhonyWithIncludeAllPhony(t *testing.T) {
 	// Check clean target (documented)
 	require.NotNil(t, targetMap["clean"])
 	assert.Len(t, targetMap["clean"].Documentation, 1)
-	assert.Equal(t, "Remove build artifacts.", targetMap["clean"].Summary.PlainText())
+	assert.Equal(t, "Remove build artifacts.", getSummaryText(targetMap["clean"].Summary))
 	assert.True(t, targetMap["clean"].IsPhony)
 
 	// Check test target (undocumented but included because .PHONY)
 	require.NotNil(t, targetMap["test"])
 	assert.Len(t, targetMap["test"].Documentation, 0, "Undocumented target should have no documentation")
-	assert.Equal(t, "", targetMap["test"].Summary.PlainText(), "Undocumented target should have empty summary")
+	assert.Equal(t, "", getSummaryText(targetMap["test"].Summary), "Undocumented target should have empty summary")
 	assert.True(t, targetMap["test"].IsPhony)
 
 	// Check install target (undocumented but included because .PHONY)
 	require.NotNil(t, targetMap["install"])
 	assert.Len(t, targetMap["install"].Documentation, 0, "Undocumented target should have no documentation")
-	assert.Equal(t, "", targetMap["install"].Summary.PlainText(), "Undocumented target should have empty summary")
+	assert.Equal(t, "", getSummaryText(targetMap["install"].Summary), "Undocumented target should have empty summary")
 	assert.True(t, targetMap["install"].IsPhony)
 }
 
@@ -1312,7 +1320,7 @@ func TestBuild_DocumentedTargetNotImplicitAlias(t *testing.T) {
 
 	// test-all should exist as a separate target (not an alias) because it's documented
 	require.NotNil(t, targetMap["test-all"], "test-all should exist as a separate target (documented)")
-	assert.Equal(t, "Runs all tests.", targetMap["test-all"].Summary.PlainText())
+	assert.Equal(t, "Runs all tests.", getSummaryText(targetMap["test-all"].Summary))
 
 	// test should NOT exist as a separate target (it's an alias)
 	assert.Nil(t, targetMap["test"], "test should not be a separate target (it's an implicit alias)")
@@ -1435,7 +1443,7 @@ func TestBuild_NotAliasWithDocumentation(t *testing.T) {
 	// Both should exist as separate targets
 	require.NotNil(t, targetMap["build"])
 	require.NotNil(t, targetMap["b"])
-	assert.Equal(t, "Short alias for build.", targetMap["b"].Summary.PlainText())
+	assert.Equal(t, "Short alias for build.", getSummaryText(targetMap["b"].Summary))
 
 	// b should be tracked as !notalias (even though redundant)
 	assert.True(t, builder.NotAliasTargets()["b"])

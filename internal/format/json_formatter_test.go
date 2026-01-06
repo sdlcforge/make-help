@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/sdlcforge/make-help/internal/model"
-	"github.com/sdlcforge/make-help/internal/richtext"
 )
 
 // TestJSONFormatter_RenderHelp_EmptyModel tests rendering an empty help model
@@ -50,13 +49,13 @@ func TestJSONFormatter_RenderHelp_WithTargets(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:       "build",
-						Summary:    richtext.FromPlainText("Build the project."),
+						Summary:    []string{"Build the project."},
 						SourceFile: "Makefile",
 						LineNumber: 10,
 					},
 					{
 						Name:       "test",
-						Summary:    richtext.FromPlainText("Run all tests."),
+						Summary:    []string{"Run all tests."},
 						SourceFile: "Makefile",
 						LineNumber: 15,
 					},
@@ -119,7 +118,7 @@ func TestJSONFormatter_RenderHelp_WithCategories(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "build",
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 				},
 			},
@@ -128,7 +127,7 @@ func TestJSONFormatter_RenderHelp_WithCategories(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "test",
-						Summary: richtext.FromPlainText("Run all tests."),
+						Summary: []string{"Run all tests."},
 					},
 				},
 			},
@@ -172,7 +171,7 @@ func TestJSONFormatter_RenderHelp_WithVariablesAndAliases(t *testing.T) {
 					{
 						Name:    "build",
 						Aliases: []string{"b", "compile"},
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 						Variables: []model.Variable{
 							{Name: "GOOS", Description: "Target OS"},
 							{Name: "GOARCH", Description: "Target architecture"},
@@ -319,7 +318,7 @@ func TestJSONFormatter_RenderDetailedTarget(t *testing.T) {
 	target := &model.Target{
 		Name:    "build",
 		Aliases: []string{"b", "compile"},
-		Summary: richtext.FromPlainText("Build the project."),
+		Summary: []string{"Build the project."},
 		Documentation: []string{
 			"Build the project.",
 			"",
@@ -478,7 +477,7 @@ func TestJSONFormatter_ComplexModel(t *testing.T) {
 					{
 						Name:    "build",
 						Aliases: []string{"b"},
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 						Variables: []model.Variable{
 							{Name: "GOOS"},
 							{Name: "GOARCH"},
@@ -494,7 +493,7 @@ func TestJSONFormatter_ComplexModel(t *testing.T) {
 					{
 						Name:       "test",
 						Aliases:    []string{"t"},
-						Summary:    richtext.FromPlainText("Run all tests."),
+						Summary:    []string{"Run all tests."},
 						SourceFile: "Makefile",
 						LineNumber: 20,
 					},
@@ -557,12 +556,10 @@ func TestJSONFormatter_ComplexModel(t *testing.T) {
 func TestJSONFormatter_PlainTextSummary(t *testing.T) {
 	formatter := NewJSONFormatter(&FormatterConfig{UseColor: false})
 
-	// Create a summary with markdown formatting
-	summary := richtext.RichText{
-		{Type: richtext.SegmentPlain, Content: "Build with "},
-		{Type: richtext.SegmentBold, Content: "debug"},
-		{Type: richtext.SegmentPlain, Content: " mode."},
-	}
+	// Create a summary (stored as plain string in []string)
+	// Note: With the new design, summaries are stored as plain text in []string
+	// and formatters parse them to RichText only when needed for display
+	summary := []string{"Build with debug mode."}
 
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{

@@ -180,7 +180,11 @@ func CheckLongSummaries(ctx *CheckContext) []Warning {
 
 	for _, category := range ctx.HelpModel.Categories {
 		for _, target := range category.Targets {
-			summary := strings.TrimSpace(target.Summary.PlainText())
+			// Extract summary text from []string
+			summary := ""
+			if len(target.Summary) > 0 {
+				summary = strings.TrimSpace(target.Summary[0])
+			}
 			if summary == "" {
 				continue
 			}

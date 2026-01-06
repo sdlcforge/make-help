@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/sdlcforge/make-help/internal/model"
-	"github.com/sdlcforge/make-help/internal/richtext"
 )
 
 // TestHTMLFormatter_RenderHelp_EmptyModel tests rendering an empty help model
@@ -46,11 +45,11 @@ func TestHTMLFormatter_RenderHelp_WithTargets(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "build",
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 					{
 						Name:    "test",
-						Summary: richtext.FromPlainText("Run all tests."),
+						Summary: []string{"Run all tests."},
 					},
 				},
 			},
@@ -90,7 +89,7 @@ func TestHTMLFormatter_RenderHelp_WithCategories(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "build",
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 				},
 			},
@@ -99,7 +98,7 @@ func TestHTMLFormatter_RenderHelp_WithCategories(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "test",
-						Summary: richtext.FromPlainText("Run all tests."),
+						Summary: []string{"Run all tests."},
 					},
 				},
 			},
@@ -171,7 +170,7 @@ func TestHTMLFormatter_RenderHelp_HTMLEscaping(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "build<>",
-						Summary: richtext.FromPlainText("Build with <tags> & \"quotes\"."),
+						Summary: []string{"Build with <tags> & \"quotes\"."},
 					},
 				},
 			},
@@ -287,7 +286,7 @@ func TestHTMLFormatter_RenderHelp_WithVariables(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name:    "serve",
-						Summary: richtext.FromPlainText("Start server."),
+						Summary: []string{"Start server."},
 						Variables: []model.Variable{
 							{Name: "PORT"},
 							{Name: "DEBUG"},
@@ -328,7 +327,7 @@ func TestHTMLFormatter_RenderHelp_WithAliases(t *testing.T) {
 					{
 						Name:    "build",
 						Aliases: []string{"b", "compile"},
-						Summary: richtext.FromPlainText("Build the project."),
+						Summary: []string{"Build the project."},
 					},
 				},
 			},
@@ -361,16 +360,7 @@ func TestHTMLFormatter_RenderHelp_WithRichText(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name: "build",
-						Summary: richtext.RichText{
-							{Type: richtext.SegmentPlain, Content: "Build with "},
-							{Type: richtext.SegmentBold, Content: "bold"},
-							{Type: richtext.SegmentPlain, Content: ", "},
-							{Type: richtext.SegmentItalic, Content: "italic"},
-							{Type: richtext.SegmentPlain, Content: ", "},
-							{Type: richtext.SegmentCode, Content: "code"},
-							{Type: richtext.SegmentPlain, Content: ", and "},
-							{Type: richtext.SegmentLink, Content: "link", URL: "https://example.com"},
-						},
+						Summary: []string{"Build with **bold**, *italic*, `code`, and [link](https://example.com)"},
 					},
 				},
 			},
@@ -587,11 +577,7 @@ func TestHTMLFormatter_UnsafeURLsRenderedAsPlainText(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name: "dangerous",
-						Summary: richtext.RichText{
-							{Type: richtext.SegmentPlain, Content: "Click "},
-							{Type: richtext.SegmentLink, Content: "here", URL: "javascript:alert('XSS')"},
-							{Type: richtext.SegmentPlain, Content: " for more."},
-						},
+						Summary: []string{"Click [here](javascript:alert('XSS')) for more."},
 					},
 				},
 			},
@@ -633,13 +619,7 @@ func TestHTMLFormatter_SafeURLsRenderedAsLinks(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name: "safe",
-						Summary: richtext.RichText{
-							{Type: richtext.SegmentPlain, Content: "Visit "},
-							{Type: richtext.SegmentLink, Content: "our site", URL: "https://example.com"},
-							{Type: richtext.SegmentPlain, Content: " or "},
-							{Type: richtext.SegmentLink, Content: "docs", URL: "/docs/guide"},
-							{Type: richtext.SegmentPlain, Content: "."},
-						},
+						Summary: []string{"Visit [our site](https://example.com) or [docs](/docs/guide)."},
 					},
 				},
 			},
@@ -675,11 +655,7 @@ func TestHTMLFormatter_MixedURLs(t *testing.T) {
 				Targets: []model.Target{
 					{
 						Name: "mixed",
-						Summary: richtext.RichText{
-							{Type: richtext.SegmentLink, Content: "safe", URL: "https://example.com"},
-							{Type: richtext.SegmentPlain, Content: " and "},
-							{Type: richtext.SegmentLink, Content: "unsafe", URL: "javascript:void(0)"},
-						},
+						Summary: []string{"[safe](https://example.com) and [unsafe](javascript:void(0))"},
 					},
 				},
 			},
