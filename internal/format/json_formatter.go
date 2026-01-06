@@ -122,7 +122,7 @@ func (f *JSONFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 		for _, target := range category.Targets {
 			jsonTgt := jsonTarget{
 				Name:       target.Name,
-				Summary:    target.Summary.PlainText(), // Use plain text for JSON consumers
+				Summary:    target.Summary.PlainText(), // Use plain text for JSON consumers (strips markdown)
 				SourceFile: target.SourceFile,
 				LineNumber: target.LineNumber,
 			}
@@ -163,7 +163,7 @@ func (f *JSONFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) 
 
 	output := jsonDetailedTarget{
 		Name:          target.Name,
-		Summary:       target.Summary.PlainText(),
+		Summary:       target.Summary.PlainText(), // Use plain text for JSON consumers (strips markdown)
 		Documentation: target.Documentation,
 		SourceFile:    target.SourceFile,
 		LineNumber:    target.LineNumber,

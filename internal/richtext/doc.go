@@ -62,4 +62,20 @@
 // This allows the same rich text to be rendered with ANSI colors in a terminal,
 // as markdown in a file, or as plain text in a context where formatting is not
 // supported.
+//
+// # Rendering Methods
+//
+// RichText provides multiple methods for rendering the same content in different
+// contexts:
+//
+//   - PlainText(): Strips all markdown formatting, returning plain text only.
+//     Used by terminal and file formatters where formatting would be distracting.
+//   - Markdown(): Preserves the original markdown formatting (e.g., **bold**).
+//     Used by markdown and HTML formatters that can interpret the formatting.
+//
+// Formatters choose which method to call based on their output context. For
+// example, the TextFormatter uses PlainText() for clean terminal output, while
+// the MarkdownFormatter uses Markdown() to preserve formatting. The HTMLFormatter
+// uses a custom renderRichText() method that converts markdown segments directly
+// to HTML elements.
 package richtext
