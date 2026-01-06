@@ -107,7 +107,12 @@ func runLint(config *Config) error {
 	for i := range helpModel.Categories {
 		for j := range helpModel.Categories[i].Targets {
 			target := &helpModel.Categories[i].Targets[j]
-			target.Summary = extractor.Extract(target.Documentation)
+			summaryText := extractor.ExtractPlainText(target.Documentation)
+			if summaryText != "" {
+				target.Summary = []string{summaryText}
+			} else {
+				target.Summary = []string{}
+			}
 		}
 	}
 

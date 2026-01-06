@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/sdlcforge/make-help/internal/model"
-	"github.com/sdlcforge/make-help/internal/richtext"
 )
 
 func TestCheckUndocumentedPhony_NoWarnings(t *testing.T) {
@@ -136,19 +135,19 @@ func TestCheckSummaryPunctuation_AllValid(t *testing.T) {
 					Targets: []model.Target{
 						{
 							Name:       "build",
-							Summary: richtext.FromPlainText("Build the project."),
+							Summary:    []string{"Build the project."},
 							SourceFile: "Makefile",
 							LineNumber: 10,
 						},
 						{
 							Name:       "test",
-							Summary: richtext.FromPlainText("Run tests!"),
+							Summary:    []string{"Run tests!"},
 							SourceFile: "Makefile",
 							LineNumber: 15,
 						},
 						{
 							Name:       "check",
-							Summary: richtext.FromPlainText("Check everything?"),
+							Summary:    []string{"Check everything?"},
 							SourceFile: "Makefile",
 							LineNumber: 20,
 						},
@@ -436,19 +435,19 @@ func TestCheckLongSummaries_NoWarnings(t *testing.T) {
 					Targets: []model.Target{
 						{
 							Name:       "build",
-							Summary: richtext.FromPlainText("Build the project."),
+							Summary:    []string{"Build the project."},
 							SourceFile: "Makefile",
 							LineNumber: 10,
 						},
 						{
 							Name:       "test",
-							Summary: richtext.FromPlainText("Run all tests."),
+							Summary:    []string{"Run all tests."},
 							SourceFile: "Makefile",
 							LineNumber: 15,
 						},
 						{
 							Name:       "exactly-80",
-							Summary: richtext.FromPlainText("1234567890123456789012345678901234567890123456789012345678901234567890123456789."),
+							Summary:    []string{"1234567890123456789012345678901234567890123456789012345678901234567890123456789."},
 							SourceFile: "Makefile",
 							LineNumber: 20,
 						},
@@ -465,7 +464,7 @@ func TestCheckLongSummaries_NoWarnings(t *testing.T) {
 }
 
 func TestCheckLongSummaries_WithLong(t *testing.T) {
-	longSummary := richtext.FromPlainText("This is a very long summary that exceeds the eighty character limit and should trigger a warning.")
+	longSummary := []string{"This is a very long summary that exceeds the eighty character limit and should trigger a warning."}
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -474,7 +473,7 @@ func TestCheckLongSummaries_WithLong(t *testing.T) {
 					Targets: []model.Target{
 						{
 							Name:       "build",
-							Summary: richtext.FromPlainText("Build the project."),
+							Summary:    []string{"Build the project."},
 							SourceFile: "Makefile",
 							LineNumber: 10,
 						},
@@ -511,7 +510,7 @@ func TestCheckLongSummaries_WithLong(t *testing.T) {
 		if w.Message != expectedMsg {
 			t.Errorf("Expected message '%s', got '%s'", expectedMsg, w.Message)
 		}
-		if w.Context != longSummary.PlainText() {
+		if w.Context != longSummary[0] {
 			t.Errorf("Expected context to be the long summary")
 		}
 	}
@@ -526,13 +525,13 @@ func TestCheckLongSummaries_BoundaryCase(t *testing.T) {
 					Targets: []model.Target{
 						{
 							Name:       "exactly-80",
-							Summary: richtext.FromPlainText("1234567890123456789012345678901234567890123456789012345678901234567890123456789."),
+							Summary:    []string{"1234567890123456789012345678901234567890123456789012345678901234567890123456789."},
 							SourceFile: "Makefile",
 							LineNumber: 10,
 						},
 						{
 							Name:       "exactly-81",
-							Summary: richtext.FromPlainText("12345678901234567890123456789012345678901234567890123456789012345678901234567890."),
+							Summary:    []string{"12345678901234567890123456789012345678901234567890123456789012345678901234567890."},
 							SourceFile: "Makefile",
 							LineNumber: 15,
 						},
@@ -699,7 +698,7 @@ func TestCheckMissingVarDescriptions_NoWarnings(t *testing.T) {
 					Targets: []model.Target{
 						{
 							Name:       "build",
-							Summary: richtext.FromPlainText("Build the project."),
+							Summary:    []string{"Build the project."},
 							SourceFile: "Makefile",
 							LineNumber: 10,
 							Variables: []model.Variable{
@@ -734,7 +733,7 @@ func TestCheckMissingVarDescriptions_WithMissing(t *testing.T) {
 					Targets: []model.Target{
 						{
 							Name:       "build",
-							Summary: richtext.FromPlainText("Build the project."),
+							Summary:    []string{"Build the project."},
 							SourceFile: "Makefile",
 							LineNumber: 10,
 							Variables: []model.Variable{
@@ -750,7 +749,7 @@ func TestCheckMissingVarDescriptions_WithMissing(t *testing.T) {
 						},
 						{
 							Name:       "serve",
-							Summary: richtext.FromPlainText("Run the server."),
+							Summary:    []string{"Run the server."},
 							SourceFile: "Makefile",
 							LineNumber: 20,
 							Variables: []model.Variable{

@@ -1,7 +1,5 @@
 package model
 
-import "github.com/sdlcforge/make-help/internal/richtext"
-
 // UncategorizedCategoryName is the category name used for targets without
 // an explicit !category directive. Empty string has special meaning as the
 // default/uncategorized group.
@@ -65,7 +63,8 @@ type Target struct {
 	Documentation []string
 
 	// Summary is the extracted first sentence (computed from Documentation).
-	Summary richtext.RichText
+	// Stored as raw documentation lines; formatters parse to RichText as needed.
+	Summary []string
 
 	// Variables contains associated environment variables from !var directives.
 	Variables []Variable

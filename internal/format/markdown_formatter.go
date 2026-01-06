@@ -6,11 +6,13 @@ import (
 	"strings"
 
 	"github.com/sdlcforge/make-help/internal/model"
+	"github.com/sdlcforge/make-help/internal/richtext"
 )
 
 // MarkdownFormatter generates Markdown output for GitHub/GitLab/documentation sites.
 type MarkdownFormatter struct {
 	config *FormatterConfig
+	parser *richtext.Parser
 }
 
 // NewMarkdownFormatter creates a new MarkdownFormatter with the given configuration.
@@ -19,6 +21,7 @@ func NewMarkdownFormatter(config *FormatterConfig) *MarkdownFormatter {
 
 	return &MarkdownFormatter{
 		config: config,
+		parser: richtext.NewParser(),
 	}
 }
 
@@ -143,10 +146,13 @@ func (f *MarkdownFormatter) renderTarget(buf *strings.Builder, target *model.Tar
 	}
 
 	// Summary: Preserve markdown formatting for markdown output
-	summaryMarkdown := target.Summary.Markdown()
-	if summaryMarkdown != "" {
-		buf.WriteString(": ")
-		buf.WriteString(summaryMarkdown)
+	if len(target.Summary) > 0 && target.Summary[0] != "" {
+		summaryRichText := f.parser.Parse(target.Summary[0])
+		summaryMarkdown := summaryRichText.Markdown()
+		if summaryMarkdown != "" {
+			buf.WriteString(": ")
+			buf.WriteString(summaryMarkdown)
+		}
 	}
 
 	buf.WriteString("\n")

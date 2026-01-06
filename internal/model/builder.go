@@ -130,8 +130,13 @@ func (b *Builder) Build(parsedFiles []*parser.ParsedFile) (*HelpModel, error) {
 
 		categoryName := targetToCategory[targetName]
 
-		// Compute summary from documentation
-		target.Summary = b.extractor.Extract(target.Documentation)
+		// Compute summary from documentation (store as single-element slice)
+		summaryText := b.extractor.ExtractPlainText(target.Documentation)
+		if summaryText != "" {
+			target.Summary = []string{summaryText}
+		} else {
+			target.Summary = []string{}
+		}
 
 		// Get or create category
 		cat, exists := categoryMap[categoryName]

@@ -1,7 +1,6 @@
 package ordering
 
 import (
-	"github.com/sdlcforge/make-help/internal/richtext"
 	"testing"
 
 	"github.com/sdlcforge/make-help/internal/errors"
@@ -388,7 +387,7 @@ func TestApplyOrdering_PreservesOtherFields(t *testing.T) {
 						Name:           "test",
 						Aliases:        []string{"t"},
 						Documentation:  []string{"Run tests"},
-						Summary: richtext.FromPlainText("Run tests"),
+						Summary:        []string{"Run tests"},
 						Variables:      []model.Variable{{Name: "VERBOSE"}},
 						DiscoveryOrder: 1,
 						SourceFile:     "/path/to/Makefile",
@@ -415,7 +414,7 @@ func TestApplyOrdering_PreservesOtherFields(t *testing.T) {
 	assert.Equal(t, "test", target.Name)
 	assert.Equal(t, []string{"t"}, target.Aliases)
 	assert.Equal(t, []string{"Run tests"}, target.Documentation)
-	assert.Equal(t, "Run tests", target.Summary.PlainText())
+	assert.Equal(t, "Run tests", target.Summary[0])
 	assert.Len(t, target.Variables, 1)
 	assert.Equal(t, "VERBOSE", target.Variables[0].Name)
 	assert.Equal(t, "/path/to/Makefile", target.SourceFile)

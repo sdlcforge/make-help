@@ -147,11 +147,10 @@ func (f *TextFormatter) renderTarget(buf *strings.Builder, target *model.Target)
 	}
 
 	// Summary: Use plain text for terminal output (strips markdown formatting)
-	summaryText := target.Summary.PlainText()
-	if summaryText != "" {
+	if len(target.Summary) > 0 && target.Summary[0] != "" {
 		buf.WriteString(": ")
 		buf.WriteString(f.colors.Documentation)
-		buf.WriteString(summaryText)
+		buf.WriteString(target.Summary[0])
 		buf.WriteString(f.colors.Reset)
 	}
 
