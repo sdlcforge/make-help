@@ -160,15 +160,15 @@ The formatter architecture implementation is **well-designed** with good separat
 - [x] Increase CLI test coverage to 87.4% *(commit 0644dd3)*
 - [x] Wrap formatter errors with context *(commit 0d9417f)*
 
-### Low Priority (Consider for Future)
-- [ ] Split Formatter interface into Renderer + FormatMetadata
-- [ ] Move richtext.RichText out of model.Target.Summary
-- [ ] Decouple generator from formatter internals via abstraction
-- [ ] Create `normalizeConfig()` helper to reduce duplication
-- [ ] Document intentional RichText stripping behavior
-- [ ] Add comments explaining CSS color scheme
-- [ ] Cache CSS string in HTML formatter
-- [ ] Add regex timeout mechanism
+### Low Priority (All Completed 2026-01-05)
+- [x] Split Formatter interface into Renderer + FormatMetadata *(commit 8680e35)*
+- [x] Move richtext.RichText out of model.Target.Summary *(commit 8bdb477)*
+- [x] Decouple generator from formatter internals via abstraction *(commit fcf45d2)*
+- [x] Create `normalizeConfig()` helper to reduce duplication *(commit 7ee8046)*
+- [x] Document intentional RichText stripping behavior *(commit 1cd65e1)*
+- [x] Add comments explaining CSS color scheme *(commit ceaf0f7)*
+- [x] Cache CSS string in HTML formatter *(commit 8b86075)*
+- [x] Add regex timeout mechanism - SKIPPED (existing protections sufficient)
 
 ---
 
