@@ -17,9 +17,7 @@ type HTMLFormatter struct {
 
 // NewHTMLFormatter creates a new HTMLFormatter with the given configuration.
 func NewHTMLFormatter(config *FormatterConfig) *HTMLFormatter {
-	if config == nil {
-		config = &FormatterConfig{UseColor: false}
-	}
+	config = normalizeConfig(config)
 
 	return &HTMLFormatter{
 		config: config,

@@ -53,6 +53,16 @@ func (c *FormatterConfig) Validate() error {
 	return nil
 }
 
+// normalizeConfig returns a non-nil config with defaults applied.
+// If the provided config is nil, returns a default config with UseColor=false.
+// If the provided config is non-nil, returns it unchanged.
+func normalizeConfig(config *FormatterConfig) *FormatterConfig {
+	if config == nil {
+		return &FormatterConfig{UseColor: false}
+	}
+	return config
+}
+
 // NewFormatter creates a formatter for the specified format type.
 // This is the factory function that replaces direct renderer construction.
 // Supported format types: "make", "mk", "text", "txt", "html", "markdown", "md", "json"
