@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1400">
+  <defs>
+    <style>
+      .box { fill: #f0f0f0; stroke: #333; stroke-width: 2; }
+      .interface { fill: #e3f2fd; stroke: #1976d2; stroke-width: 2; }
+      .impl { fill: #fff3e0; stroke: #f57c00; stroke-width: 2; }
+      .data { fill: #f3e5f5; stroke: #7b1fa2; stroke-width: 2; }
+      .arrow { stroke: #333; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .dashed { stroke-dasharray: 5,5; }
+      .text { font-family: Arial, sans-serif; font-size: 14px; }
+      .title { font-weight: bold; font-size: 16px; }
+      .small { font-size: 12px; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#333" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="600" y="30" class="text title" text-anchor="middle">Make-Help Formatter Architecture</text>
+
+  <!-- CLI Layer -->
+  <rect x="50" y="60" width="1100" height="120" class="box"/>
+  <text x="600" y="85" class="text title" text-anchor="middle">CLI Layer</text>
+  <text x="70" y="110" class="text small">Flags:</text>
+  <text x="70" y="130" class="text small">  --format {make|text|html|markdown}</text>
+  <text x="70" y="150" class="text small">  --output {path|-}  (- = stdout)</text>
+  <text x="600" y="110" class="text small">internal/cli/root.go, config.go</text>
+  <text x="600" y="130" class="text small">Validates flags, routes to appropriate handler</text>
+
+  <!-- Arrow down -->
+  <path d="M 600 180 L 600 220" class="arrow"/>
+
+  <!-- Processing Pipeline -->
+  <rect x="50" y="220" width="1100" height="80" class="box"/>
+  <text x="600" y="245" class="text title" text-anchor="middle">Processing Pipeline (Unchanged)</text>
+  <text x="600" y="270" class="text small">Discovery → Parser → Model Builder → Ordering</text>
+  <text x="600" y="290" class="text small">Produces: model.HelpModel</text>
+
+  <!-- Arrow down -->
+  <path d="M 600 300 L 600 340" class="arrow"/>
+
+  <!-- Rich Text Processing -->
+  <rect x="50" y="340" width="1100" height="100" class="data"/>
+  <text x="600" y="365" class="text title" text-anchor="middle">Rich Text Processing</text>
+  <text x="70" y="390" class="text small">internal/richtext/parser.go</text>
+  <text x="70" y="410" class="text small">  Parse markdown: **bold**, *italic*, `code`, [links]</text>
+  <text x="70" y="430" class="text small">  Output: RichText ([]Segment)</text>
+  <text x="600" y="390" class="text small">internal/summary/extractor.go (modified)</text>
+  <text x="600" y="410" class="text small">  Extract first sentence WITHOUT stripping formatting</text>
+  <text x="600" y="430" class="text small">  Returns: richtext.RichText</text>
+
+  <!-- Arrow down -->
+  <path d="M 600 440 L 600 480" class="arrow"/>
+
+  <!-- Formatter Factory -->
+  <rect x="400" y="480" width="400" height="80" class="interface"/>
+  <text x="600" y="505" class="text title" text-anchor="middle">Formatter Factory</text>
+  <text x="600" y="530" class="text small">internal/format/formatter.go</text>
+  <text x="600" y="550" class="text small">NewFormatter(formatType, config) → Formatter</text>
+
+  <!-- Arrows to formatters -->
+  <path d="M 450 560 L 250 620" class="arrow"/>
+  <path d="M 550 560 L 450 620" class="arrow"/>
+  <path d="M 650 560 L 750 620" class="arrow"/>
+  <path d="M 750 560 L 950 620" class="arrow"/>
+
+  <!-- Formatter Interface -->
+  <rect x="100" y="620" width="1000" height="100" class="interface"/>
+  <text x="600" y="645" class="text title" text-anchor="middle">Formatter Interface</text>
+  <text x="120" y="670" class="text small">RenderHelp(model, writer) error</text>
+  <text x="120" y="690" class="text small">RenderDetailedTarget(target, writer) error</text>
+  <text x="120" y="710" class="text small">ContentType() string</text>
+  <text x="600" y="670" class="text small">RenderBasicTarget(name, source, line, writer) error</text>
+  <text x="600" y="690" class="text small">DefaultExtension() string</text>
+
+  <!-- Arrows to implementations -->
+  <path d="M 250 720 L 250 760" class="arrow"/>
+  <path d="M 450 720 L 450 760" class="arrow"/>
+  <path d="M 750 720 L 750 760" class="arrow"/>
+  <path d="M 950 720 L 950 760" class="arrow"/>
+
+  <!-- Make Formatter -->
+  <rect x="100" y="760" width="300" height="180" class="impl"/>
+  <text x="250" y="785" class="text title" text-anchor="middle">MakeFormatter</text>
+  <text x="120" y="810" class="text small">internal/format/make_formatter.go</text>
+  <text x="120" y="835" class="text small">Output:</text>
+  <text x="120" y="855" class="text small">  Makefile with @printf statements</text>
+  <text x="120" y="875" class="text small">  ANSI codes (if --color)</text>
+  <text x="120" y="895" class="text small">  Escaping: $, ", \, `</text>
+  <text x="120" y="915" class="text small">  Auto-regen targets</text>
+
+  <!-- Text Formatter -->
+  <rect x="450" y="760" width="300" height="180" class="impl"/>
+  <text x="600" y="785" class="text title" text-anchor="middle">TextFormatter</text>
+  <text x="470" y="810" class="text small">internal/format/text_formatter.go</text>
+  <text x="470" y="835" class="text small">Output:</text>
+  <text x="470" y="855" class="text small">  Plain text with optional ANSI</text>
+  <text x="470" y="875" class="text small">  Bold: \033[1m...\033[0m</text>
+  <text x="470" y="895" class="text small">  Italic: \033[4m...\033[0m</text>
+  <text x="470" y="915" class="text small">  No escaping needed</text>
+
+  <!-- HTML Formatter -->
+  <rect x="800" y="760" width="300" height="180" class="impl"/>
+  <text x="950" y="785" class="text title" text-anchor="middle">HTMLFormatter</text>
+  <text x="820" y="810" class="text small">internal/format/html_formatter.go</text>
+  <text x="820" y="835" class="text small">Output:</text>
+  <text x="820" y="855" class="text small">  HTML5 with embedded CSS</text>
+  <text x="820" y="875" class="text small">  Bold: &lt;strong&gt;...&lt;/strong&gt;</text>
+  <text x="820" y="895" class="text small">  Italic: &lt;em&gt;...&lt;/em&gt;</text>
+  <text x="820" y="915" class="text small">  HTML escaping</text>
+
+  <!-- Markdown Formatter -->
+  <rect x="150" y="960" width="300" height="180" class="impl"/>
+  <text x="300" y="985" class="text title" text-anchor="middle">MarkdownFormatter</text>
+  <text x="170" y="1010" class="text small">internal/format/markdown_formatter.go</text>
+  <text x="170" y="1035" class="text small">Output:</text>
+  <text x="170" y="1055" class="text small">  Markdown structure</text>
+  <text x="170" y="1075" class="text small">  Bold: **...**</text>
+  <text x="170" y="1095" class="text small">  Italic: *...*</text>
+  <text x="170" y="1115" class="text small">  Preserves original formatting</text>
+
+  <!-- Arrow from HTML down -->
+  <path d="M 950 940 L 950 980 L 300 980 L 300 960" class="arrow dashed"/>
+
+  <!-- Rich Text Data Model -->
+  <rect x="550" y="960" width="550" height="180" class="data"/>
+  <text x="825" y="985" class="text title" text-anchor="middle">Rich Text Data Model</text>
+  <text x="570" y="1010" class="text small">internal/richtext/types.go</text>
+  <text x="570" y="1035" class="text small">type Segment struct {</text>
+  <text x="570" y="1055" class="text small">  Type    SegmentType  // Plain, Bold, Italic, Code, Link</text>
+  <text x="570" y="1075" class="text small">  Content string</text>
+  <text x="570" y="1095" class="text small">  URL     string       // For links only</text>
+  <text x="570" y="1115" class="text small">}</text>
+  <text x="570" y="1135" class="text small">type RichText []Segment</text>
+
+  <!-- Output Writer -->
+  <rect x="450" y="1180" width="300" height="80" class="box"/>
+  <text x="600" y="1205" class="text title" text-anchor="middle">Output Writer</text>
+  <text x="600" y="1230" class="text small">io.Writer (stdout or file)</text>
+  <text x="600" y="1250" class="text small">Atomic file writes for files</text>
+
+  <!-- Arrows to output -->
+  <path d="M 250 940 L 250 1200 L 450 1220" class="arrow"/>
+  <path d="M 600 940 L 600 1180" class="arrow"/>
+
+  <!-- Legend -->
+  <text x="50" y="1310" class="text title">Legend:</text>
+  <rect x="50" y="1320" width="30" height="20" class="box"/>
+  <text x="90" y="1335" class="text small">Component</text>
+  <rect x="200" y="1320" width="30" height="20" class="interface"/>
+  <text x="240" y="1335" class="text small">Interface</text>
+  <rect x="350" y="1320" width="30" height="20" class="impl"/>
+  <text x="390" y="1335" class="text small">Implementation</text>
+  <rect x="550" y="1320" width="30" height="20" class="data"/>
+  <text x="590" y="1335" class="text small">Data Model</text>
+
+  <!-- Example Data Flow -->
+  <text x="50" y="1380" class="text title">Example: "**Build** the app"</text>
+  <text x="50" y="1395" class="text small">→ RichText: [{Bold,"Build"}, {Plain," the app"}] → Make: "\033[1mBuild\033[0m the app" | HTML: "&lt;strong&gt;Build&lt;/strong&gt; the app"</text>
+</svg>

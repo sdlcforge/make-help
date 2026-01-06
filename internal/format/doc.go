@@ -26,6 +26,18 @@
 //	    DefaultExtension() string
 //	}
 //
+// For formatters that support line-based rendering (e.g., for embedding in generated files),
+// there is also a LineRenderer interface:
+//
+//	type LineRenderer interface {
+//	    RenderHelpLines(model *HelpModel) ([]string, error)
+//	    RenderDetailedTargetLines(target *Target) []string
+//	}
+//
+// MakeFormatter implements both Formatter and LineRenderer. The LineRenderer interface
+// is used by the generator package to embed help text in generated Makefile targets
+// without depending on concrete formatter implementations.
+//
 // # Color Support
 //
 // Text and Make formatters support ANSI color output, controlled via FormatterConfig.
