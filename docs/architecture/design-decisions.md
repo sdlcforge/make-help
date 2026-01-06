@@ -23,6 +23,7 @@ This document records the key architectural and design decisions made in the mak
   - [All-or-Nothing Categorization](#all-or-nothing-categorization)
 - [Output and Generation](#output-and-generation)
   - [Static vs Dynamic Help Generation](#static-vs-dynamic-help-generation)
+  - [Multiple Output Format Support](#multiple-output-format-support)
 
 ---
 
@@ -415,6 +416,40 @@ This document records the key architectural and design decisions made in the mak
 - ✅ `--output -` flag available for dynamic display when needed
 
 **Implementation**: See `internal/target/generator.go` for static file generation and `internal/cli/help.go` for mode routing.
+
+---
+
+### Multiple output format support
+
+**Decision**: Support multiple output formats (Make, Text, HTML, Markdown, JSON) via a Formatter interface with factory pattern.
+
+**Context**: Different use cases need different output formats:
+- Terminal display (colored text)
+- Makefile embedding (@printf statements)
+- Documentation sites (HTML, Markdown)
+- API consumption (JSON)
+
+**Rationale**:
+1. **Extensibility**: Factory pattern allows adding new formats without modifying existing code
+2. **Consistency**: All formats implement the same interface, ensuring consistent behavior
+3. **Separation of concerns**: Format-specific logic is isolated in dedicated formatter types
+4. **Rich text preservation**: Different formats can render markdown formatting appropriately (HTML preserves, text strips)
+5. **Interface segregation**: Renderer and FormatMetadata interfaces are separate, combined in Formatter
+
+**Alternatives Considered**:
+- **Single renderer with format flag**: Less maintainable, format-specific logic would pollute one large file
+- **Template-based rendering**: More flexible but harder to test and debug
+- **External format converters**: Requires additional dependencies and complexity
+
+**Consequences**:
+- ✅ Easy to add new formats (implement Formatter interface)
+- ✅ Each format can optimize for its output context
+- ✅ Clear separation of format-specific logic
+- ✅ LineRenderer abstraction decouples generator from formatter internals
+- ⚠️ Five formatters to maintain (MakeFormatter, TextFormatter, HTMLFormatter, MarkdownFormatter, JSONFormatter)
+- ⚠️ Some code duplication across formatters (mitigated by shared helpers)
+
+**Implementation**: See `internal/format/formatter.go` for interface and factory, individual formatter files for implementations.
 
 ---
 

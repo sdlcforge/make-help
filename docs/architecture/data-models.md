@@ -213,6 +213,57 @@ Contains discovered targets and their metadata extracted from make -p output.
 
 ### 6. Rendering Model
 
+#### Formatter Interface
+The main interface that all output format implementations must satisfy. Combines rendering capabilities with format metadata.
+
+```go
+type Formatter interface {
+    Renderer       // RenderHelp, RenderDetailedTarget, RenderBasicTarget
+    FormatMetadata // ContentType, DefaultExtension
+}
+```
+
+[View source](https://github.com/sdlcforge/make-help/blob/main/internal/format/formatter.go#L36-L43)
+
+#### Renderer Interface
+Interface for generating formatted output in a specific format.
+
+**Key methods:**
+- `RenderHelp(model *HelpModel, w io.Writer) error` - Generate complete help output
+- `RenderDetailedTarget(target *Target, w io.Writer) error` - Detailed single target help
+- `RenderBasicTarget(name, sourceFile string, lineNumber int, w io.Writer) error` - Minimal undocumented target info
+
+[View source](https://github.com/sdlcforge/make-help/blob/main/internal/format/formatter.go#L10-L24)
+
+#### FormatMetadata Interface
+Provides information about a format's properties.
+
+**Key methods:**
+- `ContentType() string` - MIME type (e.g., "text/html", "application/json")
+- `DefaultExtension() string` - File extension (e.g., ".html", ".json")
+
+[View source](https://github.com/sdlcforge/make-help/blob/main/internal/format/formatter.go#L26-L34)
+
+#### FormatterConfig
+Configuration options common to all formatters.
+
+**Key fields:**
+- `UseColor` - Enables colored/styled output (ANSI codes for terminal, CSS for HTML)
+- `ColorScheme` - Color definitions for terminal formats (nil when color disabled)
+
+[View source](https://github.com/sdlcforge/make-help/blob/main/internal/format/formatter.go#L45-L56)
+
+#### LineRenderer Interface
+Interface for formatters that support line-based rendering for embedding in generated files.
+
+**Key methods:**
+- `RenderHelpLines(model *HelpModel) ([]string, error)` - Help as array of escaped lines
+- `RenderDetailedTargetLines(target *Target) []string` - Detailed target as escaped lines
+
+**Note:** Currently only MakeFormatter implements this interface, used by the generator for embedding help in Makefile targets.
+
+[View source](https://github.com/sdlcforge/make-help/blob/main/internal/format/line_renderer.go)
+
 #### ColorScheme
 Defines ANSI color codes for different elements in the rendered output.
 
@@ -222,7 +273,44 @@ Defines ANSI color codes for different elements in the rendered output.
 
 **Note:** All fields are empty strings when color is disabled.
 
-[View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/format/colors.go#L3-L14)
+[View source](https://github.com/sdlcforge/make-help/blob/main/internal/format/colors.go)
+
+### 7. Rich Text Model
+
+**Package:** `internal/richtext`
+
+Handles markdown inline formatting preservation across different output formats.
+
+#### RichText
+A slice of Segment representing formatted text.
+
+**Key methods:**
+- `PlainText() string` - Strip all formatting, return plain text
+- `Markdown() string` - Return text with markdown formatting preserved
+
+#### Segment
+A piece of text with optional formatting.
+
+**Key fields:**
+- `Type` - SegmentType (Plain, Bold, Italic, Code, Link)
+- `Content` - The text content (without markdown markers)
+- `URL` - For links only
+
+#### SegmentType
+Enum for segment formatting types:
+- `SegmentPlain` - Plain text
+- `SegmentBold` - **text** or __text__
+- `SegmentItalic` - *text* or _text_
+- `SegmentCode` - `code`
+- `SegmentLink` - [text](url)
+
+#### Parser
+Parses markdown inline formatting into RichText segments.
+
+**Key method:**
+- `Parse(text string) RichText` - Convert markdown string to segments
+
+[View source](https://github.com/sdlcforge/make-help/blob/main/internal/richtext/)
 
 
-Last reviewed: 2025-12-25T16:43Z
+Last reviewed: 2026-01-06

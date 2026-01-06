@@ -51,6 +51,7 @@ CLI Layer → Discovery → Parser → Model Builder → Ordering → Summary �
 | `internal/model/` | Build & validate help model | `Builder.Build()`, `HelpModel` |
 | `internal/ordering/` | Sort categories/targets | `Service.ApplyOrdering()` |
 | `internal/summary/` | Extract first sentence (strip markdown) | `Extractor.Extract()` |
+| `internal/richtext/` | Parse markdown inline formatting | `Parser.Parse()`, `RichText` |
 | `internal/format/` | Format help output in multiple formats | `Formatter.RenderHelp()`, `NewFormatter()` |
 | `internal/target/` | Generate/remove help targets | `AddService`, `RemoveService` |
 

@@ -335,57 +335,104 @@ function Extract(documentation):
 
 **Package:** `internal/format`
 
-**Design:** String builder-based rendering with conditional ANSI color support
+**Design:** Multi-format output via Formatter interface with factory pattern. Supports five output formats: Make, Text, HTML, Markdown, and JSON. Each format is implemented by a dedicated formatter type that implements the common Formatter interface.
+
+**Core Interfaces:**
+
+```go
+// Renderer is the interface for generating formatted output.
+type Renderer interface {
+    RenderHelp(model *HelpModel, w io.Writer) error
+    RenderDetailedTarget(target *Target, w io.Writer) error
+    RenderBasicTarget(name, sourceFile string, lineNumber int, w io.Writer) error
+}
+
+// FormatMetadata provides information about a format's properties.
+type FormatMetadata interface {
+    ContentType() string      // MIME type (e.g., "text/html")
+    DefaultExtension() string // File extension (e.g., ".html")
+}
+
+// Formatter combines Renderer and FormatMetadata.
+type Formatter interface {
+    Renderer
+    FormatMetadata
+}
+
+// LineRenderer for formatters that support line-based rendering (embedding).
+type LineRenderer interface {
+    RenderHelpLines(model *HelpModel) ([]string, error)
+    RenderDetailedTargetLines(target *Target) []string
+}
+```
+
+**Factory Function:**
+
+```go
+func NewFormatter(formatType string, config *FormatterConfig) (Formatter, error)
+// Supported: "make", "mk", "text", "txt", "html", "markdown", "md", "json"
+```
+
+**Formatter Implementations:**
+
+| Formatter | Purpose | ContentType | Extension | Color Support |
+|-----------|---------|-------------|-----------|---------------|
+| MakeFormatter | @printf statements for Makefile | `text/x-makefile` | `.mk` | ANSI codes |
+| TextFormatter | Terminal or plain text output | `text/plain` | `.txt` | ANSI codes |
+| HTMLFormatter | Browser-ready HTML with CSS | `text/html` | `.html` | CSS styles |
+| MarkdownFormatter | GitHub/GitLab documentation | `text/markdown` | `.md` | None |
+| JSONFormatter | Programmatic consumption | `application/json` | `.json` | None |
+
+**Rich Text Handling:**
+
+Different formatters handle markdown formatting in documentation based on output context:
+
+| Format | Bold | Italic | Code | Links |
+|--------|------|--------|------|-------|
+| Make/Text (color) | ANSI bold | ANSI underline | strip | strip |
+| Make/Text (no color) | strip | strip | strip | strip |
+| HTML | `<strong>` | `<em>` | `<code>` | `<a href>` |
+| Markdown | `**text**` | `*text*` | `` `code` `` | `[text](url)` |
+| JSON | plain text | plain text | plain text | plain text |
 
 **Pseudocode:**
+
 ```
-type Renderer:
-    colors - ColorScheme (ANSI codes or empty strings based on useColor)
+function NewFormatter(formatType, config):
+    validate config if provided
+    switch formatType:
+        "make", "mk" → MakeFormatter
+        "text", "txt" → TextFormatter
+        "html" → HTMLFormatter
+        "markdown", "md" → MarkdownFormatter
+        "json" → JSONFormatter
+        default → error "unknown format type"
 
-function Render(model):
-    // Main help output for stdout or static help.mk generation
-    1. write usage line
-    2. if file docs exist: write each doc line
-    3. write "Targets:" header
-    4. for each category:
-        if category has name: write colored category header
-        for each target:
-            write "  - " + colored target name
-            if aliases: write colored aliases
-            write ": " + colored summary
-            if variables: write "Vars: " + variable names
-    return formatted string
+// Each formatter implements:
+function RenderHelp(model, writer):
+    1. render usage section
+    2. render file documentation (if present)
+    3. render targets by category
+    4. write to io.Writer
 
-function RenderDetailedTarget(target):
-    // Detailed help for single target (--output - --target <name>)
-    1. write "Target: " + colored target name
-    2. if aliases: write "Aliases: " + aliases
-    3. if variables: write "Variables:" + detailed list
-    4. write full documentation (all lines)
-    5. write source location
-    return formatted string
-
-function RenderForMakefile(model):
-    // Generate help as list of strings for @echo embedding
-    1. similar to Render() but return []string
-    2. each string is escaped for Makefile @echo:
-        - $ -> $$
-        - " -> \"
-        - \x1b -> \033 (ANSI escape literal form)
-    return array of escaped lines
+function RenderDetailedTarget(target, writer):
+    1. render target name and aliases
+    2. render variables section
+    3. render full documentation
+    4. render source location
 ```
 
-[View source: Renderer.Render](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/format/renderer.go#L30-L55)
-[View source: Renderer.RenderDetailedTarget](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/format/renderer.go#L125-L183)
-[View source: Renderer.RenderForMakefile](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/format/renderer.go#L216-L242)
-[View source: escapeForMakefileEcho](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/format/renderer.go#L378-L403)
+[View source: Formatter interface](https://github.com/sdlcforge/make-help/blob/main/internal/format/formatter.go)
+[View source: NewFormatter factory](https://github.com/sdlcforge/make-help/blob/main/internal/format/formatter.go#L79-L104)
+[View source: LineRenderer interface](https://github.com/sdlcforge/make-help/blob/main/internal/format/line_renderer.go)
 
 **Key Design Decisions:**
-- **String builder for efficient concatenation** (single allocation, minimal copying)
-- **Color codes injected conditionally** via ColorScheme (ANSI codes vs empty strings)
-- **Three rendering modes**: Render (stdout), RenderDetailedTarget (single target), RenderForMakefile (static @echo)
-- **Escape strategy for Makefile generation**: Converts ANSI codes to literal \033 form for @echo compatibility
-- **Structured rendering methods** for consistency across all output modes
+- **Factory pattern** centralizes formatter creation and format validation
+- **Interface segregation**: Renderer and FormatMetadata are separate, combined in Formatter
+- **LineRenderer abstraction** decouples generator from concrete formatter implementations
+- **Format-appropriate rendering**: Each formatter renders rich text appropriately for its context
+- **Color codes conditional** via FormatterConfig (ANSI codes vs empty strings for terminal formats)
+- **MakeFormatter implements LineRenderer** for embedding help in generated Makefile targets
 
 ### 8 Static Help File Generator
 
