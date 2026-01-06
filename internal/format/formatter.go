@@ -7,9 +7,9 @@ import (
 	"github.com/sdlcforge/make-help/internal/model"
 )
 
-// Formatter is the interface that all output format implementations must satisfy.
-// Each formatter knows how to render a HelpModel in its specific format.
-type Formatter interface {
+// Renderer is the interface for generating formatted output.
+// It handles the actual rendering of help content in a specific format.
+type Renderer interface {
 	// RenderHelp generates the complete help output from a HelpModel.
 	// This is the summary view showing all categories and targets.
 	RenderHelp(model *model.HelpModel, w io.Writer) error
@@ -21,12 +21,25 @@ type Formatter interface {
 	// RenderBasicTarget generates minimal help for an undocumented target.
 	// Shows target name and source location if available.
 	RenderBasicTarget(name string, sourceFile string, lineNumber int, w io.Writer) error
+}
 
+// FormatMetadata provides information about a format's properties.
+// This includes content type and file extension for output purposes.
+type FormatMetadata interface {
 	// ContentType returns the MIME type for this format (for HTTP responses, future use).
 	ContentType() string
 
 	// DefaultExtension returns the default file extension for this format.
 	DefaultExtension() string
+}
+
+// Formatter is the interface that all output format implementations must satisfy.
+// Each formatter knows how to render a HelpModel in its specific format.
+// This interface combines rendering capabilities with format metadata.
+// It is kept for backward compatibility and to provide a complete formatter contract.
+type Formatter interface {
+	Renderer
+	FormatMetadata
 }
 
 // FormatterConfig holds configuration options common to all formatters.
