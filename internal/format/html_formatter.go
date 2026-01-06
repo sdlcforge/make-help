@@ -29,7 +29,7 @@ func NewHTMLFormatter(config *FormatterConfig) *HTMLFormatter {
 // RenderHelp generates the complete help output from a HelpModel in HTML format.
 func (f *HTMLFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) error {
 	if helpModel == nil {
-		return fmt.Errorf("html formatter: help model cannot be nil")
+		return errNilHelpModel("html")
 	}
 
 	var buf strings.Builder
@@ -61,34 +61,26 @@ func (f *HTMLFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 	// File documentation section
 	if len(helpModel.FileDocs) > 0 {
 		// Render entry point file docs first
-		for _, fileDoc := range helpModel.FileDocs {
-			if fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
-				buf.WriteString("  <section class=\"file-docs\">\n")
-				buf.WriteString("    <h2>Description</h2>\n")
-				buf.WriteString("    <div class=\"description\">\n")
-				for _, line := range fileDoc.Documentation {
-					if line == "" {
-						buf.WriteString("      <br>\n")
-					} else {
-						buf.WriteString("      <p>")
-						buf.WriteString(html.EscapeString(line))
-						buf.WriteString("</p>\n")
-					}
+		entryPointDocs := extractEntryPointDocs(helpModel.FileDocs)
+		if entryPointDocs != nil {
+			buf.WriteString("  <section class=\"file-docs\">\n")
+			buf.WriteString("    <h2>Description</h2>\n")
+			buf.WriteString("    <div class=\"description\">\n")
+			for _, line := range entryPointDocs {
+				if line == "" {
+					buf.WriteString("      <br>\n")
+				} else {
+					buf.WriteString("      <p>")
+					buf.WriteString(html.EscapeString(line))
+					buf.WriteString("</p>\n")
 				}
-				buf.WriteString("    </div>\n")
-				buf.WriteString("  </section>\n")
-				break
 			}
+			buf.WriteString("    </div>\n")
+			buf.WriteString("  </section>\n")
 		}
 
 		// Render included files section
-		var includedFiles []model.FileDoc
-		for _, fileDoc := range helpModel.FileDocs {
-			if !fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
-				includedFiles = append(includedFiles, fileDoc)
-			}
-		}
-
+		includedFiles := extractIncludedFiles(helpModel.FileDocs)
 		if len(includedFiles) > 0 {
 			buf.WriteString("  <section class=\"included-files\">\n")
 			buf.WriteString("    <h2>Included files</h2>\n")
@@ -206,7 +198,7 @@ func (f *HTMLFormatter) renderTarget(buf *strings.Builder, target *model.Target)
 // RenderDetailedTarget renders a detailed view of a single target in HTML.
 func (f *HTMLFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) error {
 	if target == nil {
-		return fmt.Errorf("html formatter: target cannot be nil")
+		return errNilTarget("html")
 	}
 
 	var buf strings.Builder

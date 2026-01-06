@@ -2,7 +2,6 @@ package format
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"strings"
 
@@ -81,7 +80,7 @@ type jsonBasicTarget struct {
 // RenderHelp generates the complete help output from a HelpModel in JSON format.
 func (f *JSONFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) error {
 	if helpModel == nil {
-		return fmt.Errorf("json formatter: help model cannot be nil")
+		return errNilHelpModel("json")
 	}
 
 	output := jsonHelpOutput{
@@ -91,22 +90,19 @@ func (f *JSONFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 	// Extract entry point description and included files
 	if len(helpModel.FileDocs) > 0 {
 		// Entry point file documentation
-		for _, fileDoc := range helpModel.FileDocs {
-			if fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
-				// Join all documentation lines with newlines
-				output.Description = strings.Join(fileDoc.Documentation, "\n")
-				break
-			}
+		entryPointDocs := extractEntryPointDocs(helpModel.FileDocs)
+		if entryPointDocs != nil {
+			// Join all documentation lines with newlines
+			output.Description = strings.Join(entryPointDocs, "\n")
 		}
 
 		// Included files
-		for _, fileDoc := range helpModel.FileDocs {
-			if !fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
-				output.IncludedFiles = append(output.IncludedFiles, jsonIncludedFile{
-					Path:        fileDoc.SourceFile,
-					Description: strings.Join(fileDoc.Documentation, "\n"),
-				})
-			}
+		includedFiles := extractIncludedFiles(helpModel.FileDocs)
+		for _, fileDoc := range includedFiles {
+			output.IncludedFiles = append(output.IncludedFiles, jsonIncludedFile{
+				Path:        fileDoc.SourceFile,
+				Description: strings.Join(fileDoc.Documentation, "\n"),
+			})
 		}
 	}
 
@@ -162,7 +158,7 @@ func (f *JSONFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 // RenderDetailedTarget renders a detailed view of a single target in JSON format.
 func (f *JSONFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) error {
 	if target == nil {
-		return fmt.Errorf("json formatter: target cannot be nil")
+		return errNilTarget("json")
 	}
 
 	// Extract summary text (first element of Summary slice)

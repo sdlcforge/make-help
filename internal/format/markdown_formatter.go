@@ -46,7 +46,7 @@ func escapeMarkdown(s string) string {
 // RenderHelp generates the complete help output from a HelpModel in Markdown format.
 func (f *MarkdownFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) error {
 	if helpModel == nil {
-		return fmt.Errorf("markdown formatter: help model cannot be nil")
+		return errNilHelpModel("markdown")
 	}
 
 	var buf strings.Builder
@@ -63,26 +63,18 @@ func (f *MarkdownFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) 
 	// File documentation section
 	if len(helpModel.FileDocs) > 0 {
 		// Render entry point file docs first
-		for _, fileDoc := range helpModel.FileDocs {
-			if fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
-				buf.WriteString("## Description\n\n")
-				for _, line := range fileDoc.Documentation {
-					buf.WriteString(line)
-					buf.WriteString("\n")
-				}
+		entryPointDocs := extractEntryPointDocs(helpModel.FileDocs)
+		if entryPointDocs != nil {
+			buf.WriteString("## Description\n\n")
+			for _, line := range entryPointDocs {
+				buf.WriteString(line)
 				buf.WriteString("\n")
-				break
 			}
+			buf.WriteString("\n")
 		}
 
 		// Render included files section
-		var includedFiles []model.FileDoc
-		for _, fileDoc := range helpModel.FileDocs {
-			if !fileDoc.IsEntryPoint && len(fileDoc.Documentation) > 0 {
-				includedFiles = append(includedFiles, fileDoc)
-			}
-		}
-
+		includedFiles := extractIncludedFiles(helpModel.FileDocs)
 		if len(includedFiles) > 0 {
 			buf.WriteString("## Included files\n\n")
 			for _, fileDoc := range includedFiles {
@@ -175,7 +167,7 @@ func (f *MarkdownFormatter) renderTarget(buf *strings.Builder, target *model.Tar
 // RenderDetailedTarget renders a detailed view of a single target in Markdown.
 func (f *MarkdownFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) error {
 	if target == nil {
-		return fmt.Errorf("markdown formatter: target cannot be nil")
+		return errNilTarget("markdown")
 	}
 
 	var buf strings.Builder
