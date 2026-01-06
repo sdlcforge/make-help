@@ -15,6 +15,9 @@ type MakeFormatter struct {
 	colors *ColorScheme
 }
 
+// Compile-time check to ensure MakeFormatter implements LineRenderer interface.
+var _ LineRenderer = (*MakeFormatter)(nil)
+
 // NewMakeFormatter creates a new MakeFormatter with the given configuration.
 func NewMakeFormatter(config *FormatterConfig) *MakeFormatter {
 	if config == nil {
@@ -97,7 +100,8 @@ func (f *MakeFormatter) DefaultExtension() string {
 // RenderHelpLines generates help output lines suitable for Makefile @printf statements.
 // Returns a slice of strings, each representing one line to be printed.
 // Each line is properly escaped for shell/Makefile context.
-// This is a public API for use by generator code that needs the raw lines.
+// This method implements the LineRenderer interface, allowing the generator package
+// to embed help text without depending on the concrete MakeFormatter type.
 func (f *MakeFormatter) RenderHelpLines(helpModel *model.HelpModel) ([]string, error) {
 	var lines []string
 
@@ -229,7 +233,8 @@ func (f *MakeFormatter) renderTargetLines(target *model.Target) []string {
 }
 
 // RenderDetailedTargetLines renders detailed help for a single target suitable for Makefile @printf.
-// This is a public API for use by generator code that needs the raw lines.
+// This method implements the LineRenderer interface, allowing the generator package
+// to embed help text without depending on the concrete MakeFormatter type.
 func (f *MakeFormatter) RenderDetailedTargetLines(target *model.Target) []string {
 	var lines []string
 

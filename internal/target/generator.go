@@ -52,7 +52,8 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	var buf strings.Builder
 
 	// Create formatter with color configuration
-	formatter := format.NewMakeFormatter(&format.FormatterConfig{
+	// We use the LineRenderer interface to decouple from the concrete MakeFormatter type
+	var renderer format.LineRenderer = format.NewMakeFormatter(&format.FormatterConfig{
 		UseColor: config.UseColor,
 	})
 
@@ -107,7 +108,7 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	buf.WriteString("\tdone\n")
 
 	// Render help content
-	helpLines, err := formatter.RenderHelpLines(config.HelpModel)
+	helpLines, err := renderer.RenderHelpLines(config.HelpModel)
 	if err != nil {
 		return "", fmt.Errorf("failed to render help content: %w", err)
 	}
@@ -123,7 +124,7 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 			buf.WriteString(fmt.Sprintf(".PHONY: help-%s\n", target.Name))
 			buf.WriteString(fmt.Sprintf("help-%s:\n", target.Name))
 
-			detailedLines := formatter.RenderDetailedTargetLines(&target)
+			detailedLines := renderer.RenderDetailedTargetLines(&target)
 			for _, line := range detailedLines {
 				buf.WriteString(fmt.Sprintf("\t@printf '%%b\\n' \"%s\"\n", line))
 			}
