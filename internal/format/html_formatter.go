@@ -408,9 +408,8 @@ func (f *HTMLFormatter) renderRichText(rt richtext.RichText) string {
 	return buf.String()
 }
 
-// getCSS returns the embedded CSS stylesheet.
-func (f *HTMLFormatter) getCSS() string {
-	return `    body {
+// cachedHTMLCSS contains the embedded CSS stylesheet (cached at package level for performance).
+var cachedHTMLCSS = `    body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       max-width: 1000px;
       margin: 2em auto;
@@ -500,4 +499,8 @@ func (f *HTMLFormatter) getCSS() string {
       margin: 0.5em 0;
     }
 `
+
+// getCSS returns the cached CSS stylesheet.
+func (f *HTMLFormatter) getCSS() string {
+	return cachedHTMLCSS
 }
