@@ -12,7 +12,6 @@ func TestNewScanner(t *testing.T) {
 	assert.NotNil(t, scanner)
 	assert.Empty(t, scanner.pendingDocs)
 	assert.Empty(t, scanner.currentFile)
-	assert.Empty(t, scanner.currentCategory)
 }
 
 func TestScanContent_FileDirective(t *testing.T) {
@@ -621,5 +620,4 @@ test:
 	// Verify state was reset
 	assert.Empty(t, scanner.pendingDocs)
 	assert.Equal(t, "file2.mk", scanner.currentFile)
-	assert.Equal(t, "", scanner.currentCategory) // Should be reset
 }

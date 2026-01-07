@@ -86,15 +86,13 @@ Input: fileContent (string), targetMap (map[string]int)
 Output: []Directive
 
 State:
-- currentCategory: string (current category name)
 - pendingDocs: []Directive (docs awaiting target association)
 
 For each line:
   1. If line starts with "## ":
      - Parse directive (detect !file, !category, !var, !alias, or doc)
-     - If !category: update currentCategory
      - If !file: add to FileDocs immediately
-     - Else: add to pendingDocs
+     - Else: add to pendingDocs (category tracking happens in model builder)
 
   2. Else if line is target definition (contains : or &:):
      - Extract target name

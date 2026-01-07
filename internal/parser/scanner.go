@@ -7,12 +7,11 @@ import (
 )
 
 // Scanner scans Makefile content and extracts documentation directives.
-// It maintains state to track the current category and pending documentation
-// that will be associated with the next target.
+// It maintains state to track pending documentation that will be associated
+// with the next target.
 type Scanner struct {
-	currentFile     string      // Current file being scanned
-	currentCategory string      // Current category from !category directive
-	pendingDocs     []Directive // Documentation lines awaiting target association
+	currentFile string      // Current file being scanned
+	pendingDocs []Directive // Documentation lines awaiting target association
 }
 
 // NewScanner creates a new Scanner instance.
@@ -40,7 +39,6 @@ func (s *Scanner) ScanFile(path string) (*ParsedFile, error) {
 func (s *Scanner) ScanContent(content string, path string) (*ParsedFile, error) {
 	// Reset scanner state
 	s.currentFile = path
-	s.currentCategory = ""
 	s.pendingDocs = []Directive{}
 
 	result := &ParsedFile{
@@ -121,8 +119,6 @@ func (s *Scanner) parseDirective(line string, lineNum int) Directive {
 	case strings.HasPrefix(content, "!category "):
 		directive.Type = DirectiveCategory
 		directive.Value = strings.TrimSpace(strings.TrimPrefix(content, "!category "))
-		// Update current category state
-		s.currentCategory = directive.Value
 
 	case strings.HasPrefix(content, "!var "):
 		directive.Type = DirectiveVar
