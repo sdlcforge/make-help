@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 // discoverMakefileList discovers all Makefiles using the MAKEFILE_LIST variable.
@@ -51,7 +50,7 @@ func (s *Service) discoverMakefileList(mainPath string) ([]string, error) {
 	}
 
 	// Execute make with timeout to prevent indefinite hangs
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), makeDiscoveryTimeout)
 	defer cancel()
 
 	// Use -s (silent) and --no-print-directory to prevent make from adding
