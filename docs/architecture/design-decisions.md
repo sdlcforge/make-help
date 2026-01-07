@@ -64,9 +64,9 @@ This document records the key architectural and design decisions made in the mak
 
 ### Stateful single-pass parsing
 
-**Decision**: Maintain parser state (`currentCategory`, `pendingDocs`) across lines instead of using multiple passes over the file.
+**Decision**: Maintain parser state (`pendingDocs`) across lines instead of using multiple passes over the file. Category tracking is handled in the model builder layer.
 
-**Context**: The parser needs to associate documentation comments with the target that follows them, and track which category subsequent targets belong to.
+**Context**: The parser needs to associate documentation comments with the target that follows them. Category assignment to targets happens during model building.
 
 **Rationale**:
 1. **Performance**: Single-pass parsing is O(n) vs. multi-pass which would be O(n×m) where m is number of passes

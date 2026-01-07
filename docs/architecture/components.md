@@ -134,9 +134,8 @@ function DiscoverTargets(makefilePath):
 **Pseudocode:**
 ```
 type Scanner with state:
-    currentFile     - file being scanned
-    currentCategory - sticky category from !category directive
-    pendingDocs     - documentation awaiting target association
+    currentFile - file being scanned
+    pendingDocs - documentation awaiting target association
 
 function ScanFile(path):
     1. read file content
@@ -158,7 +157,7 @@ function parseDirective(line):
     1. strip "## " prefix
     2. detect directive type by prefix:
         !file -> DirectiveFile
-        !category -> DirectiveCategory (updates currentCategory state)
+        !category -> DirectiveCategory
         !var -> DirectiveVar
         !alias -> DirectiveAlias
         default -> DirectiveDoc

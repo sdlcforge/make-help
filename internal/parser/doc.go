@@ -70,12 +70,11 @@
 //
 // State Variables:
 //   - pendingDocs: Queue of directives awaiting target association
-//   - currentCategory: Active category from last !category directive
 //   - currentFile: Source file path for error reporting
 //
 // Key Behaviors:
 //   - !file directives bypass pendingDocs and go directly to output
-//   - !category directives update currentCategory state AND queue to pendingDocs
+//   - !category directives queue to pendingDocs for association with next target
 //   - Orphaned docs (followed by non-target line) are discarded
 //   - Multiple doc blocks can exist; each associates with the next target
 package parser
