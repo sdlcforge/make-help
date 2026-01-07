@@ -12,9 +12,9 @@ Consolidated findings from Product Manager, Architect, and Go Developer reviews.
 
 | # | Issue | File | Fix |
 |---|-------|------|-----|
-| 1 | Dead Scanner field | `internal/parser/scanner.go:14` | Remove unused `currentCategory` field from Scanner struct |
-| 2 | Magic timeout constants | `internal/discovery/targets.go:30`, `internal/target/add.go:93` | Define named constants: `makeDiscoveryTimeout = 30 * time.Second`, `makeValidationTimeout = 10 * time.Second` |
-| 3 | Missing bounds check | `internal/summary/extractor.go:192` | Add defensive guard: `if len(strippedSentence) == 0 { return "" }` |
+| ~~1~~ | ~~Dead Scanner field~~ | ~~`internal/parser/scanner.go:14`~~ | ~~Remove unused `currentCategory` field from Scanner struct~~ ✅ |
+| ~~2~~ | ~~Magic timeout constants~~ | ~~`internal/discovery/targets.go:30`, `internal/target/add.go:93`~~ | ~~Define named constants: `makeDiscoveryTimeout = 30 * time.Second`, `makeValidationTimeout = 10 * time.Second`~~ ✅ |
+| ~~3~~ | ~~Missing bounds check~~ | ~~`internal/summary/extractor.go:192`~~ | ~~Add defensive guard: `if len(strippedSentence) == 0 { return "" }`~~ ✅ |
 
 ---
 
@@ -24,8 +24,8 @@ Consolidated findings from Product Manager, Architect, and Go Developer reviews.
 
 | # | Issue | Action |
 |---|-------|--------|
-| 4 | ~~`--show-help` documentation inconsistency~~ | ~~CLAUDE.md mentions `--show-help` but flag doesn't exist; remove all references~~ (DONE: updated to `--output -`) |
-| 5 | Absolute paths in generated files | Generated `help.mk` files contain absolute Source: paths; use relative paths or make configurable |
+| ~~4~~ | ~~`--show-help` documentation inconsistency~~ | ~~CLAUDE.md mentions `--show-help` but flag doesn't exist; remove all references~~ ✅ |
+| ~~5~~ | ~~Absolute paths in generated files~~ | ~~Generated `help.mk` files contain absolute Source: paths; use relative paths or make configurable~~ ✅ |
 
 ---
 
