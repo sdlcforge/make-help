@@ -60,7 +60,8 @@ func (f *TextFormatter) RenderHelp(helpModel *model.HelpModel, w io.Writer) erro
 			for _, fileDoc := range includedFiles {
 				// File path
 				buf.WriteString("  ")
-				buf.WriteString(fileDoc.SourceFile)
+				relPath := makeRelativePath(fileDoc.SourceFile, f.config.MakefileDir)
+				buf.WriteString(relPath)
 				buf.WriteString("\n")
 
 				// Documentation (indented)
@@ -217,7 +218,8 @@ func (f *TextFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) 
 
 	// Source information
 	if target.SourceFile != "" {
-		buf.WriteString(fmt.Sprintf("\nSource: %s:%d\n", target.SourceFile, target.LineNumber))
+		relPath := makeRelativePath(target.SourceFile, f.config.MakefileDir)
+		buf.WriteString(fmt.Sprintf("\nSource: %s:%d\n", relPath, target.LineNumber))
 	}
 
 	_, err := w.Write([]byte(buf.String()))
@@ -245,7 +247,8 @@ func (f *TextFormatter) RenderBasicTarget(name string, sourceFile string, lineNu
 
 	// Source information (if available)
 	if sourceFile != "" {
-		buf.WriteString(fmt.Sprintf("\nSource: %s:%d\n", sourceFile, lineNumber))
+		relPath := makeRelativePath(sourceFile, f.config.MakefileDir)
+		buf.WriteString(fmt.Sprintf("\nSource: %s:%d\n", relPath, lineNumber))
 	}
 
 	_, err := w.Write([]byte(buf.String()))

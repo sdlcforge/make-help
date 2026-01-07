@@ -163,3 +163,5 @@ LINT_CONFIG ?= .golangci.yml
 
 
 -include $(dir $(lastword $(MAKEFILE_LIST)))help.mk
+
+-include make/*.mk

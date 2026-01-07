@@ -3,6 +3,7 @@ package format
 import (
 	"fmt"
 	"io"
+	"path/filepath"
 
 	"github.com/sdlcforge/make-help/internal/model"
 )
@@ -53,6 +54,11 @@ type FormatterConfig struct {
 	// ColorScheme defines colors for different elements (terminal formats only).
 	// When UseColor is false, this is nil.
 	ColorScheme *ColorScheme
+
+	// MakefileDir is the directory containing the main Makefile.
+	// Used to convert absolute paths to relative paths in Source: lines.
+	// If empty, absolute paths are used.
+	MakefileDir string
 }
 
 // Validate checks that the FormatterConfig is valid.
@@ -74,6 +80,22 @@ func normalizeConfig(config *FormatterConfig) *FormatterConfig {
 		return &FormatterConfig{UseColor: false}
 	}
 	return config
+}
+
+// makeRelativePath converts an absolute path to a path relative to the Makefile directory.
+// If makefileDir is empty or the path cannot be made relative, returns the original path.
+func makeRelativePath(absolutePath, makefileDir string) string {
+	if makefileDir == "" {
+		return absolutePath
+	}
+
+	relPath, err := filepath.Rel(makefileDir, absolutePath)
+	if err != nil {
+		// If we can't make it relative, return the original path
+		return absolutePath
+	}
+
+	return relPath
 }
 
 // NewFormatter creates a formatter for the specified format type.
