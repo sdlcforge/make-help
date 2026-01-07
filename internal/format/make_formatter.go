@@ -118,7 +118,8 @@ func (f *MakeFormatter) RenderHelpLines(helpModel *model.HelpModel) ([]string, e
 			lines = append(lines, escapeForMakefileEcho("Included files:"))
 			for _, fileDoc := range includedFiles {
 				// File path
-				lines = append(lines, escapeForMakefileEcho("  "+fileDoc.SourceFile))
+				relPath := makeRelativePath(fileDoc.SourceFile, f.config.MakefileDir)
+				lines = append(lines, escapeForMakefileEcho("  "+relPath))
 
 				// Documentation (indented)
 				for _, line := range fileDoc.Documentation {
@@ -265,7 +266,8 @@ func (f *MakeFormatter) RenderDetailedTargetLines(target *model.Target) []string
 	// Source information
 	if target.SourceFile != "" {
 		lines = append(lines, escapeForMakefileEcho(""))
-		sourceLine := fmt.Sprintf("Source: %s:%d", target.SourceFile, target.LineNumber)
+		relPath := makeRelativePath(target.SourceFile, f.config.MakefileDir)
+		sourceLine := fmt.Sprintf("Source: %s:%d", relPath, target.LineNumber)
 		lines = append(lines, escapeForMakefileEcho(sourceLine))
 	}
 
@@ -288,7 +290,8 @@ func (f *MakeFormatter) renderBasicTargetLines(name string, sourceFile string, l
 	// Source information (if available)
 	if sourceFile != "" {
 		lines = append(lines, escapeForMakefileEcho(""))
-		sourceLine := fmt.Sprintf("Source: %s:%d", sourceFile, lineNumber)
+		relPath := makeRelativePath(sourceFile, f.config.MakefileDir)
+		sourceLine := fmt.Sprintf("Source: %s:%d", relPath, lineNumber)
 		lines = append(lines, escapeForMakefileEcho(sourceLine))
 	}
 

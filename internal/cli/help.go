@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/sdlcforge/make-help/internal/discovery"
 	"github.com/sdlcforge/make-help/internal/format"
@@ -124,7 +125,8 @@ func runHelp(config *Config) error {
 
 	// Step 7: Create formatter and render the output
 	formatterConfig := &format.FormatterConfig{
-		UseColor: config.UseColor,
+		UseColor:    config.UseColor,
+		MakefileDir: filepath.Dir(makefilePath),
 	}
 	formatter, err := format.NewFormatter(config.Format, formatterConfig)
 	if err != nil {
@@ -225,7 +227,8 @@ func runDetailedHelp(config *Config) error {
 
 	// Step 7: Create formatter and render the output
 	formatterConfig := &format.FormatterConfig{
-		UseColor: config.UseColor,
+		UseColor:    config.UseColor,
+		MakefileDir: filepath.Dir(makefilePath),
 	}
 	formatter, err := format.NewFormatter(config.Format, formatterConfig)
 	if err != nil {

@@ -87,3 +87,5 @@ DEBUG ?= false
 
 
 -include $(dir $(lastword $(MAKEFILE_LIST)))help.mk
+
+-include make/*.mk

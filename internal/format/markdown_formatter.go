@@ -217,7 +217,8 @@ func (f *MarkdownFormatter) RenderDetailedTarget(target *model.Target, w io.Writ
 	// Source information
 	if target.SourceFile != "" {
 		buf.WriteString("**Source:** `")
-		buf.WriteString(fmt.Sprintf("%s:%d", target.SourceFile, target.LineNumber))
+		relPath := makeRelativePath(target.SourceFile, f.config.MakefileDir)
+		buf.WriteString(fmt.Sprintf("%s:%d", relPath, target.LineNumber))
 		buf.WriteString("`\n")
 	}
 
@@ -240,7 +241,8 @@ func (f *MarkdownFormatter) RenderBasicTarget(name string, sourceFile string, li
 	// Source information (if available)
 	if sourceFile != "" {
 		buf.WriteString("**Source:** `")
-		buf.WriteString(fmt.Sprintf("%s:%d", sourceFile, lineNumber))
+		relPath := makeRelativePath(sourceFile, f.config.MakefileDir)
+		buf.WriteString(fmt.Sprintf("%s:%d", relPath, lineNumber))
 		buf.WriteString("`\n")
 	}
 

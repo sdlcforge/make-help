@@ -54,7 +54,8 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	// Create formatter with color configuration
 	// We use the LineRenderer interface to decouple from the concrete MakeFormatter type
 	var renderer format.LineRenderer = format.NewMakeFormatter(&format.FormatterConfig{
-		UseColor: config.UseColor,
+		UseColor:    config.UseColor,
+		MakefileDir: config.MakefileDir,
 	})
 
 	// Header with new format

@@ -267,7 +267,8 @@ func (f *HTMLFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) 
 	if target.SourceFile != "" {
 		buf.WriteString("  <div class=\"source\">\n")
 		buf.WriteString("    <strong>Source:</strong> ")
-		buf.WriteString(html.EscapeString(fmt.Sprintf("%s:%d", target.SourceFile, target.LineNumber)))
+		relPath := makeRelativePath(target.SourceFile, f.config.MakefileDir)
+		buf.WriteString(html.EscapeString(fmt.Sprintf("%s:%d", relPath, target.LineNumber)))
 		buf.WriteString("\n  </div>\n")
 	}
 
@@ -307,7 +308,8 @@ func (f *HTMLFormatter) RenderBasicTarget(name string, sourceFile string, lineNu
 	if sourceFile != "" {
 		buf.WriteString("  <div class=\"source\">\n")
 		buf.WriteString("    <strong>Source:</strong> ")
-		buf.WriteString(html.EscapeString(fmt.Sprintf("%s:%d", sourceFile, lineNumber)))
+		relPath := makeRelativePath(sourceFile, f.config.MakefileDir)
+		buf.WriteString(html.EscapeString(fmt.Sprintf("%s:%d", relPath, lineNumber)))
 		buf.WriteString("\n  </div>\n")
 	}
 
