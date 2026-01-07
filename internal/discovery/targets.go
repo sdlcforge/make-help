@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+// makeDiscoveryTimeout is the maximum time allowed for make commands during discovery.
+// This prevents indefinite hangs from Makefile errors or infinite recursion.
+const makeDiscoveryTimeout = 30 * time.Second
+
 // DiscoverTargetsResult contains discovered targets and their metadata.
 type DiscoverTargetsResult struct {
 	// Targets contains all discovered target names in order.
@@ -27,7 +31,7 @@ type DiscoverTargetsResult struct {
 // It executes make -p -r to get the database output and parses target names.
 func (s *Service) discoverTargets(makefilePath string) (*DiscoverTargetsResult, error) {
 	// Execute make with timeout to prevent indefinite hangs
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), makeDiscoveryTimeout)
 	defer cancel()
 
 	// Use -s and --no-print-directory to prevent make from adding

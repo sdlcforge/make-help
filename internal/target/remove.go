@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/sdlcforge/make-help/internal/discovery"
 )
@@ -77,7 +76,7 @@ func (s *RemoveService) RemoveTarget() error {
 
 // validateMakefile runs `make -n` to check for syntax errors.
 func (s *RemoveService) validateMakefile(makefilePath string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), makeValidationTimeout)
 	defer cancel()
 
 	// Run make -n (dry-run) to check syntax without executing recipes

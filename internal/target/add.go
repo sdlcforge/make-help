@@ -12,6 +12,10 @@ import (
 	"github.com/sdlcforge/make-help/internal/discovery"
 )
 
+// makeValidationTimeout is the maximum time allowed for make validation commands.
+// This prevents indefinite hangs during syntax validation.
+const makeValidationTimeout = 10 * time.Second
+
 // Config holds configuration for target manipulation operations.
 type Config struct {
 	MakefilePath        string
@@ -90,7 +94,7 @@ func (s *AddService) validateMakefile(makefilePath string) error {
 
 // ValidateMakefile runs `make -n` to check for syntax errors.
 func ValidateMakefile(executor discovery.CommandExecutor, makefilePath string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), makeValidationTimeout)
 	defer cancel()
 
 	// Run make -n (dry-run) to check syntax without executing recipes
