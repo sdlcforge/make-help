@@ -189,6 +189,9 @@ func (e *Extractor) extractMatchingPortion(originalText, strippedSentence string
 
 	// Find the sentence boundary in the normalized original
 	// by looking for the same terminating punctuation
+	if len(strippedSentence) == 0 {
+		return ""
+	}
 	lastChar := strippedSentence[len(strippedSentence)-1]
 	if lastChar != '.' && lastChar != '!' && lastChar != '?' {
 		// No sentence terminator, return the whole text
