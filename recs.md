@@ -24,7 +24,7 @@ Consolidated findings from Product Manager, Architect, and Go Developer reviews.
 
 | # | Issue | Action |
 |---|-------|--------|
-| 4 | `--show-help` documentation inconsistency | CLAUDE.md mentions `--show-help` but flag doesn't exist; remove all references |
+| 4 | ~~`--show-help` documentation inconsistency~~ | ~~CLAUDE.md mentions `--show-help` but flag doesn't exist; remove all references~~ (DONE: updated to `--output -`) |
 | 5 | Absolute paths in generated files | Generated `help.mk` files contain absolute Source: paths; use relative paths or make configurable |
 
 ---
