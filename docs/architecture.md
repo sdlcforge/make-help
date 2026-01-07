@@ -34,13 +34,17 @@ make-help is a CLI tool that generates formatted help output from specially-form
 
 <!-- AI readable version of SVG diagram: architecture/diagrams/pipeline-overview.mmd -->
 
+### Core Processing Pipeline
+
+The diagram below shows the core processing pipeline for help generation modes (default, --output -, and --target). For complete CLI mode routing including --lint, --remove-help, and other modes, see [cli-mode-routing.mmd](architecture/diagrams/cli-mode-routing.mmd).
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                          CLI Layer                               │
 │    (Cobra-based, flag validation, mode detection, routing)      │
 └───────────────┬─────────────────────────────────────────────────┘
                 │
-                ├──> Default Mode (no mode flags)
+                ├──> Default Mode (file generation)
                 │    ┌────────────────────────────────────────────┐
                 │    │  Discovery Service                         │
                 │    │  - Makefile resolution                     │
@@ -85,34 +89,30 @@ make-help is a CLI tool that generates formatted help output from specially-form
                 │    │  - Layout formatting                       │
                 │    └──────┬─────────────────────────────────────┘
                 │           │
-                │           ▼
-                │       [STDOUT]
-                │
-                ├──> --target <name> Mode
-                │    ┌────────────────────────────────────────────┐
-                │    │  Discovery → Parser → Model Builder        │
-                │    │  Extract single target's full docs         │
-                │    │  Format detailed view (full documentation) │
-                │    └──────┬─────────────────────────────────────┘
-                │           ▼
-                │       [STDOUT]
-                │
-                ├──> --create-help-target Mode
-                │    ┌────────────────────────────────────────────┐
-                │    │  Help Target Generator                     │
+                │    ┌──────▼─────────────────────────────────────┐
+                │    │  Add-Target Service                        │
                 │    │  - Detect include pattern                  │
                 │    │  - Generate help target file               │
                 │    │  - Create help-<target> targets            │
                 │    │  - Inject include directive                │
                 │    └────────────────────────────────────────────┘
                 │
-                └──> --remove-help-target Mode
+                ├──> --output - Mode (stdout)
+                │    ┌────────────────────────────────────────────┐
+                │    │  Discovery → Parser → Model Builder        │
+                │    │  → Ordering → Summary → Formatter          │
+                │    └──────┬─────────────────────────────────────┘
+                │           ▼
+                │       [STDOUT]
+                │
+                └──> --target <name> Mode (detailed help)
                      ┌────────────────────────────────────────────┐
-                     │  Help Target Remover                       │
-                     │  - Identify help target artifacts          │
-                     │  - Remove include directives               │
-                     │  - Clean up generated files                │
-                     └────────────────────────────────────────────┘
+                     │  Discovery → Parser → Model Builder        │
+                     │  Extract single target's full docs         │
+                     │  Format detailed view (full documentation) │
+                     └──────┬─────────────────────────────────────┘
+                            ▼
+                        [STDOUT]
 ```
 
 ## Component responsibilities

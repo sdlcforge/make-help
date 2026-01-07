@@ -11,8 +11,10 @@ Detailed specifications for each major component in the make-help system.
 - [Ordering Service](#ordering-service)
 - [Summary Extractor](#summary-extractor)
 - [Formatter Service](#formatter-service)
-- [Create-Help-Target Service](#create-help-target-service)
+- [Static Help File Generator](#static-help-file-generator)
 - [Remove-Help-Target Service](#remove-help-target-service)
+- [Lint Service](#lint-service)
+- [Version Package](#version-package)
 
 ---
 
@@ -183,7 +185,7 @@ function parseDirective(line):
 
 **Package:** `internal/model`
 
-**Design:** Aggregate directives into structured model using two-pointer line-order merge algorithm
+**Design:** Aggregate directives into structured model using two-pointer line-order merge algorithm (see algorithms.md for details)
 
 **Pseudocode:**
 ```
@@ -385,7 +387,7 @@ func NewFormatter(formatType string, config *FormatterConfig) (Formatter, error)
 
 **Rich Text Handling:**
 
-Different formatters handle markdown formatting in documentation based on output context:
+Different formatters handle markdown formatting in documentation based on output context. Rich text parsing is handled by the `internal/richtext` package (see data-models.md for details).
 
 | Format | Bold | Italic | Code | Links |
 |--------|------|--------|------|-------|

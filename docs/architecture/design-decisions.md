@@ -31,32 +31,32 @@ This document records the key architectural and design decisions made in the mak
 
 ### Flags instead of subcommands
 
-**Decision**: Use flags (`--create-help-target`, `--remove-help-target`, `--target`) instead of subcommands (`make-help add-target`, `make-help remove-target`).
+**Decision**: Use flags (`--output`, `--remove-help`, `--target`) instead of subcommands (`make-help generate`, `make-help remove`).
 
 **Context**: The tool has several operational modes:
-- Default: Display help summary
-- Detail mode: Show full docs for a specific target
-- Creation mode: Generate help target file
-- Removal mode: Remove help target artifacts
+- Default: Generate static help file (./make/help.mk)
+- Dynamic mode: Display help to stdout (--output -)
+- Detail mode: Show full docs for a specific target (--output - --target <name>)
+- Removal mode: Remove help target artifacts (--remove-help)
 
 **Rationale**:
-1. **Simplicity**: The default behavior (showing help) is the most common use case and should require the fewest keystrokes
-2. **Natural workflow**: Users typically run `make-help` to see help, then occasionally use flags for other operations
+1. **Simplicity**: The default behavior (generating static help file) is the most common use case and should require the fewest keystrokes
+2. **Natural workflow**: Users typically run `make-help` to generate the help file, then occasionally use flags for other operations
 3. **Consistency with Make**: Make itself uses flags (`make -f`, `make -n`) rather than subcommands
-4. **Discoverability**: Running just `make-help` immediately shows useful output (the help), whereas subcommands would require `make-help help` or similar
+4. **Discoverability**: Running just `make-help` performs a useful action (generates help.mk), whereas subcommands would require `make-help generate` or similar
 
 **Alternatives Considered**:
-- **Subcommands** (e.g., `make-help show`, `make-help add-target`): More explicit but requires extra typing for the common case and breaks the natural workflow
-- **Positional arguments** (e.g., `make-help show`, `make-help build`): Ambiguous when target names conflict with commands
+- **Subcommands** (e.g., `make-help generate`, `make-help remove`): More explicit but requires extra typing for the common case and breaks the natural workflow
+- **Positional arguments** (e.g., `make-help generate`, `make-help build`): Ambiguous when target names conflict with commands
 
 **Consequences**:
-- ✅ Default behavior (help display) requires no arguments
+- ✅ Default behavior (file generation) requires no arguments
 - ✅ Aligns with Make's own command-line interface
 - ✅ Simpler mental model for users
 - ⚠️ Mode detection logic in root command is slightly more complex
 - ⚠️ Flag validation must ensure mutual exclusivity
 
-**Implementation**: See `internal/cli/root.go:70-88` where the `RunE` function dispatches based on flag combinations.
+**Implementation**: See `internal/cli/root.go:120-144` where the `RunE` function dispatches based on flag combinations.
 
 ---
 
@@ -387,8 +387,8 @@ This document records the key architectural and design decisions made in the mak
 **Decision**: Default behavior generates static help files with embedded help text instead of displaying help dynamically.
 
 **Context**: The tool can either:
-1. Display help directly to stdout when invoked (dynamic)
-2. Generate a help.mk file with `@echo` statements containing help text (static)
+1. Display help directly to stdout when invoked (dynamic, using `--output -`)
+2. Generate a help.mk file with `@printf` statements containing help text (static, default behavior)
 
 **Rationale**:
 1. **No runtime dependencies**: Generated help files work without requiring `make-help` binary to be installed
@@ -466,4 +466,4 @@ These design decisions prioritize:
 
 Each decision involves trade-offs, but the consequences align with the project's goals of being a secure, simple, and reliable tool for Makefile documentation.
 
-Last reviewed: 2025-12-25T16:43Z
+Last reviewed: 2026-01-06

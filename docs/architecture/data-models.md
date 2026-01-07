@@ -15,7 +15,7 @@ Core data structures used throughout the make-help system.
 
 ### 1. Target Service Models
 
-#### Config
+#### Target Service Config
 Configuration for target manipulation operations (add/remove help targets).
 
 **Key fields:**

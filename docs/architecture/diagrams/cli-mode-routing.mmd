@@ -7,25 +7,25 @@ flowchart TD
     VERSION -->|No| HELP_FLAG{--help?}
 
     HELP_FLAG -->|Yes| H_OUT[Print usage<br/>and exit]
-    HELP_FLAG -->|No| REMOVE{--remove-help?}
-
-    REMOVE -->|Yes| RM_HANDLER[RemoveService<br/>Clean up help artifacts]
-    REMOVE -->|No| LINT{--lint?}
+    HELP_FLAG -->|No| LINT{--lint?}
 
     LINT -->|Yes| FIX{--fix?}
     FIX -->|Yes| LINT_FIX[LintService<br/>Check + Apply fixes]
     FIX -->|No| LINT_ONLY[LintService<br/>Check only]
 
-    LINT -->|No| SHOW{--show-help?}
+    LINT -->|No| REMOVE{--remove-help?}
 
-    SHOW -->|Yes| TARGET{--target set?}
-    TARGET -->|Yes| DETAIL[Render detailed<br/>target help]
-    TARGET -->|No| FULL[Render full<br/>help output]
+    REMOVE -->|Yes| RM_HANDLER[RemoveService<br/>Clean up help artifacts]
+    REMOVE -->|No| TARGET_FLAG{--target set?}
 
-    SHOW -->|No| STATIC[Generate static<br/>help file<br/>./make/help.mk]
+    TARGET_FLAG -->|Yes| DETAIL[Render detailed<br/>target help to stdout]
+    TARGET_FLAG -->|No| OUTPUT{--output -?}
+
+    OUTPUT -->|Yes| STDOUT[Render full help<br/>to stdout]
+    OUTPUT -->|No| DEFAULT[Default Mode<br/>Generate static help file<br/>./make/help.mk]
 
     style START fill:#e3f2fd
-    style STATIC fill:#c8e6c9
+    style DEFAULT fill:#c8e6c9
     style RM_HANDLER fill:#ffcdd2
     style LINT_FIX fill:#fff9c4
     style LINT_ONLY fill:#fff9c4

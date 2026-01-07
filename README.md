@@ -43,7 +43,7 @@ go install github.com/sdlcforge/make-help/cmd/make-help@latest
 npm install -g @sdlcforge/make-help
 bun install -g @sdlcforge/make-help
 # package installation
-npm install --save-dev @sdlcforce/make-help
+npm install --save-dev @sdlcforge/make-help
 bun install --save-dev --trust true @sdlcforge/make-help
 ```
 
@@ -134,7 +134,7 @@ make-help --include-all-phony          # Include all .PHONY targets
 ### Remove help files
 
 ```bash
-make-help --remove-help                # Remove generated help files and incldue
+make-help --remove-help                # Remove generated help files and include
 ```
 
 ## CLI reference
@@ -193,7 +193,7 @@ make-help --remove-help                # Remove generated help files and incldue
 
 - **Multiple `!file` directives**: You can have multiple `!file` directives in the same file. They will be concatenated with a blank line between them.
 - **File ordering**: By default, included files are sorted alphabetically in the "Included Files:" section. Use `--keep-order-files` to preserve the discovery order instead.
-- All file-level documents are included, not just a sumamry.
+- All file-level documents are included, not just a summary.
 
 ### Target documentation
 
@@ -240,9 +240,9 @@ integration:              # category: Test (inherited)
 
 ### Aliases
 
-An 'alias' is just an alternate name for a target. There are two ways to create an aliase.
+An 'alias' is just an alternate name for a target. There are two ways to create an alias.
 
-**Implicit aliases**: A single phony target with a single phony target dependincy is regonized as an aliase; e.g., `test: test.unit` recognized `test` as an alias for `test.unit`. This can be supressed by placing the `## !noalias` directive before the target. E.g.:
+**Implicit aliases**: A single phony target with a single phony target dependency is recognized as an alias; e.g., `test: test.unit` recognized `test` as an alias for `test.unit`. This can be suppressed by placing the `## !noalias` directive before the target. E.g.:
 
 ```makefile
 ## !noalias
@@ -384,7 +384,7 @@ rm $(go env GOPATH)/bin/make-help
 npm uninstall -g @sdlcforge/make-help
 bun uninstall -g @sdlcforge/make-help
 # package installation
-npm uninstall @sdlcforce/make-help
+npm uninstall @sdlcforge/make-help
 bun uninstall @sdlcforge/make-help
 ```
 

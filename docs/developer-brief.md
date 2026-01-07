@@ -55,7 +55,7 @@ Follow these conventions when contributing:
 2. **Write godoc comments** - All exported symbols need documentation
 3. **Meaningful variable names** - Prioritize clarity over brevity
 4. **Add tests for new functionality** - Aim for >90% coverage on new code
-5. **Update documentation** - Keep README.md, design.md, and this file in sync
+5. **Update documentation** - Keep README.md, architecture.md, and this file in sync
 
 ### Pull request process
 
@@ -80,7 +80,7 @@ Follow these conventions when contributing:
 CLI → Discovery → Parser → Model Builder → Ordering → Summary → Formatter → Output
 ```
 
-Each stage is independent and testable. See [design.md](design.md) for detailed architecture.
+Each stage is independent and testable. See [architecture.md](architecture.md) for detailed architecture.
 
 ### Key design principles
 
@@ -183,7 +183,7 @@ test/
 
 5. **Update documentation**:
    - README.md "Documentation Syntax" section
-   - design.md data structures section
+   - architecture.md data structures section
 
 ### Changing output format
 
@@ -207,7 +207,7 @@ test/
 
 1. **Update logic** in `internal/ordering/service.go`
 2. **Add test cases** in `internal/ordering/service_test.go`
-3. **Update design.md** algorithm section if significantly changed
+3. **Update architecture.md** algorithm section if significantly changed
 
 ### Adding a new lint check
 
@@ -236,7 +236,7 @@ test/
 This shows:
 - Discovered Makefiles and their order
 - Discovered targets from `make -p`
-- File operations during --create-help-target/--remove-help-target
+- File operations during file generation or removal
 
 ### Common issues
 
@@ -307,4 +307,4 @@ For detailed information on:
 
 See [architecture.md](architecture.md).
 
-Last reviewed: 2025-12-25T16:43Z
+Last reviewed: 2026-01-06
