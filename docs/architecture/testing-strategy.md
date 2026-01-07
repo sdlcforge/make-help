@@ -351,16 +351,20 @@ func TestDiscoverMakefiles(t *testing.T) {
 
 ### 4 Test coverage goals
 
-| Package | Coverage Target | Focus Areas |
-|---------|----------------|-------------|
-| `internal/parser` | 95% | All directive types, edge cases |
-| `internal/summary` | 100% | All regex edge cases (ellipsis, IPs) |
-| `internal/model` | 90% | Categorization validation, alias/var handling |
-| `internal/ordering` | 95% | All ordering strategies |
-| `internal/format` | 85% | Template rendering, color schemes |
-| `internal/discovery` | 80% | Mock-based tests (not real make execution) |
-| `internal/target` | 85% | File operations, pattern detection |
-| Overall | 90% | Focus on critical paths |
+| Package | Current | Target | Focus Areas |
+|---------|---------|--------|-------------|
+| `internal/parser` | 95% | 95% | All directive types, edge cases |
+| `internal/summary` | 77% | 90% | Regex edge cases (ellipsis, IPs) |
+| `internal/model` | 99% | 90% | Categorization validation, alias/var handling |
+| `internal/ordering` | 100% | 95% | All ordering strategies |
+| `internal/format` | 98% | 85% | Template rendering, color schemes |
+| `internal/discovery` | 88% | 80% | Mock-based tests (not real make execution) |
+| `internal/target` | 79% | 85% | File operations, pattern detection |
+| Overall | ~91% | 90% | Focus on critical paths |
+
+**Note:** Coverage values reflect measurements as of 2026-01-07. Two packages are below target:
+- `summary`: Needs additional tests for edge cases
+- `target`: Needs additional tests for file operation edge cases
 
 
-Last reviewed: 2025-12-25T16:43Z
+Last reviewed: 2026-01-07

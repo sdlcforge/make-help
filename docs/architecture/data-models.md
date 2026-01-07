@@ -155,7 +155,7 @@ A parsed documentation directive from a Makefile. Used during parsing before bei
 [View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/parser/types.go#L41-L58)
 
 #### DirectiveType
-Enum representing the type of documentation directive: `DirectiveFile`, `DirectiveCategory`, `DirectiveVar`, `DirectiveAlias`, or `DirectiveDoc` (regular documentation line).
+Enum representing the type of documentation directive: `DirectiveFile`, `DirectiveCategory`, `DirectiveVar`, `DirectiveAlias`, `DirectiveNotAlias`, or `DirectiveDoc` (regular documentation line).
 
 [View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/parser/types.go#L3-L21)
 
@@ -176,11 +176,15 @@ All CLI configuration options, including global settings, help generation option
 
 **Key fields:**
 - **Global:** `MakefilePath`, `ColorMode`, `Verbose`
-- **Help generation:** `KeepOrderCategories`, `KeepOrderTargets`, `CategoryOrder`, `DefaultCategory`, `HelpCategory`
-- **Mode control:** `ShowHelp`, `RemoveHelpTarget`, `Lint`, `Fix`, `DryRun`
+- **Ordering:** `KeepOrderCategories`, `KeepOrderTargets`, `KeepOrderFiles`, `CategoryOrder`
+- **Categories:** `DefaultCategory`, `HelpCategory`
+- **Mode control:** `RemoveHelpTarget`, `Lint`, `Fix`, `DryRun`
 - **Include options:** `IncludeTargets`, `IncludeAllPhony`
-- **Target detail:** `Target` (for detailed help view)
-- **Derived:** `UseColor` (computed based on ColorMode and terminal detection)
+- **Target detail:** `Target` (for `--output - --target <name>` mode)
+- **Output:** `Output`, `Format`, `HelpFileRelPath`
+- **Derived:** `UseColor` (computed from ColorMode and terminal), `CommandLine` (full invocation for regeneration)
+
+**Note:** Show help mode is determined by checking `config.Output == "-"` rather than a dedicated field.
 
 [View source](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/cli/config.go#L31-L102)
 
@@ -292,7 +296,7 @@ A slice of Segment representing formatted text.
 A piece of text with optional formatting.
 
 **Key fields:**
-- `Type` - SegmentType (Plain, Bold, Italic, Code, Link)
+- `Type` - SegmentType (SegmentPlain, SegmentBold, SegmentItalic, SegmentCode, SegmentLink)
 - `Content` - The text content (without markdown markers)
 - `URL` - For links only
 
@@ -313,4 +317,4 @@ Parses markdown inline formatting into RichText segments.
 [View source](https://github.com/sdlcforge/make-help/blob/main/internal/richtext/)
 
 
-Last reviewed: 2026-01-06
+Last reviewed: 2026-01-07

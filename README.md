@@ -147,8 +147,8 @@ make-help --remove-help                # Remove generated help files and include
 - `--target <name>` - Show detailed help for specific target (requires `--output -`)
 
 **Input:**
-- `--help-file-rel-path <path>` - Relative path for generated help file (default: `make/help.mk`)
-- `--makefile-path <path>` - Path to Makefile (default: `./Makefile`)
+- `--help-file-rel-path <path>` - Override the relative path stored in the generated help file for auto-regeneration (derived from `--output` by default)
+- `--makefile-path <path>` - Path to Makefile (default: `./Makefile` in current directory)
 
 **Output/formatting:**
 - `--category-order <list>` - Explicit category order (comma-separated)
@@ -162,7 +162,7 @@ make-help --remove-help                # Remove generated help files and include
 - `--keep-order-categories` - Preserve category discovery order
 - `--keep-order-files` - Preserve file discovery order (default: alphabetical)
 - `--keep-order-targets` - Preserve target discovery order
-- `--output <path>` - Output destination (file path or `-` for stdout)
+- `--output <path>` - Output destination (file path or `-` for stdout; default: `./make/help.mk` for make format)
 
 **Misc:**
 - `--help` - Displays `make-help` help
@@ -177,7 +177,7 @@ make-help --remove-help                # Remove generated help files and include
   - `!file` to identify file level documentation.
   - `!category` to specify the category for the following targets within the source file.
   - `!alias` explicitly names another target as an alias for the target being documented. Aliases can usually be inferred and the use of this directive may not be necessary.
-  - `!noalias` marks a phony `X: Y` construct as a non-alias.
+  - `!notalias` marks a phony `X: Y` construct as a non-alias.
   - `!var` documents environment variables affecting the target behavior.
 
 ### File-level documentation
@@ -242,10 +242,10 @@ integration:              # category: Test (inherited)
 
 An 'alias' is just an alternate name for a target. There are two ways to create an alias.
 
-**Implicit aliases**: A single phony target with a single phony target dependency is recognized as an alias; e.g., `test: test.unit` recognized `test` as an alias for `test.unit`. This can be suppressed by placing the `## !noalias` directive before the target. E.g.:
+**Implicit aliases**: A single phony target with a single phony target dependency is recognized as an alias; e.g., `test: test.unit` recognized `test` as an alias for `test.unit`. This can be suppressed by placing the `## !notalias` directive before the target. E.g.:
 
 ```makefile
-## !noalias
+## !notalias
 all: build
 ```
 

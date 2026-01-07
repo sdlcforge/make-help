@@ -484,7 +484,7 @@ function addIncludeDirective(makefilePath, targetFile):
             -include $(dir $(lastword $(MAKEFILE_LIST)))<relpath>
     use atomic write (prevents corruption)
 
-function atomicWriteFile(filename, data):
+function AtomicWriteFile(filename, data):
     1. create temp file in same directory
     2. write content to temp file
     3. sync to disk
@@ -495,7 +495,7 @@ function atomicWriteFile(filename, data):
 
 [View source: GenerateHelpFile](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/generator.go#L48-L129)
 [View source: determineTargetFile logic](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/add.go)
-[View source: atomicWriteFile](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/write.go)
+[View source: AtomicWriteFile](https://github.com/sdlcforge/make-help/blob/86a8eea0cb298def52ddd7dcbe70107532e5ef69/internal/target/write.go)
 
 **Key Design Decisions:**
 - **Static generation**: Help text is embedded as `@echo` statements, not generated dynamically
@@ -640,4 +640,4 @@ build:
 - **Simple implementation**: Single exported variable, minimal code
 
 
-Last reviewed: 2025-12-25T16:43Z
+Last reviewed: 2026-01-07
