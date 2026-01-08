@@ -38,7 +38,7 @@ Consolidated findings from Product Manager, Architect, and Go Developer reviews.
 | ~~6~~ | ~~README lacks quick example~~ | ~~Add "30-Second Example" section before "Why make-help?"~~ ✅ |
 | 7 | CLI help is wall of text | Add "Quick start: Run `make-help` in a directory with a Makefile" to `--help` output |
 | ~~8~~ | ~~Inconsistent `!category Help`~~ | ~~Ensure consistency between `help` and `update-help` targets in generated files~~ ✅ |
-| 9 | `!file` behavior unclear | Add callout box explaining entry point vs included file behavior |
+| ~~9~~ | ~~`!file` behavior unclear~~ | ~~Add callout box explaining entry point vs included file behavior~~ ✅ |
 
 ### Testing (Go Developer)
 

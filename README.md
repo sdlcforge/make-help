@@ -177,8 +177,7 @@ make-help --remove-help                # Remove generated help files and include
 
 ### File-level documentation
 
-- In entry point Makefile,  `!file` is used to add top level summary at the top of the help output after th "Usage" section.
-- In included files, `!file` creates an entry in the "Included files" section of the help output.
+Use `!file` to add documentation about the Makefile itself:
 
 ```makefile
 ## !file
@@ -186,9 +185,16 @@ make-help --remove-help                # Remove generated help files and include
 ## This Makefile handles building, testing, and deploying the application.
 ```
 
-- **Multiple `!file` directives**: You can have multiple `!file` directives in the same file. They will be concatenated with a blank line between them.
-- **File ordering**: By default, included files are sorted alphabetically in the "Included Files:" section. Use `--keep-order-files` to preserve the discovery order instead.
-- All file-level documents are included, not just a summary.
+> **Note: Entry point vs included files**
+>
+> The `!file` directive behaves differently depending on where it appears:
+> - **Entry point Makefile**: Documentation appears at the top of help output, immediately after "Usage:"
+> - **Included files**: Documentation appears in the "Included Files:" section with the file path
+
+**Additional behaviors:**
+- **Multiple `!file` directives**: Multiple directives in the same file are concatenated with a blank line between them.
+- **File ordering**: Included files are sorted alphabetically by default. Use `--keep-order-files` to preserve discovery order.
+- **Full text**: All file-level documentation is included, not just a summary.
 
 ### Target documentation
 
