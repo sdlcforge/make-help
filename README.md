@@ -1,6 +1,6 @@
 # make-help
 
-[![coverage: 91.6%](./docs/assets/coverage-badge.svg)](../../actions/workflows/) [![license: Apache 2.0](./docs/assets/license-badge.svg)](./LICENSE.txt)
+[![coverage: 91.6%](./docs/assets/coverage-badge.svg)](../../actions/workflows/ci.yml) [![license: Apache 2.0](./docs/assets/license-badge.svg)](./LICENSE.txt)
 
 Static help generation for Makefiles with rich documentation support and linting.
 
