@@ -622,10 +622,7 @@ func TestGenerateRegenerationTarget(t *testing.T) {
 
 	result := generateRegenerationTarget(config)
 
-	// Check structure - now generates update-help target instead of file rule
-	if !strings.Contains(result, "# Explicit target to regenerate help.mk") {
-		t.Error("Missing comment")
-	}
+	// Check structure - generates update-help target (consistent with help target format)
 	if !strings.Contains(result, ".PHONY: update-help") {
 		t.Error("Missing update-help phony declaration")
 	}

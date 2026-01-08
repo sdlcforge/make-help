@@ -198,7 +198,6 @@ func generateRegenerationTarget(config *GeneratorConfig) string {
 	// Build flags to pass to regeneration command (same flags used for original generation)
 	flags := buildRegenerateFlags(config)
 
-	buf.WriteString("# Explicit target to regenerate help.mk\n")
 	// If source Makefiles use categories, add category directive for consistency
 	// (uses same category as the help target)
 	if config.HelpModel.HasCategories {
