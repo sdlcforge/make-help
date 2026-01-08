@@ -7,7 +7,10 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$PROJECT_DIR"
 
-echo "==> Generating coverage badge..."
+echo "==> Generating badges..."
+
+# Generate license badge
+node "$SCRIPT_DIR/badger.mjs" license "./docs/assets/license-badge.svg"
 
 # Run tests with coverage and capture the total percentage
 # The go test output includes a line like: "coverage: 85.5% of statements"
@@ -26,7 +29,7 @@ fi
 echo "    Total coverage: ${TOTAL_COVERAGE}%"
 
 # Generate the coverage badge
-node "$SCRIPT_DIR/make-coverage-badge.mjs" "$TOTAL_COVERAGE" "./docs/assets/coverage-badge.svg"
+node "$SCRIPT_DIR/badger.mjs" coverage "$TOTAL_COVERAGE" "./docs/assets/coverage-badge.svg"
 
 echo "==> Creating placeholder binary..."
 
