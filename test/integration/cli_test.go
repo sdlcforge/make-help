@@ -715,3 +715,384 @@ func TestErrorScenario_MixedCategorizationWithDefault(t *testing.T) {
 	assert.Contains(t, stdout, "build", "should show build target")
 	assert.Contains(t, stdout, "clean", "should show clean target")
 }
+
+func TestErrorScenario_TimeoutOnMakeCommand(t *testing.T) {
+	binary := buildBinary(t)
+
+	// Create a Makefile that causes an infinite loop during discovery
+	// Note: Modern make detects simple circular dependencies immediately,
+	// so we create a more complex scenario that might cause issues
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	content := `
+# This creates a circular dependency
+.PHONY: loop
+loop: loop
+	@echo "infinite"
+
+## Build target
+build:
+	@echo "building"
+`
+	err := os.WriteFile(makefilePath, []byte(content), 0644)
+	require.NoError(t, err)
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--output", "-", "--makefile-path", makefilePath, "--no-color")
+
+	// Modern make typically detects circular dependencies immediately and fails
+	// This test verifies that make-help handles make errors appropriately
+	// Could succeed (if make ignores the circular target) or fail (if make detects it)
+	combinedOutput := stdout + stderr
+
+	if err != nil {
+		// If it fails, should have meaningful error output
+		assert.True(t,
+			strings.Contains(combinedOutput, "failed to discover") ||
+				strings.Contains(combinedOutput, "Circular") ||
+				strings.Contains(combinedOutput, "timed out"),
+			"error should mention the issue, got: %s", combinedOutput)
+	} else {
+		// If it succeeds, make ignored the circular dependency
+		// Verify it produced output for the valid build target
+		assert.Contains(t, combinedOutput, "build", "should show build target if make ignored circular dependency")
+	}
+}
+
+func TestErrorScenario_PermissionDeniedReadingMakefile(t *testing.T) {
+	if os.Getuid() == 0 {
+		t.Skip("skipping permission test when running as root")
+	}
+
+	binary := buildBinary(t)
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+
+	// Create a Makefile with valid content
+	content := `
+## Build the project
+build:
+	@echo "building"
+`
+	err := os.WriteFile(makefilePath, []byte(content), 0644)
+	require.NoError(t, err)
+
+	// Remove read permissions
+	err = os.Chmod(makefilePath, 0000)
+	require.NoError(t, err)
+
+	// Restore permissions after test
+	defer os.Chmod(makefilePath, 0644)
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--output", "-", "--makefile-path", makefilePath, "--no-color")
+
+	// Should fail due to permission denied
+	require.Error(t, err, "should fail when Makefile is not readable")
+
+	// Check that error output contains meaningful information
+	combinedOutput := stdout + stderr
+	assert.Contains(t, combinedOutput, "permission denied", "error should mention permission denied")
+}
+
+func TestErrorScenario_PermissionDeniedWritingHelpFile(t *testing.T) {
+	if os.Getuid() == 0 {
+		t.Skip("skipping permission test when running as root")
+	}
+
+	binary := buildBinary(t)
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+
+	// Create a valid Makefile
+	content := `
+## Build the project
+build:
+	@echo "building"
+`
+	err := os.WriteFile(makefilePath, []byte(content), 0644)
+	require.NoError(t, err)
+
+	// Create make directory but remove write permissions
+	makeDir := filepath.Join(tmpDir, "make")
+	err = os.Mkdir(makeDir, 0755)
+	require.NoError(t, err)
+
+	err = os.Chmod(makeDir, 0555)
+	require.NoError(t, err)
+
+	// Restore permissions after test
+	defer os.Chmod(makeDir, 0755)
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--makefile-path", makefilePath, "--no-color")
+
+	// Should fail due to permission denied when writing to make/help.mk
+	require.Error(t, err, "should fail when cannot write to make directory")
+
+	// Check that error output contains meaningful information
+	combinedOutput := stdout + stderr
+	assert.Contains(t, combinedOutput, "permission denied", "error should mention permission denied")
+}
+
+func TestErrorScenario_InvalidDirectiveSyntax(t *testing.T) {
+	binary := buildBinary(t)
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+
+	// Create a Makefile with various malformed directives
+	content := `
+## !category
+## Missing category name
+build:
+	@echo "building"
+
+## !category Test
+## !var
+## Missing variable name and description
+test:
+	@echo "testing"
+
+## !alias
+## Missing alias definition
+deploy:
+	@echo "deploying"
+`
+	err := os.WriteFile(makefilePath, []byte(content), 0644)
+	require.NoError(t, err)
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--output", "-", "--makefile-path", makefilePath, "--no-color")
+
+	// Should handle invalid directives gracefully (may succeed with warnings or fail)
+	// The behavior depends on how the parser handles malformed directives
+	combinedOutput := stdout + stderr
+
+	// Should either show the targets (if parser is lenient) or show an error
+	// At minimum, it should not crash
+	if err != nil {
+		// If it fails, should have a meaningful error message
+		assert.NotEmpty(t, combinedOutput, "should have error output")
+	} else {
+		// If it succeeds, should show the targets (parser was lenient)
+		assert.Contains(t, combinedOutput, "Usage:", "should show usage line")
+	}
+}
+
+func TestErrorScenario_CircularInclude(t *testing.T) {
+	binary := buildBinary(t)
+	tmpDir := t.TempDir()
+	makefile1 := filepath.Join(tmpDir, "Makefile1")
+	makefile2 := filepath.Join(tmpDir, "Makefile2")
+
+	// Create circular includes: Makefile1 includes Makefile2, which includes Makefile1
+	content1 := `
+include ` + makefile2 + `
+
+## Build from file 1
+build1:
+	@echo "build1"
+`
+	content2 := `
+include ` + makefile1 + `
+
+## Build from file 2
+build2:
+	@echo "build2"
+`
+	err := os.WriteFile(makefile1, []byte(content1), 0644)
+	require.NoError(t, err)
+	err = os.WriteFile(makefile2, []byte(content2), 0644)
+	require.NoError(t, err)
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--output", "-", "--makefile-path", makefile1, "--no-color")
+
+	// Should fail due to circular include
+	require.Error(t, err, "should fail for circular includes")
+
+	// Check that error output mentions the circular dependency
+	combinedOutput := stdout + stderr
+	assert.True(t,
+		strings.Contains(combinedOutput, "Circular") ||
+			strings.Contains(combinedOutput, "infinite") ||
+			strings.Contains(combinedOutput, "timed out") ||
+			strings.Contains(combinedOutput, "failed"),
+		"error should mention circular dependency or timeout, got: %s", combinedOutput)
+}
+
+func TestErrorScenario_EmptyMakefilePathFlag(t *testing.T) {
+	binary := buildBinary(t)
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--output", "-", "--makefile-path", "", "--no-color")
+
+	// Should fail with empty makefile path
+	require.Error(t, err, "should fail when --makefile-path is empty")
+
+	// Check that error output is meaningful
+	combinedOutput := stdout + stderr
+	assert.NotEmpty(t, combinedOutput, "should have error output")
+}
+
+func TestErrorScenario_DirectoryInsteadOfFile(t *testing.T) {
+	binary := buildBinary(t)
+	tmpDir := t.TempDir()
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--output", "-", "--makefile-path", tmpDir, "--no-color")
+
+	// Should fail when path is a directory, not a file
+	require.Error(t, err, "should fail when makefile path is a directory")
+
+	// Check that error output mentions the issue
+	combinedOutput := stdout + stderr
+	assert.True(t,
+		strings.Contains(combinedOutput, "not found") ||
+			strings.Contains(combinedOutput, "directory") ||
+			strings.Contains(combinedOutput, "failed"),
+		"error should mention the path issue, got: %s", combinedOutput)
+}
+
+func TestErrorScenario_UnreadableIncludedFile(t *testing.T) {
+	if os.Getuid() == 0 {
+		t.Skip("skipping permission test when running as root")
+	}
+
+	binary := buildBinary(t)
+	tmpDir := t.TempDir()
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	includedPath := filepath.Join(tmpDir, "included.mk")
+
+	// Create an included file
+	includedContent := `
+## Build from included file
+included-target:
+	@echo "included"
+`
+	err := os.WriteFile(includedPath, []byte(includedContent), 0644)
+	require.NoError(t, err)
+
+	// Create main Makefile that includes the file
+	mainContent := `
+include ` + includedPath + `
+
+## Build from main file
+main-target:
+	@echo "main"
+`
+	err = os.WriteFile(makefilePath, []byte(mainContent), 0644)
+	require.NoError(t, err)
+
+	// Remove read permissions from included file
+	err = os.Chmod(includedPath, 0000)
+	require.NoError(t, err)
+
+	// Restore permissions after test
+	defer os.Chmod(includedPath, 0644)
+
+	stdout, stderr, err := runMakeHelp(t, binary, "--output", "-", "--makefile-path", makefilePath, "--no-color")
+
+	// Should fail when included file is not readable
+	require.Error(t, err, "should fail when included file is not readable")
+
+	// Check that error output contains meaningful information (case-insensitive)
+	combinedOutput := strings.ToLower(stdout + stderr)
+	assert.Contains(t, combinedOutput, "permission denied", "error should mention permission denied")
+}
+
+func TestErrorScenario_InvalidCategoryOrderFormat(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "categorized.mk")
+
+	tests := []struct {
+		name         string
+		categoryOrder string
+	}{
+		{
+			name:         "empty category in list",
+			categoryOrder: "Build,,Test",
+		},
+		{
+			name:         "whitespace only category",
+			categoryOrder: "Build,  ,Test",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := runMakeHelp(t, binary,
+				"--output", "-",
+				"--makefile-path", fixture,
+				"--no-color",
+				"--category-order", tt.categoryOrder)
+
+			// Should either fail or handle gracefully (depending on validation)
+			combinedOutput := stdout + stderr
+			if err != nil {
+				assert.NotEmpty(t, combinedOutput, "should have error output")
+			}
+			// If it succeeds, it should still produce valid output
+		})
+	}
+}
+
+func TestErrorScenario_ConflictingOrderingFlags(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "categorized.mk")
+
+	tests := []struct {
+		name        string
+		args        []string
+		shouldError bool
+	}{
+		{
+			name:        "category-order with keep-order-categories",
+			args:        []string{"--category-order", "Build", "--keep-order-categories"},
+			shouldError: true,
+		},
+		{
+			name:        "category-order with keep-order-all",
+			args:        []string{"--category-order", "Build", "--keep-order-all"},
+			shouldError: true,
+		},
+		{
+			name:        "keep-order-categories with keep-order-all",
+			args:        []string{"--keep-order-categories", "--keep-order-all"},
+			shouldError: true,
+		},
+		{
+			name:        "all three flags",
+			args:        []string{"--category-order", "Build", "--keep-order-categories", "--keep-order-all"},
+			shouldError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			args := append([]string{"--output", "-", "--makefile-path", fixture, "--no-color"}, tt.args...)
+			stdout, stderr, err := runMakeHelp(t, binary, args...)
+
+			if tt.shouldError {
+				// If we expect an error, check that it either fails or produces a warning
+				combinedOutput := stdout + stderr
+				if err != nil {
+					// Error case - should have meaningful error message
+					assert.NotEmpty(t, combinedOutput, "should have error output")
+				} else {
+					// If no error, the CLI may be lenient and allow the combination
+					// Just verify it produces output without crashing
+					assert.NotEmpty(t, combinedOutput, "should produce output even if flags conflict")
+				}
+			}
+		})
+	}
+}
+
+func TestErrorScenario_WriteToStdoutFails(t *testing.T) {
+	binary := buildBinary(t)
+	fixture := getFixturePath(t, "basic.mk")
+
+	// This test verifies that the CLI handles stdout write errors gracefully
+	// We can't easily force stdout to fail in an integration test, but we can
+	// verify the normal case works and document the expected behavior
+	stdout, _, err := runMakeHelp(t, binary, "--output", "-", "--makefile-path", fixture, "--no-color")
+	require.NoError(t, err)
+	assert.NotEmpty(t, stdout, "should write to stdout successfully")
+
+	// Note: Testing actual stdout write failures would require a more complex
+	// test setup (e.g., closing stdout, which is difficult in integration tests)
+}

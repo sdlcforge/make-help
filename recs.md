@@ -44,10 +44,10 @@ Consolidated findings from Product Manager, Architect, and Go Developer reviews.
 
 | # | Issue | Action |
 |---|-------|--------|
-| 10 | Missing error path tests | Add integration tests for invalid syntax, timeouts, permissions |
-| 11 | No concurrency tests | Test `AtomicWriteFile` concurrent writes don't corrupt |
-| 12 | Parser edge cases | Test Unicode, large files, mixed line endings, malformed directives |
-| 13 | Summary extraction edge cases | Test "v1.0.0.", "U.S.", URLs with periods, backtick code with periods |
+| ~~10~~ | ~~Missing error path tests~~ | ~~Add integration tests for invalid syntax, timeouts, permissions~~ ✅ |
+| ~~11~~ | ~~No concurrency tests~~ | ~~Test `AtomicWriteFile` concurrent writes don't corrupt~~ ✅ |
+| ~~12~~ | ~~Parser edge cases~~ | ~~Test Unicode, large files, mixed line endings, malformed directives~~ ✅ |
+| ~~13~~ | ~~Summary extraction edge cases~~ | ~~Test "v1.0.0.", "U.S.", URLs with periods, backtick code with periods~~ ✅ |
 
 ---
 

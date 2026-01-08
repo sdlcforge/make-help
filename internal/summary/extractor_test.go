@@ -567,6 +567,229 @@ func TestNewExtractor(t *testing.T) {
 	}
 }
 
+// TestExtractEdgeCases verifies edge case handling for summary extraction.
+// These tests cover scenarios that might be problematic for sentence boundary detection.
+func TestExtractEdgeCases(t *testing.T) {
+	tests := []struct {
+		name     string
+		docs     []string
+		expected string
+	}{
+		// Version numbers with trailing periods
+		{
+			name:     "version with trailing period",
+			docs:     []string{"Version v1.0.0. Released today."},
+			expected: "Version v1.0.0.",
+		},
+		{
+			name:     "semantic version with patch and trailing period",
+			docs:     []string{"Updated to v2.5.3. Contains bug fixes."},
+			expected: "Updated to v2.5.3.",
+		},
+		{
+			name:     "version with multiple digits",
+			docs:     []string{"Release v10.20.30. Major update."},
+			expected: "Release v10.20.30.",
+		},
+		{
+			name:     "version without v prefix",
+			docs:     []string{"Now at 3.14.159. More stable."},
+			expected: "Now at 3.14.159.",
+		},
+
+		// Common abbreviations - these are treated as sentence boundaries per spec
+		// The regex spec explicitly allows periods followed by space to end sentences
+		{
+			name:     "U.S. abbreviation",
+			docs:     []string{"Located in the U.S. Territory is large."},
+			expected: "Located in the U.S.",
+		},
+		{
+			name:     "Dr. abbreviation",
+			docs:     []string{"Ask Dr. Smith for details. He knows."},
+			expected: "Ask Dr.",
+		},
+		{
+			name:     "Mr. abbreviation",
+			docs:     []string{"Contact Mr. Johnson directly. Available today."},
+			expected: "Contact Mr.",
+		},
+		{
+			name:     "Mrs. abbreviation",
+			docs:     []string{"See Mrs. Davis first. She approves."},
+			expected: "See Mrs.",
+		},
+		{
+			name:     "e.g. abbreviation with space",
+			docs:     []string{"Examples e.g. these cases. More below."},
+			expected: "Examples e.g.",
+		},
+		{
+			name:     "i.e. abbreviation with space",
+			docs:     []string{"This means i.e. exactly that. Nothing more."},
+			expected: "This means i.e.",
+		},
+		{
+			name:     "etc. abbreviation",
+			docs:     []string{"Supports JSON, YAML, etc. All formats work."},
+			expected: "Supports JSON, YAML, etc.",
+		},
+		{
+			name:     "abbreviation without space after (not sentence boundary)",
+			docs:     []string{"Use e.g.this example as reference. Done."},
+			expected: "Use e.g.this example as reference.",
+		},
+
+		// URLs with periods
+		{
+			name:     "simple domain URL",
+			docs:     []string{"Visit example.com. More info there."},
+			expected: "Visit example.com.",
+		},
+		{
+			name:     "URL with subdomain",
+			docs:     []string{"Check docs.example.com. Documentation is complete."},
+			expected: "Check docs.example.com.",
+		},
+		{
+			name:     "URL with path",
+			docs:     []string{"See api.example.com/v1. Full API docs."},
+			expected: "See api.example.com/v1.",
+		},
+		{
+			name:     "URL in markdown link",
+			docs:     []string{"Visit [docs](http://docs.example.com). Contains guides."},
+			expected: "Visit docs.",
+		},
+		{
+			name:     "HTTP URL with port",
+			docs:     []string{"Connect to http://192.168.1.1:8080. Server runs there."},
+			expected: "Connect to http://192.168.1.1:8080.",
+		},
+		{
+			name:     "URL with path and fragment",
+			docs:     []string{"Visit https://example.com/docs#setup. Follow instructions."},
+			expected: "Visit https://example.com/docs#setup.",
+		},
+
+		// Backtick code with periods
+		{
+			name:     "config filename in backticks",
+			docs:     []string{"Edit `config.yaml`. Then restart."},
+			expected: "Edit config.yaml.",
+		},
+		{
+			name:     "multiple filenames in backticks",
+			docs:     []string{"Update `app.config.js`. Also check `package.json`. Done."},
+			expected: "Update app.config.js.",
+		},
+		{
+			name:     "IP address in backticks",
+			docs:     []string{"Connect to `192.168.1.1`. Default gateway."},
+			expected: "Connect to 192.168.1.1.",
+		},
+		{
+			name:     "method call in backticks",
+			docs:     []string{"Use `http.Server.ListenAndServe()`. Starts server."},
+			expected: "Use http.Server.ListenAndServe().",
+		},
+		{
+			name:     "code with version in backticks",
+			docs:     []string{"Requires `node@18.0.0`. LTS version."},
+			expected: "Requires node@18.0.0.",
+		},
+		{
+			name:     "file path in backticks",
+			docs:     []string{"Check `./config/app.config.yaml`. Contains settings."},
+			expected: "Check ./config/app.config.yaml.",
+		},
+
+		// Complex mixed cases
+		{
+			name:     "version in backticks with markdown",
+			docs:     []string{"**Requires** `v3.1.4`. **Important** update."},
+			expected: "Requires v3.1.4.",
+		},
+		{
+			name:     "IP in code with bold text",
+			docs:     []string{"Connect to `10.0.0.1`. **Warning**: production server."},
+			expected: "Connect to 10.0.0.1.",
+		},
+		{
+			name:     "config file with link",
+			docs:     []string{"Edit `app.yaml`. See [docs](http://example.com). More details."},
+			expected: "Edit app.yaml.",
+		},
+		{
+			name:     "multiple periods in technical context",
+			docs:     []string{"Server at `api.v2.example.com:443`. Uses TLS 1.3. Secure."},
+			expected: "Server at api.v2.example.com:443.",
+		},
+
+		// Edge cases with ellipsis (should NOT be sentence boundaries)
+		{
+			name:     "ellipsis with code",
+			docs:     []string{"Loading `config.yaml`... please wait. Done."},
+			expected: "Loading config.yaml... please wait.",
+		},
+		{
+			name:     "ellipsis with version",
+			docs:     []string{"Upgrading to v2.0.0... processing. Complete."},
+			expected: "Upgrading to v2.0.0... processing.",
+		},
+
+		// Decimal numbers (should NOT be sentence boundaries)
+		{
+			name:     "decimal number",
+			docs:     []string{"Supports version 3.14. Latest release."},
+			expected: "Supports version 3.14.",
+		},
+		{
+			name:     "price with decimal",
+			docs:     []string{"Costs $19.99. Affordable option."},
+			expected: "Costs $19.99.",
+		},
+		{
+			name:     "percentage with decimal",
+			docs:     []string{"Success rate of 99.9%. Highly reliable."},
+			expected: "Success rate of 99.9%.",
+		},
+
+		// File extensions and paths
+		{
+			name:     "file extension without backticks",
+			docs:     []string{"Modify the database.sql. Then migrate."},
+			expected: "Modify the database.sql.",
+		},
+		{
+			name:     "dotfile",
+			docs:     []string{"Update .gitignore. Excludes node_modules."},
+			expected: "Update .gitignore.",
+		},
+		{
+			name:     "hidden config file",
+			docs:     []string{"Check .env.local. Contains secrets."},
+			expected: "Check .env.local.",
+		},
+		{
+			name:     "path with multiple extensions",
+			docs:     []string{"Archive as backup.tar.gz. Compressed format."},
+			expected: "Archive as backup.tar.gz.",
+		},
+	}
+
+	extractor := NewExtractor()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractor.Extract(tt.docs)
+			resultText := result.PlainText()
+			if resultText != tt.expected {
+				t.Errorf("Extract().PlainText() = %q, want %q", resultText, tt.expected)
+			}
+		})
+	}
+}
+
 // BenchmarkExtract measures performance of the Extract method
 func BenchmarkExtract(b *testing.B) {
 	extractor := NewExtractor()

@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -620,4 +622,503 @@ test:
 	// Verify state was reset
 	assert.Empty(t, scanner.pendingDocs)
 	assert.Equal(t, "file2.mk", scanner.currentFile)
+}
+
+// TestScanContent_UnicodeHandling tests that the parser handles non-ASCII characters correctly
+// in target names, documentation, and directives.
+func TestScanContent_UnicodeHandling(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected []Directive
+		targets  map[string]int
+	}{
+		{
+			name: "unicode in documentation",
+			content: `## Compilar el proyecto 🚀
+## Español: construir la aplicación
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveDoc, Value: "Compilar el proyecto 🚀", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Español: construir la aplicación", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"build": 3},
+		},
+		{
+			name: "unicode in category names",
+			content: `## !category 构建工具
+## 中文文档
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveCategory, Value: "构建工具", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "中文文档", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"build": 3},
+		},
+		{
+			name: "unicode in variable descriptions",
+			content: `## !var PORT - Порт сервера (русский)
+## Start server
+serve:
+	./server`,
+			expected: []Directive{
+				{Type: DirectiveVar, Value: "PORT - Порт сервера (русский)", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Start server", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"serve": 3},
+		},
+		{
+			name: "unicode in target names",
+			content: `## テスト実行
+テスト:
+	go test`,
+			expected: []Directive{
+				{Type: DirectiveDoc, Value: "テスト実行", SourceFile: "test.mk", LineNumber: 1},
+			},
+			targets: map[string]int{"テスト": 2},
+		},
+		{
+			name: "mixed unicode scripts",
+			content: `## !category Διάφορα
+## تثبيت التبعيات (Arabic)
+## Install dependencies 한국어
+install:
+	npm install`,
+			expected: []Directive{
+				{Type: DirectiveCategory, Value: "Διάφορα", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "تثبيت التبعيات (Arabic)", SourceFile: "test.mk", LineNumber: 2},
+				{Type: DirectiveDoc, Value: "Install dependencies 한국어", SourceFile: "test.mk", LineNumber: 3},
+			},
+			targets: map[string]int{"install": 4},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scanner := NewScanner()
+			result, err := scanner.ScanContent(tt.content, "test.mk")
+			require.NoError(t, err)
+			assert.Equal(t, len(tt.expected), len(result.Directives))
+			for i, expected := range tt.expected {
+				assert.Equal(t, expected.Type, result.Directives[i].Type, "directive type mismatch at index %d", i)
+				assert.Equal(t, expected.Value, result.Directives[i].Value, "directive value mismatch at index %d", i)
+			}
+			assert.Equal(t, tt.targets, result.TargetMap)
+		})
+	}
+}
+
+// TestScanContent_LargeFiles tests the parser's ability to handle files with many targets.
+func TestScanContent_LargeFiles(t *testing.T) {
+	tests := []struct {
+		name           string
+		numTargets     int
+		wantTargets    int
+		wantDirectives int
+	}{
+		{
+			name:           "100 targets",
+			numTargets:     100,
+			wantTargets:    100,
+			wantDirectives: 100, // One doc per target
+		},
+		{
+			name:           "500 targets",
+			numTargets:     500,
+			wantTargets:    500,
+			wantDirectives: 500,
+		},
+		{
+			name:           "1000 targets",
+			numTargets:     1000,
+			wantTargets:    1000,
+			wantDirectives: 1000,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Generate content with many targets
+			var builder strings.Builder
+			for i := 1; i <= tt.numTargets; i++ {
+				builder.WriteString(fmt.Sprintf("## Build target %d\n", i))
+				builder.WriteString(fmt.Sprintf("target%d:\n", i))
+				builder.WriteString("\t@echo \"building\"\n\n")
+			}
+
+			scanner := NewScanner()
+			result, err := scanner.ScanContent(builder.String(), "test.mk")
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantTargets, len(result.TargetMap))
+			assert.Equal(t, tt.wantDirectives, len(result.Directives))
+
+			// Verify all targets are present
+			for i := 1; i <= tt.numTargets; i++ {
+				targetName := fmt.Sprintf("target%d", i)
+				assert.Contains(t, result.TargetMap, targetName)
+			}
+		})
+	}
+}
+
+// TestScanContent_LargeFileWithCategories tests large files with category organization.
+func TestScanContent_LargeFileWithCategories(t *testing.T) {
+	// Generate 200 targets across 10 categories
+	var builder strings.Builder
+	numCategories := 10
+	targetsPerCategory := 20
+
+	for catNum := 1; catNum <= numCategories; catNum++ {
+		builder.WriteString(fmt.Sprintf("## !category Category%d\n", catNum))
+		for targetNum := 1; targetNum <= targetsPerCategory; targetNum++ {
+			builder.WriteString(fmt.Sprintf("## Target %d in category %d\n", targetNum, catNum))
+			builder.WriteString(fmt.Sprintf("cat%d_target%d:\n", catNum, targetNum))
+			builder.WriteString("\t@echo \"building\"\n\n")
+		}
+	}
+
+	scanner := NewScanner()
+	result, err := scanner.ScanContent(builder.String(), "test.mk")
+	require.NoError(t, err)
+
+	// Count category and doc directives
+	var catCount, docCount int
+	for _, d := range result.Directives {
+		switch d.Type {
+		case DirectiveCategory:
+			catCount++
+		case DirectiveDoc:
+			docCount++
+		}
+	}
+
+	assert.Equal(t, numCategories, catCount)
+	assert.Equal(t, numCategories*targetsPerCategory, docCount)
+	assert.Equal(t, numCategories*targetsPerCategory, len(result.TargetMap))
+}
+
+// TestScanContent_MixedLineEndings tests parsing of files with different line ending styles.
+// Note: The scanner splits on \n only. Directive values use TrimSpace (removes \r),
+// but regular doc lines preserve \r characters. This tests the current behavior.
+func TestScanContent_MixedLineEndings(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected []Directive
+		targets  map[string]int
+	}{
+		{
+			name: "unix line endings (LF) - clean handling",
+			content: "## Build\nbuild:\n\tgo build",
+			expected: []Directive{
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 1},
+			},
+			targets: map[string]int{"build": 2},
+		},
+		{
+			name: "windows line endings (CRLF) - CR remains in doc content",
+			content: "## Build\r\nbuild:\r\n\tgo build",
+			expected: []Directive{
+				{Type: DirectiveDoc, Value: "Build\r", SourceFile: "test.mk", LineNumber: 1},
+			},
+			targets: map[string]int{"build": 2},
+		},
+		{
+			name: "category directive with CRLF - TrimSpace removes CR",
+			content: "## !category Build\r\n## Build the project\nbuild:\r\n\tgo build\n\n## Test\r\ntest:\n\tgo test",
+			expected: []Directive{
+				{Type: DirectiveCategory, Value: "Build", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Build the project", SourceFile: "test.mk", LineNumber: 2},
+				{Type: DirectiveDoc, Value: "Test\r", SourceFile: "test.mk", LineNumber: 6},
+			},
+			targets: map[string]int{"build": 3, "test": 7},
+		},
+		{
+			name: "old mac line endings (CR only) - treated as single line",
+			content: "## Build\rbuild:\r\tgo build",
+			expected: []Directive{
+				// CR-only: no \n means no line split. "## Build\rbuild:\r\tgo build" is one line.
+				// This line doesn't match "## " pattern (has "\r" not " " after ##)
+				// so it's not recognized as documentation
+			},
+			targets: map[string]int{}, // No valid target detected
+		},
+		{
+			name: "file directive with CRLF - TrimSpace removes CR",
+			content: "## !file\r\n## Main build file\r\n## !category Build\r\n## Build\nbuild:\r\n\tgo build",
+			expected: []Directive{
+				{Type: DirectiveFile, Value: "", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Main build file\r", SourceFile: "test.mk", LineNumber: 2},
+				{Type: DirectiveCategory, Value: "Build", SourceFile: "test.mk", LineNumber: 3},
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 4},
+			},
+			targets: map[string]int{"build": 5},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scanner := NewScanner()
+			result, err := scanner.ScanContent(tt.content, "test.mk")
+			require.NoError(t, err)
+			assert.Equal(t, len(tt.expected), len(result.Directives), "directive count mismatch")
+			for i, expected := range tt.expected {
+				if i < len(result.Directives) {
+					assert.Equal(t, expected.Type, result.Directives[i].Type, "directive type mismatch at index %d", i)
+					assert.Equal(t, expected.Value, result.Directives[i].Value, "directive value mismatch at index %d", i)
+				}
+			}
+			assert.Equal(t, tt.targets, result.TargetMap)
+		})
+	}
+}
+
+// TestScanContent_MalformedDirectives tests behavior with incomplete or malformed directives.
+func TestScanContent_MalformedDirectives(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected []Directive
+		targets  map[string]int
+	}{
+		{
+			name: "directive without space after !category",
+			content: `## !category
+## Build
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveDoc, Value: "!category", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"build": 3},
+		},
+		{
+			name: "directive with only prefix no content",
+			content: `## !var
+## Build
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveDoc, Value: "!var", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"build": 3},
+		},
+		{
+			name: "directive with only prefix no content for alias",
+			content: `## !alias
+## Build
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveDoc, Value: "!alias", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"build": 3},
+		},
+		{
+			name: "unknown directive type",
+			content: `## !unknown directive type
+## Build
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveDoc, Value: "!unknown directive type", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"build": 3},
+		},
+		{
+			name: "directive with extra whitespace",
+			content: `## !category   Build Tools
+## Build
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveCategory, Value: "Build Tools", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"build": 3},
+		},
+		{
+			name: "directive with tabs instead of spaces - not recognized as doc",
+			content: "##\t!category\tBuild\n## Build\nbuild:\n\tgo build",
+			expected: []Directive{
+				// "##\t" is not recognized as documentation line (needs "## " with space)
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"build": 3},
+		},
+		{
+			name: "file directive with inline description",
+			content: `## !file This is the main file
+## Build
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveFile, Value: "This is the main file", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"build": 3},
+		},
+		{
+			name: "category with special characters",
+			content: `## !category Build & Deploy
+## Build
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveCategory, Value: "Build & Deploy", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"build": 3},
+		},
+		{
+			name: "empty category value - treated as regular doc",
+			content: `## !category
+## Build
+build:
+	go build`,
+			expected: []Directive{
+				// !category without space after is treated as regular documentation
+				{Type: DirectiveDoc, Value: "!category", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 2},
+			},
+			targets: map[string]int{"build": 3},
+		},
+		{
+			name: "directive case sensitivity",
+			content: `## !CATEGORY Build
+## !Category Test
+## !CaTeGoRy Mixed
+## Build
+build:
+	go build`,
+			expected: []Directive{
+				{Type: DirectiveDoc, Value: "!CATEGORY Build", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "!Category Test", SourceFile: "test.mk", LineNumber: 2},
+				{Type: DirectiveDoc, Value: "!CaTeGoRy Mixed", SourceFile: "test.mk", LineNumber: 3},
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 4},
+			},
+			targets: map[string]int{"build": 5},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scanner := NewScanner()
+			result, err := scanner.ScanContent(tt.content, "test.mk")
+			require.NoError(t, err)
+			assert.Equal(t, len(tt.expected), len(result.Directives), "directive count mismatch")
+			for i, expected := range tt.expected {
+				assert.Equal(t, expected.Type, result.Directives[i].Type, "directive type mismatch at index %d", i)
+				assert.Equal(t, expected.Value, result.Directives[i].Value, "directive value mismatch at index %d", i)
+			}
+			assert.Equal(t, tt.targets, result.TargetMap)
+		})
+	}
+}
+
+// TestScanContent_EdgeCaseTargetNames tests unusual but valid target name formats.
+func TestScanContent_EdgeCaseTargetNames(t *testing.T) {
+	tests := []struct {
+		name    string
+		content string
+		targets map[string]int
+	}{
+		{
+			name: "target with dots",
+			content: `## Build binary
+build.linux.amd64:
+	go build`,
+			targets: map[string]int{"build.linux.amd64": 2},
+		},
+		{
+			name: "target with hyphens",
+			content: `## Build
+build-all-targets:
+	go build`,
+			targets: map[string]int{"build-all-targets": 2},
+		},
+		{
+			name: "target with underscores",
+			content: `## Build
+build_go_binary:
+	go build`,
+			targets: map[string]int{"build_go_binary": 2},
+		},
+		{
+			name: "target with path-like name",
+			content: `## Build
+./bin/app:
+	go build`,
+			targets: map[string]int{"./bin/app": 2},
+		},
+		{
+			name: "target with percent sign (pattern rule)",
+			content: `## Build
+%.o:
+	gcc -c $<`,
+			targets: map[string]int{"%.o": 2},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scanner := NewScanner()
+			result, err := scanner.ScanContent(tt.content, "test.mk")
+			require.NoError(t, err)
+			assert.Equal(t, tt.targets, result.TargetMap)
+		})
+	}
+}
+
+// TestScanContent_EdgeCaseWhitespace tests handling of unusual whitespace patterns.
+func TestScanContent_EdgeCaseWhitespace(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected []Directive
+	}{
+		{
+			name:    "documentation with trailing spaces",
+			content: "## Build the project   \nbuild:\n\tgo build",
+			expected: []Directive{
+				{Type: DirectiveDoc, Value: "Build the project   ", SourceFile: "test.mk", LineNumber: 1},
+			},
+		},
+		{
+			name:    "documentation with only spaces after ## - one space trimmed",
+			content: "##     \nbuild:\n\tgo build",
+			expected: []Directive{
+				// TrimPrefix("## ") removes first space, leaving 4 spaces
+				{Type: DirectiveDoc, Value: "    ", SourceFile: "test.mk", LineNumber: 1},
+			},
+		},
+		{
+			name:    "multiple consecutive blank documentation lines",
+			content: "##\n##\n## Build\nbuild:\n\tgo build",
+			expected: []Directive{
+				{Type: DirectiveDoc, Value: "", SourceFile: "test.mk", LineNumber: 1},
+				{Type: DirectiveDoc, Value: "", SourceFile: "test.mk", LineNumber: 2},
+				{Type: DirectiveDoc, Value: "Build", SourceFile: "test.mk", LineNumber: 3},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scanner := NewScanner()
+			result, err := scanner.ScanContent(tt.content, "test.mk")
+			require.NoError(t, err)
+			assert.Equal(t, len(tt.expected), len(result.Directives))
+			for i, expected := range tt.expected {
+				assert.Equal(t, expected.Type, result.Directives[i].Type)
+				assert.Equal(t, expected.Value, result.Directives[i].Value)
+			}
+		})
+	}
 }
