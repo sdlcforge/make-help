@@ -160,16 +160,8 @@ build:
 
 func TestRunLint_RecursionDetection(t *testing.T) {
 	// Set the environment variable to simulate recursion
-	oldEnv := os.Getenv("MAKE_HELP_GENERATING")
-	defer func() {
-		if oldEnv != "" {
-			os.Setenv("MAKE_HELP_GENERATING", oldEnv)
-		} else {
-			os.Unsetenv("MAKE_HELP_GENERATING")
-		}
-	}()
-
-	os.Setenv("MAKE_HELP_GENERATING", "1")
+	// t.Setenv automatically restores the original value when the test completes
+	t.Setenv("MAKE_HELP_GENERATING", "1")
 
 	config := NewConfig()
 	config.Lint = true
