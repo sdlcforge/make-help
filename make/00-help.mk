@@ -1,6 +1,6 @@
 # generated-by: make-help
 # command: ./bin/make-help
-# date: 2026-01-03T20:58:45 UTC
+# date: 2026-01-08T06:11:08 UTC
 # ---
 # DO NOT EDIT
 
@@ -12,8 +12,8 @@ MAKE_HELP_MAKEFILES := $(MAKE_HELP_DIR)Makefile
 ## Displays help for available targets.
 help:
 	@for f in $(MAKE_HELP_MAKEFILES); do \
-	  if [ "$$f" -nt "$(MAKE_HELP_DIR)help.mk" ]; then \
-	    printf '\033[0;33mWarning: %s is newer than help.mk. Run make update-help to refresh.\033[0m\n' "$$f"; \
+	  if [ "$$f" -nt "$(MAKE_HELP_DIR)00-help.mk" ]; then \
+	    printf '\033[0;33mWarning: %s is newer than 00-help.mk. Run make update-help to refresh.\033[0m\n' "$$f"; \
 	  fi; \
 	done
 	@printf '%b\n' "Usage: make [<target>...] [<ENV_VAR>=<value>...]"
@@ -27,6 +27,7 @@ help:
 	@printf '%b\n' "  - \033[1;32mclean.all\033[0m: \033[0;37mDeletes all built artifacts and generated diagram SVG files.\033[0m"
 	@printf '%b\n' "  - \033[1;32mclean.diagrams\033[0m: \033[0;37mRemove generated diagram SVG files.\033[0m"
 	@printf '%b\n' "  - \033[1;32mdiagrams\033[0m: \033[0;37mGenerate SVG diagrams from Mermaid files.\033[0m"
+	@printf '%b\n' "  - \033[1;32mprepack\033[0m: \033[0;37mPrepares the package for publishing (generates coverage badge, placeholder binary).\033[0m"
 	@printf '%b\n' ""
 	@printf '%b\n' "\033[1;36mHelp:\033[0m"
 	@printf '%b\n' "  - \033[1;32mhelp\033[0m: \033[0;37mDisplays help for available targets.\033[0m"
@@ -48,35 +49,35 @@ help-all:
 	@printf '%b\n' "\033[1;32mTarget: all\033[0m"
 	@printf '%b\n' "\033[0;37mBuilds the make-help binary and generated diagram SVG files.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:91"
+	@printf '%b\n' "Source: Makefile:91"
 
 .PHONY: help-build
 help-build:
 	@printf '%b\n' "\033[1;32mTarget: build\033[0m"
 	@printf '%b\n' "\033[0;37mBuilds the make-help binary.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:66"
+	@printf '%b\n' "Source: Makefile:66"
 
 .PHONY: help-clean
 help-clean:
 	@printf '%b\n' "\033[1;32mTarget: clean\033[0m"
 	@printf '%b\n' "\033[0;37mDeletes all built artifacts.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:70"
+	@printf '%b\n' "Source: Makefile:70"
 
 .PHONY: help-clean.all
 help-clean.all:
 	@printf '%b\n' "\033[1;32mTarget: clean.all\033[0m"
 	@printf '%b\n' "\033[0;37mDeletes all built artifacts and generated diagram SVG files.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:80"
+	@printf '%b\n' "Source: Makefile:80"
 
 .PHONY: help-clean.diagrams
 help-clean.diagrams:
 	@printf '%b\n' "\033[1;32mTarget: clean.diagrams\033[0m"
 	@printf '%b\n' "\033[0;37mRemove generated diagram SVG files.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:75"
+	@printf '%b\n' "Source: Makefile:75"
 
 .PHONY: help-diagrams
 help-diagrams:
@@ -84,42 +85,49 @@ help-diagrams:
 	@printf '%b\n' "\033[0;37mGenerate SVG diagrams from Mermaid files.\033[0m"
 	@printf '%b\n' "\033[0;37mRequires mermaid-cli: npm install -g @mermaid-js/mermaid-cli\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:59"
+	@printf '%b\n' "Source: Makefile:59"
+
+.PHONY: help-prepack
+help-prepack:
+	@printf '%b\n' "\033[1;32mTarget: prepack\033[0m"
+	@printf '%b\n' "\033[0;37mPrepares the package for publishing (generates coverage badge, placeholder binary).\033[0m"
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: Makefile:95"
 
 .PHONY: help-help
 help-help:
 	@printf '%b\n' "\033[1;32mTarget: help\033[0m"
 	@printf '%b\n' "\033[0;37mDisplays help for available targets.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/make/00-help.mk:13"
+	@printf '%b\n' "Source: make/00-help.mk:13"
 
 .PHONY: help-update-help
 help-update-help:
 	@printf '%b\n' "\033[1;32mTarget: update-help\033[0m"
 	@printf '%b\n' "\033[0;37mRegenerates help.mk from source Makefiles.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/make/00-help.mk:157"
+	@printf '%b\n' "Source: make/00-help.mk:164"
 
 .PHONY: help-lint
 help-lint:
 	@printf '%b\n' "\033[1;32mTarget: lint\033[0m"
 	@printf '%b\n' "\033[0;37mRun golangci-lint.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:38"
+	@printf '%b\n' "Source: Makefile:38"
 
 .PHONY: help-lint-fix
 help-lint-fix:
 	@printf '%b\n' "\033[1;32mTarget: lint-fix\033[0m"
 	@printf '%b\n' "\033[0;37mRun golangci-lint with auto-fix.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:43"
+	@printf '%b\n' "Source: Makefile:43"
 
 .PHONY: help-qa
 help-qa:
 	@printf '%b\n' "\033[1;32mTarget: qa\033[0m"
 	@printf '%b\n' "\033[0;37mRun all quality checks (test.all + lint).\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:48"
+	@printf '%b\n' "Source: Makefile:48"
 
 .PHONY: help-test
 help-test:
@@ -127,30 +135,29 @@ help-test:
 	@printf '%b\n' "\033[0;33mAliases: t, t\033[0m"
 	@printf '%b\n' "\033[0;37mRun unit tests.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:21"
+	@printf '%b\n' "Source: Makefile:21"
 
 .PHONY: help-test.all
 help-test.all:
 	@printf '%b\n' "\033[1;32mTarget: test.all\033[0m"
 	@printf '%b\n' "\033[0;37mRun all tests (unit + integration).\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:33"
+	@printf '%b\n' "Source: Makefile:33"
 
 .PHONY: help-test.integration
 help-test.integration:
 	@printf '%b\n' "\033[1;32mTarget: test.integration\033[0m"
 	@printf '%b\n' "\033[0;37mRun integration tests. Use 'test.all' to run all tests.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:28"
+	@printf '%b\n' "Source: Makefile:28"
 
 .PHONY: help-test.unit
 help-test.unit:
 	@printf '%b\n' "\033[1;32mTarget: test.unit\033[0m"
 	@printf '%b\n' "\033[0;37mRun unit tests. Use 'test.all' to run all tests.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: /Users/zane/playground/sdlcforge/make-help/Makefile:15"
+	@printf '%b\n' "Source: Makefile:15"
 
-# Explicit target to regenerate help.mk
 ## !category Help
 .PHONY: update-help
 ## Regenerates help.mk from source Makefiles.

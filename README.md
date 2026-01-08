@@ -1,6 +1,6 @@
 # make-help
 
-[![codecov](https://codecov.io/gh/sdlcforge/make-help/graph/badge.svg)](https://codecov.io/gh/sdlcforge/make-help)
+![coverage](./docs/assets/coverage-badge.svg)
 
 Static help generation for Makefiles with rich documentation support and linting.
 

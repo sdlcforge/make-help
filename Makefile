@@ -91,4 +91,9 @@ SHELL:=bash
 all: build diagrams
 .PHONY: all
 
+## Prepares the package for publishing (generates coverage badge, placeholder binary).
+prepack:
+	./scripts/prepack.sh
+.PHONY: prepack
+
 -include make/*.mk

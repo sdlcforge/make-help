@@ -16,7 +16,7 @@
     "preversion": "make qa",
     "lint": "make lint",
     "lint:fix": "make lint-fix",
-    "prepack": "make qa && ./scripts/prepack.sh",
+    "prepack": "make qa && make prepack",
     "postinstall": "node scripts/install.js",
     "qa": "make qa"
   },
@@ -33,7 +33,8 @@
   },
   "homepage": "https://github.com/sdlcforge/make-help#readme",
   "devDependencies": {
-    "@mermaid-js/mermaid-cli": "^11.12.0"
+    "@mermaid-js/mermaid-cli": "^11.12.0",
+    "badge-maker": "^5.0.2"
   },
   "_comply": {
     "orgKey": "@liquid-labs"
