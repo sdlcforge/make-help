@@ -37,6 +37,8 @@ test.all: test.unit test.integration
 ## Run golangci-lint.
 lint:
 	golangci-lint run
+	go vet ./...
+	@which -s staticcheck && { echo "Running staticcheck..."; staticcheck ./...; } || { echo "staticcheck not found"; true; }
 .PHONY: lint
 
 ## Run golangci-lint with auto-fix.
