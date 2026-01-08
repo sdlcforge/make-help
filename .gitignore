@@ -11,3 +11,4 @@
 /*.pid
 /bin/
 /*.star.md
+/coverage.out
