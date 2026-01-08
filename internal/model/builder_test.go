@@ -18,6 +18,7 @@ func getSummaryText(summary []string) string {
 }
 
 func TestNewBuilder(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -27,6 +28,7 @@ func TestNewBuilder(t *testing.T) {
 }
 
 func TestBuild_EmptyParsedFiles(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -40,6 +42,7 @@ func TestBuild_EmptyParsedFiles(t *testing.T) {
 }
 
 func TestBuild_FileDocumentation(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -66,6 +69,7 @@ func TestBuild_FileDocumentation(t *testing.T) {
 }
 
 func TestBuild_BasicTargetWithDocs(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -103,6 +107,7 @@ func TestBuild_BasicTargetWithDocs(t *testing.T) {
 }
 
 func TestBuild_TargetWithCategory(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -130,6 +135,7 @@ func TestBuild_TargetWithCategory(t *testing.T) {
 }
 
 func TestBuild_MultipleCategories(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -164,6 +170,7 @@ func TestBuild_MultipleCategories(t *testing.T) {
 }
 
 func TestBuild_CategorySwitchBehavior(t *testing.T) {
+	t.Parallel()
 	// Test that !category acts as a switch - subsequent targets
 	// inherit the category until another !category is encountered
 	config := &BuilderConfig{DefaultCategory: ""}
@@ -219,6 +226,7 @@ func TestBuild_CategorySwitchBehavior(t *testing.T) {
 }
 
 func TestBuild_TargetWithVariables(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -251,6 +259,7 @@ func TestBuild_TargetWithVariables(t *testing.T) {
 }
 
 func TestBuild_TargetWithAliases(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -280,6 +289,7 @@ func TestBuild_TargetWithAliases(t *testing.T) {
 }
 
 func TestBuild_MixedCategorizationError(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -313,6 +323,7 @@ func TestBuild_MixedCategorizationError(t *testing.T) {
 }
 
 func TestBuild_MixedCategorizationWithDefaultCategory(t *testing.T) {
+	t.Parallel()
 	defaultCategory := "Other"
 	config := &BuilderConfig{DefaultCategory: defaultCategory}
 	builder := NewBuilder(config)
@@ -353,6 +364,7 @@ func TestBuild_MixedCategorizationWithDefaultCategory(t *testing.T) {
 }
 
 func TestBuild_SplitCategories(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -391,6 +403,7 @@ func TestBuild_SplitCategories(t *testing.T) {
 }
 
 func TestBuild_DiscoveryOrder(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -425,6 +438,7 @@ func TestBuild_DiscoveryOrder(t *testing.T) {
 }
 
 func TestBuild_SummaryExtraction(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -451,6 +465,7 @@ func TestBuild_SummaryExtraction(t *testing.T) {
 }
 
 func TestBuild_TargetSourceTracking(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -478,6 +493,7 @@ func TestBuild_TargetSourceTracking(t *testing.T) {
 }
 
 func TestBuild_MultipleFilesAggregation(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -521,6 +537,7 @@ func TestBuild_MultipleFilesAggregation(t *testing.T) {
 }
 
 func TestParseVarDirective(t *testing.T) {
+	t.Parallel()
 	builder := NewBuilder(&BuilderConfig{DefaultCategory: ""})
 
 	tests := []struct {
@@ -557,6 +574,7 @@ func TestParseVarDirective(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := builder.parseVarDirective(tt.input)
 			assert.Equal(t, tt.wantName, result.Name)
 			assert.Equal(t, tt.wantDesc, result.Description)
@@ -565,6 +583,7 @@ func TestParseVarDirective(t *testing.T) {
 }
 
 func TestParseAliasDirective(t *testing.T) {
+	t.Parallel()
 	builder := NewBuilder(&BuilderConfig{DefaultCategory: ""})
 
 	tests := []struct {
@@ -596,6 +615,7 @@ func TestParseAliasDirective(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := builder.parseAliasDirective(tt.input)
 			assert.Equal(t, tt.want, result)
 		})
@@ -603,6 +623,7 @@ func TestParseAliasDirective(t *testing.T) {
 }
 
 func TestBuild_NoDocTargetsFiltered(t *testing.T) {
+	t.Parallel()
 	// Test that targets without documentation are filtered by default
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
@@ -628,6 +649,7 @@ func TestBuild_NoDocTargetsFiltered(t *testing.T) {
 }
 
 func TestBuild_EmptyFileDocValue(t *testing.T) {
+	t.Parallel()
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
 
@@ -663,6 +685,7 @@ func findCategory(model *HelpModel, name string) *Category {
 }
 
 func TestBuild_FilterUndocumented(t *testing.T) {
+	t.Parallel()
 	// Test that undocumented targets are excluded by default
 	config := &BuilderConfig{
 		DefaultCategory: "",
@@ -693,6 +716,7 @@ func TestBuild_FilterUndocumented(t *testing.T) {
 }
 
 func TestBuild_IncludeTargets(t *testing.T) {
+	t.Parallel()
 	// Test --include-target includes specific undocumented targets
 	config := &BuilderConfig{
 		DefaultCategory: "",
@@ -728,6 +752,7 @@ func TestBuild_IncludeTargets(t *testing.T) {
 }
 
 func TestBuild_IncludeAllPhony(t *testing.T) {
+	t.Parallel()
 	// Test --include-all-phony includes all .PHONY targets
 	config := &BuilderConfig{
 		DefaultCategory: "",
@@ -772,6 +797,7 @@ func TestBuild_IncludeAllPhony(t *testing.T) {
 }
 
 func TestBuild_PhonyStatusSet(t *testing.T) {
+	t.Parallel()
 	// Test that IsPhony field is correctly set on targets
 	config := &BuilderConfig{
 		DefaultCategory: "",
@@ -814,6 +840,7 @@ func TestBuild_PhonyStatusSet(t *testing.T) {
 }
 
 func TestBuild_CombinedFiltering(t *testing.T) {
+	t.Parallel()
 	// Test combination of documented, included, and phony targets
 	config := &BuilderConfig{
 		DefaultCategory: "",
@@ -858,6 +885,7 @@ func TestBuild_CombinedFiltering(t *testing.T) {
 }
 
 func TestBuild_CategoryReset(t *testing.T) {
+	t.Parallel()
 	// Test that !category _ resets the category to empty/uncategorized
 	// This should create a mixed categorization error without a default category
 	config := &BuilderConfig{DefaultCategory: "Misc"}
@@ -899,6 +927,7 @@ func TestBuild_CategoryReset(t *testing.T) {
 }
 
 func TestBuild_CategoryResetMixedError(t *testing.T) {
+	t.Parallel()
 	// Test that !category _ creates mixed categorization error
 	// when there are both categorized and uncategorized targets
 	config := &BuilderConfig{DefaultCategory: ""}
@@ -927,6 +956,7 @@ func TestBuild_CategoryResetMixedError(t *testing.T) {
 }
 
 func TestBuild_CategoryResetWithDefaultCategory(t *testing.T) {
+	t.Parallel()
 	// Test that !category _ with --default-category resolves the mixed categorization
 	defaultCategory := "Other"
 	config := &BuilderConfig{DefaultCategory: defaultCategory}
@@ -968,6 +998,7 @@ func TestBuild_CategoryResetWithDefaultCategory(t *testing.T) {
 }
 
 func TestBuild_CategoryResetMultipleTimes(t *testing.T) {
+	t.Parallel()
 	// Test that !category _ can be used multiple times
 	config := &BuilderConfig{DefaultCategory: "Misc"}
 	builder := NewBuilder(config)
@@ -1024,6 +1055,7 @@ func TestBuild_CategoryResetMultipleTimes(t *testing.T) {
 }
 
 func TestBuild_CategoryResetNoTargetsAfter(t *testing.T) {
+	t.Parallel()
 	// Test !category _ with no targets following it (edge case)
 	config := &BuilderConfig{DefaultCategory: ""}
 	builder := NewBuilder(config)
@@ -1051,6 +1083,7 @@ func TestBuild_CategoryResetNoTargetsAfter(t *testing.T) {
 }
 
 func TestBuild_CategoryResetAtStart(t *testing.T) {
+	t.Parallel()
 	// Test !category _ at the start of a file (before any other category)
 	// All targets should be uncategorized
 	config := &BuilderConfig{DefaultCategory: "Misc"}
@@ -1082,6 +1115,7 @@ func TestBuild_CategoryResetAtStart(t *testing.T) {
 }
 
 func TestBuild_CategoryResetAtStartNoDefault(t *testing.T) {
+	t.Parallel()
 	// Test !category _ at start without default category
 	// This should NOT error - there's no mixing since no real categories exist.
 	// All targets are simply uncategorized.
@@ -1112,6 +1146,7 @@ func TestBuild_CategoryResetAtStartNoDefault(t *testing.T) {
 }
 
 func TestBuild_DuplicateTargetInMultipleFiles(t *testing.T) {
+	t.Parallel()
 	// Test that when the same target is defined in multiple files,
 	// only the first occurrence is used (first file wins).
 	config := &BuilderConfig{DefaultCategory: ""}
@@ -1162,6 +1197,7 @@ func TestBuild_DuplicateTargetInMultipleFiles(t *testing.T) {
 }
 
 func TestBuild_DocumentationWithoutTargets(t *testing.T) {
+	t.Parallel()
 	// Test that documentation comments without any following target
 	// are handled gracefully. Documentation accumulates until a target is found,
 	// so all directives before a target get attached to it.
@@ -1202,6 +1238,7 @@ func TestBuild_DocumentationWithoutTargets(t *testing.T) {
 }
 
 func TestBuild_UndocumentedPhonyWithIncludeAllPhony(t *testing.T) {
+	t.Parallel()
 	// Test edge case: undocumented .PHONY targets are included with IncludeAllPhony,
 	// and they should have empty documentation, no summary, but still appear in output.
 	config := &BuilderConfig{
@@ -1263,6 +1300,7 @@ func TestBuild_UndocumentedPhonyWithIncludeAllPhony(t *testing.T) {
 }
 
 func TestBuild_DocumentedTargetNotImplicitAlias(t *testing.T) {
+	t.Parallel()
 	// Test that a documented target with a single phony dependency is NOT an implicit alias.
 	// Documented targets are semantically distinct, not just shortcuts.
 	config := &BuilderConfig{
@@ -1327,6 +1365,7 @@ func TestBuild_DocumentedTargetNotImplicitAlias(t *testing.T) {
 }
 
 func TestBuild_NotAliasDirective(t *testing.T) {
+	t.Parallel()
 	// Test that !notalias directive prevents a target from being treated as an implicit alias.
 	config := &BuilderConfig{
 		DefaultCategory: "",
@@ -1393,6 +1432,7 @@ func TestBuild_NotAliasDirective(t *testing.T) {
 }
 
 func TestBuild_NotAliasWithDocumentation(t *testing.T) {
+	t.Parallel()
 	// Test edge case: !notalias combined with documentation.
 	// The !notalias is redundant (documented targets are never implicit aliases),
 	// but should not cause errors.

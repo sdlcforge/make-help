@@ -10,6 +10,7 @@ import (
 
 // TestMarkdownFormatter_RenderHelp_EmptyModel tests rendering an empty help model
 func TestMarkdownFormatter_RenderHelp_EmptyModel(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{}
 
@@ -37,6 +38,7 @@ func TestMarkdownFormatter_RenderHelp_EmptyModel(t *testing.T) {
 
 // TestMarkdownFormatter_RenderHelp_WithTargets tests rendering with basic targets
 func TestMarkdownFormatter_RenderHelp_WithTargets(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -77,6 +79,7 @@ func TestMarkdownFormatter_RenderHelp_WithTargets(t *testing.T) {
 
 // TestMarkdownFormatter_RenderHelp_WithCategories tests rendering with categories
 func TestMarkdownFormatter_RenderHelp_WithCategories(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		HasCategories: true,
@@ -120,6 +123,7 @@ func TestMarkdownFormatter_RenderHelp_WithCategories(t *testing.T) {
 
 // TestMarkdownFormatter_RenderHelp_WithFileDocumentation tests file documentation rendering
 func TestMarkdownFormatter_RenderHelp_WithFileDocumentation(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -153,6 +157,7 @@ func TestMarkdownFormatter_RenderHelp_WithFileDocumentation(t *testing.T) {
 
 // TestMarkdownFormatter_RenderHelp_WithIncludedFiles tests included files rendering
 func TestMarkdownFormatter_RenderHelp_WithIncludedFiles(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -192,6 +197,7 @@ func TestMarkdownFormatter_RenderHelp_WithIncludedFiles(t *testing.T) {
 
 // TestMarkdownFormatter_RenderHelp_WithVariables tests target variables rendering
 func TestMarkdownFormatter_RenderHelp_WithVariables(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -226,6 +232,7 @@ func TestMarkdownFormatter_RenderHelp_WithVariables(t *testing.T) {
 
 // TestMarkdownFormatter_RenderHelp_WithAliases tests target aliases rendering
 func TestMarkdownFormatter_RenderHelp_WithAliases(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -257,6 +264,7 @@ func TestMarkdownFormatter_RenderHelp_WithAliases(t *testing.T) {
 
 // TestMarkdownFormatter_RenderHelp_WithRichText tests RichText rendering
 func TestMarkdownFormatter_RenderHelp_WithRichText(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -296,6 +304,7 @@ func TestMarkdownFormatter_RenderHelp_WithRichText(t *testing.T) {
 
 // TestMarkdownFormatter_RenderDetailedTarget tests detailed target rendering
 func TestMarkdownFormatter_RenderDetailedTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	target := &model.Target{
 		Name:    "build",
@@ -346,6 +355,7 @@ func TestMarkdownFormatter_RenderDetailedTarget(t *testing.T) {
 
 // TestMarkdownFormatter_RenderBasicTarget tests basic target rendering
 func TestMarkdownFormatter_RenderBasicTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 
 	var buf bytes.Buffer
@@ -369,6 +379,7 @@ func TestMarkdownFormatter_RenderBasicTarget(t *testing.T) {
 
 // TestMarkdownFormatter_ContentType tests content type
 func TestMarkdownFormatter_ContentType(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{})
 
 	contentType := formatter.ContentType()
@@ -379,6 +390,7 @@ func TestMarkdownFormatter_ContentType(t *testing.T) {
 
 // TestMarkdownFormatter_DefaultExtension tests default extension
 func TestMarkdownFormatter_DefaultExtension(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{})
 
 	ext := formatter.DefaultExtension()
@@ -389,6 +401,7 @@ func TestMarkdownFormatter_DefaultExtension(t *testing.T) {
 
 // TestMarkdownFormatter_NilModel tests error handling for nil model
 func TestMarkdownFormatter_NilModel(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{})
 
 	var buf bytes.Buffer
@@ -404,6 +417,7 @@ func TestMarkdownFormatter_NilModel(t *testing.T) {
 
 // TestMarkdownFormatter_NilTarget tests error handling for nil target
 func TestMarkdownFormatter_NilTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{})
 
 	var buf bytes.Buffer
@@ -419,6 +433,7 @@ func TestMarkdownFormatter_NilTarget(t *testing.T) {
 
 // TestMarkdownFormatter_RenderHelp_SpecialCharacters tests Markdown escaping
 func TestMarkdownFormatter_RenderHelp_SpecialCharacters(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -492,6 +507,7 @@ func TestMarkdownFormatter_RenderHelp_SpecialCharacters(t *testing.T) {
 
 // TestMarkdownFormatter_RenderHelp_CategoryNamesEscaped tests that category names are escaped
 func TestMarkdownFormatter_RenderHelp_CategoryNamesEscaped(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		HasCategories: true,
@@ -573,6 +589,7 @@ func TestMarkdownFormatter_RenderHelp_CategoryNamesEscaped(t *testing.T) {
 
 // TestMarkdownFormatter_ComplexModel tests a complex help model
 func TestMarkdownFormatter_ComplexModel(t *testing.T) {
+	t.Parallel()
 	formatter := NewMarkdownFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{

@@ -11,6 +11,7 @@ import (
 )
 
 func TestGenerateHelpFile_Basic(t *testing.T) {
+	t.Parallel()
 	config := &GeneratorConfig{
 		UseColor:     true,
 		Makefiles:    []string{"/path/to/Makefile"},
@@ -106,6 +107,7 @@ func TestGenerateHelpFile_Basic(t *testing.T) {
 }
 
 func TestGenerateHelpFile_NoColor(t *testing.T) {
+	t.Parallel()
 	config := &GeneratorConfig{
 		UseColor:     false,
 		Makefiles:    []string{"/path/to/Makefile"},
@@ -143,6 +145,7 @@ func TestGenerateHelpFile_NoColor(t *testing.T) {
 }
 
 func TestGenerateHelpFile_WithColor(t *testing.T) {
+	t.Parallel()
 	config := &GeneratorConfig{
 		UseColor:     true,
 		Makefiles:    []string{"/path/to/Makefile"},
@@ -180,6 +183,7 @@ func TestGenerateHelpFile_WithColor(t *testing.T) {
 }
 
 func TestGenerateHelpFile_AllOptions(t *testing.T) {
+	t.Parallel()
 	config := &GeneratorConfig{
 		UseColor:            true,
 		KeepOrderCategories: true,
@@ -245,6 +249,7 @@ func TestGenerateHelpFile_AllOptions(t *testing.T) {
 }
 
 func TestGenerateHelpFile_MultipleTargets(t *testing.T) {
+	t.Parallel()
 	config := &GeneratorConfig{
 		UseColor:     false,
 		Makefiles:    []string{"/path/to/Makefile"},
@@ -299,6 +304,7 @@ func TestGenerateHelpFile_MultipleTargets(t *testing.T) {
 }
 
 func TestGenerateHelpFile_MultipleMakefiles(t *testing.T) {
+	t.Parallel()
 	config := &GeneratorConfig{
 		UseColor: false,
 		Makefiles: []string{
@@ -341,6 +347,7 @@ func TestGenerateHelpFile_MultipleMakefiles(t *testing.T) {
 }
 
 func TestGenerateHelpFile_TargetWithAliases(t *testing.T) {
+	t.Parallel()
 	config := &GeneratorConfig{
 		UseColor:     false,
 		Makefiles:    []string{"/path/to/Makefile"},
@@ -375,6 +382,7 @@ func TestGenerateHelpFile_TargetWithAliases(t *testing.T) {
 }
 
 func TestGenerateHelpFile_TargetWithVariables(t *testing.T) {
+	t.Parallel()
 	config := &GeneratorConfig{
 		UseColor:     false,
 		Makefiles:    []string{"/path/to/Makefile"},
@@ -412,6 +420,7 @@ func TestGenerateHelpFile_TargetWithVariables(t *testing.T) {
 }
 
 func TestGenerateHelpFile_ValidMakefile(t *testing.T) {
+	t.Parallel()
 	// Skip if make is not available
 	if _, err := exec.LookPath("make"); err != nil {
 		t.Skip("make command not available")
@@ -467,6 +476,7 @@ func TestGenerateHelpFile_ValidMakefile(t *testing.T) {
 }
 
 func TestRelativizeMakefilePaths(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		makefiles   []string
@@ -495,6 +505,7 @@ func TestRelativizeMakefilePaths(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := relativizeMakefilePaths(tt.makefiles, tt.makefileDir)
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d paths, got %d", len(tt.expected), len(result))
@@ -510,6 +521,7 @@ func TestRelativizeMakefilePaths(t *testing.T) {
 }
 
 func TestBuildRegenerateFlags(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		config   *GeneratorConfig
@@ -603,6 +615,7 @@ func TestBuildRegenerateFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := buildRegenerateFlags(tt.config)
 			if result != tt.expected {
 				t.Errorf("buildRegenerateFlags() = %q, want %q", result, tt.expected)
@@ -612,6 +625,7 @@ func TestBuildRegenerateFlags(t *testing.T) {
 }
 
 func TestGenerateRegenerationTarget(t *testing.T) {
+	t.Parallel()
 	config := &GeneratorConfig{
 		UseColor:     false,
 		Makefiles:    []string{"/path/to/Makefile"},
@@ -641,6 +655,7 @@ func TestGenerateRegenerationTarget(t *testing.T) {
 }
 
 func TestGenerateRegenerationTarget_WithFlags(t *testing.T) {
+	t.Parallel()
 	config := &GeneratorConfig{
 		UseColor:            true, // no --no-color flag
 		KeepOrderCategories: true,
@@ -667,6 +682,7 @@ func TestGenerateRegenerationTarget_WithFlags(t *testing.T) {
 }
 
 func TestGenerateHelpFile_CustomHelpFilename(t *testing.T) {
+	t.Parallel()
 	config := &GeneratorConfig{
 		UseColor:     false,
 		Makefiles:    []string{"/path/to/Makefile"},

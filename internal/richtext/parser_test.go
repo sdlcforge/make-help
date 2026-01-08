@@ -6,6 +6,7 @@ import (
 )
 
 func TestParser_Parse_PlainText(t *testing.T) {
+	t.Parallel()
 	parser := NewParser()
 	tests := []struct {
 		name     string
@@ -35,6 +36,7 @@ func TestParser_Parse_PlainText(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parser.Parse(tt.input)
 			if !richTextEqual(result, tt.expected) {
 				t.Errorf("Parse() = %+v, want %+v", result, tt.expected)
@@ -44,6 +46,7 @@ func TestParser_Parse_PlainText(t *testing.T) {
 }
 
 func TestParser_Parse_Bold(t *testing.T) {
+	t.Parallel()
 	parser := NewParser()
 	tests := []struct {
 		name     string
@@ -86,6 +89,7 @@ func TestParser_Parse_Bold(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parser.Parse(tt.input)
 			if !richTextEqual(result, tt.expected) {
 				t.Errorf("Parse() = %+v, want %+v", result, tt.expected)
@@ -95,6 +99,7 @@ func TestParser_Parse_Bold(t *testing.T) {
 }
 
 func TestParser_Parse_Italic(t *testing.T) {
+	t.Parallel()
 	parser := NewParser()
 	tests := []struct {
 		name     string
@@ -128,6 +133,7 @@ func TestParser_Parse_Italic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parser.Parse(tt.input)
 			if !richTextEqual(result, tt.expected) {
 				t.Errorf("Parse() = %+v, want %+v", result, tt.expected)
@@ -137,6 +143,7 @@ func TestParser_Parse_Italic(t *testing.T) {
 }
 
 func TestParser_Parse_Mixed(t *testing.T) {
+	t.Parallel()
 	parser := NewParser()
 	tests := []struct {
 		name     string
@@ -176,6 +183,7 @@ func TestParser_Parse_Mixed(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parser.Parse(tt.input)
 			if !richTextEqual(result, tt.expected) {
 				t.Errorf("Parse() = %+v, want %+v", result, tt.expected)
@@ -185,6 +193,7 @@ func TestParser_Parse_Mixed(t *testing.T) {
 }
 
 func TestParser_Parse_Code(t *testing.T) {
+	t.Parallel()
 	parser := NewParser()
 	tests := []struct {
 		name     string
@@ -220,6 +229,7 @@ func TestParser_Parse_Code(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parser.Parse(tt.input)
 			if !richTextEqual(result, tt.expected) {
 				t.Errorf("Parse() = %+v, want %+v", result, tt.expected)
@@ -229,6 +239,7 @@ func TestParser_Parse_Code(t *testing.T) {
 }
 
 func TestParser_Parse_Links(t *testing.T) {
+	t.Parallel()
 	parser := NewParser()
 	tests := []struct {
 		name     string
@@ -271,6 +282,7 @@ func TestParser_Parse_Links(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parser.Parse(tt.input)
 			if !richTextEqual(result, tt.expected) {
 				t.Errorf("Parse() = %+v, want %+v", result, tt.expected)
@@ -280,6 +292,7 @@ func TestParser_Parse_Links(t *testing.T) {
 }
 
 func TestParser_Parse_Nested(t *testing.T) {
+	t.Parallel()
 	parser := NewParser()
 	tests := []struct {
 		name     string
@@ -311,6 +324,7 @@ func TestParser_Parse_Nested(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parser.Parse(tt.input)
 			if !richTextEqual(result, tt.expected) {
 				t.Errorf("Parse() = %+v, want %+v", result, tt.expected)
@@ -320,6 +334,7 @@ func TestParser_Parse_Nested(t *testing.T) {
 }
 
 func TestParser_Parse_EdgeCases(t *testing.T) {
+	t.Parallel()
 	parser := NewParser()
 	tests := []struct {
 		name     string
@@ -380,6 +395,7 @@ func TestParser_Parse_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parser.Parse(tt.input)
 			if !richTextEqual(result, tt.expected) {
 				t.Errorf("Parse() = %+v, want %+v", result, tt.expected)
@@ -389,9 +405,11 @@ func TestParser_Parse_EdgeCases(t *testing.T) {
 }
 
 func TestParser_Parse_Security(t *testing.T) {
+	t.Parallel()
 	parser := NewParser()
 
 	t.Run("strips ANSI escape codes", func(t *testing.T) {
+		t.Parallel()
 		input := "\x1b[31mred text\x1b[0m"
 		result := parser.Parse(input)
 		expected := RichText{
@@ -403,6 +421,7 @@ func TestParser_Parse_Security(t *testing.T) {
 	})
 
 	t.Run("handles max input length", func(t *testing.T) {
+		t.Parallel()
 		// Create input larger than MaxInputLength
 		input := strings.Repeat("a", MaxInputLength+1000)
 		result := parser.Parse(input)
@@ -417,6 +436,7 @@ func TestParser_Parse_Security(t *testing.T) {
 	})
 
 	t.Run("bounded segment length prevents ReDoS", func(t *testing.T) {
+		t.Parallel()
 		// Create input with very long bold segment (over MaxSegmentLength)
 		input := "**" + strings.Repeat("a", MaxSegmentLength+100) + "**"
 		result := parser.Parse(input)
@@ -429,6 +449,7 @@ func TestParser_Parse_Security(t *testing.T) {
 }
 
 func TestRichText_PlainText(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		richText RichText
@@ -481,6 +502,7 @@ func TestRichText_PlainText(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := tt.richText.PlainText()
 			if result != tt.expected {
 				t.Errorf("PlainText() = %q, want %q", result, tt.expected)
@@ -490,6 +512,7 @@ func TestRichText_PlainText(t *testing.T) {
 }
 
 func TestRichText_Markdown(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		richText RichText
@@ -551,6 +574,7 @@ func TestRichText_Markdown(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := tt.richText.Markdown()
 			if result != tt.expected {
 				t.Errorf("Markdown() = %q, want %q", result, tt.expected)
@@ -560,6 +584,7 @@ func TestRichText_Markdown(t *testing.T) {
 }
 
 func TestRichText_String(t *testing.T) {
+	t.Parallel()
 	richText := RichText{
 		{Type: SegmentBold, Content: "bold"},
 	}
@@ -571,6 +596,7 @@ func TestRichText_String(t *testing.T) {
 }
 
 func TestParser_RoundTrip(t *testing.T) {
+	t.Parallel()
 	parser := NewParser()
 	tests := []string{
 		"plain text",
@@ -585,6 +611,7 @@ func TestParser_RoundTrip(t *testing.T) {
 
 	for _, input := range tests {
 		t.Run(input, func(t *testing.T) {
+			t.Parallel()
 			parsed := parser.Parse(input)
 			markdown := parsed.Markdown()
 

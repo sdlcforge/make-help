@@ -7,6 +7,7 @@ import (
 )
 
 func TestIsDocumentationLine(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		line     string
@@ -71,6 +72,7 @@ func TestIsDocumentationLine(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := IsDocumentationLine(tt.line)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -78,6 +80,7 @@ func TestIsDocumentationLine(t *testing.T) {
 }
 
 func TestIsTargetLine(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		line     string
@@ -152,6 +155,7 @@ func TestIsTargetLine(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := IsTargetLine(tt.line)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -159,6 +163,7 @@ func TestIsTargetLine(t *testing.T) {
 }
 
 func TestExtractTargetName(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		line     string
@@ -293,6 +298,7 @@ func TestExtractTargetName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := ExtractTargetName(tt.line)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -300,6 +306,7 @@ func TestExtractTargetName(t *testing.T) {
 }
 
 func TestExtractTargetName_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		line     string
@@ -344,6 +351,7 @@ func TestExtractTargetName_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := ExtractTargetName(tt.line)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -351,6 +359,7 @@ func TestExtractTargetName_EdgeCases(t *testing.T) {
 }
 
 func TestExtractTargetName_RealWorldExamples(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		line     string
@@ -385,6 +394,7 @@ func TestExtractTargetName_RealWorldExamples(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := ExtractTargetName(tt.line)
 			assert.Equal(t, tt.expected, result)
 		})

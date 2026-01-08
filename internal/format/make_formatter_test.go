@@ -10,6 +10,7 @@ import (
 
 // TestMakeFormatter_RenderHelp_EmptyModel tests rendering an empty help model
 func TestMakeFormatter_RenderHelp_EmptyModel(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{}
 
@@ -31,6 +32,7 @@ func TestMakeFormatter_RenderHelp_EmptyModel(t *testing.T) {
 
 // TestMakeFormatter_RenderHelp_WithTargets tests rendering with basic targets
 func TestMakeFormatter_RenderHelp_WithTargets(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -71,6 +73,7 @@ func TestMakeFormatter_RenderHelp_WithTargets(t *testing.T) {
 
 // TestMakeFormatter_RenderHelp_WithCategories tests rendering with categories
 func TestMakeFormatter_RenderHelp_WithCategories(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		HasCategories: true,
@@ -114,6 +117,7 @@ func TestMakeFormatter_RenderHelp_WithCategories(t *testing.T) {
 
 // TestMakeFormatter_RenderHelp_WithColors tests color code escaping
 func TestMakeFormatter_RenderHelp_WithColors(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{UseColor: true})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -155,6 +159,7 @@ func TestMakeFormatter_RenderHelp_WithColors(t *testing.T) {
 
 // TestMakeFormatter_RenderHelp_SpecialCharactersEscaped tests escaping of special characters
 func TestMakeFormatter_RenderHelp_SpecialCharactersEscaped(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -201,6 +206,7 @@ func TestMakeFormatter_RenderHelp_SpecialCharactersEscaped(t *testing.T) {
 
 // TestMakeFormatter_RenderDetailedTarget tests detailed target rendering
 func TestMakeFormatter_RenderDetailedTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{UseColor: false})
 	target := &model.Target{
 		Name:    "build",
@@ -248,6 +254,7 @@ func TestMakeFormatter_RenderDetailedTarget(t *testing.T) {
 
 // TestMakeFormatter_RenderBasicTarget tests basic target rendering
 func TestMakeFormatter_RenderBasicTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{UseColor: false})
 
 	var buf bytes.Buffer
@@ -271,6 +278,7 @@ func TestMakeFormatter_RenderBasicTarget(t *testing.T) {
 
 // TestMakeFormatter_ContentType tests content type
 func TestMakeFormatter_ContentType(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{})
 
 	contentType := formatter.ContentType()
@@ -281,6 +289,7 @@ func TestMakeFormatter_ContentType(t *testing.T) {
 
 // TestMakeFormatter_DefaultExtension tests default extension
 func TestMakeFormatter_DefaultExtension(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{})
 
 	ext := formatter.DefaultExtension()
@@ -291,6 +300,7 @@ func TestMakeFormatter_DefaultExtension(t *testing.T) {
 
 // TestMakeFormatter_WithFileDocumentation tests file documentation rendering
 func TestMakeFormatter_WithFileDocumentation(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -321,6 +331,7 @@ func TestMakeFormatter_WithFileDocumentation(t *testing.T) {
 
 // TestMakeFormatter_WithIncludedFiles tests included files rendering
 func TestMakeFormatter_WithIncludedFiles(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -360,6 +371,7 @@ func TestMakeFormatter_WithIncludedFiles(t *testing.T) {
 
 // TestMakeFormatter_WithVariables tests target variables rendering
 func TestMakeFormatter_WithVariables(t *testing.T) {
+	t.Parallel()
 	formatter := NewMakeFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{

@@ -111,6 +111,7 @@ func (m *MockCommandExecutor) ExecuteContext(ctx context.Context, cmd string, ar
 }
 
 func TestNewService(t *testing.T) {
+	t.Parallel()
 	mock := NewMockCommandExecutor()
 	service := NewService(mock, false)
 
@@ -123,6 +124,7 @@ func TestNewService(t *testing.T) {
 }
 
 func TestDiscoverMakefiles_Verbose(t *testing.T) {
+	t.Parallel()
 	// Create temporary directory and Makefile
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -141,6 +143,7 @@ func TestDiscoverMakefiles_Verbose(t *testing.T) {
 }
 
 func TestDiscoverTargets_Basic(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -165,6 +168,7 @@ test:
 }
 
 func TestDiscoverTargets_Verbose(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -185,6 +189,7 @@ build:
 }
 
 func TestDiscoverTargets_Timeout(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -212,6 +217,7 @@ func TestDiscoverTargets_Timeout(t *testing.T) {
 }
 
 func TestDiscoverTargets_Error(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -230,6 +236,7 @@ func TestDiscoverTargets_Error(t *testing.T) {
 }
 
 func TestResolveAbsolutePaths(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		files       []string
@@ -261,6 +268,7 @@ func TestResolveAbsolutePaths(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tmpDir := t.TempDir()
 
 			// Create test files
@@ -298,6 +306,7 @@ func TestResolveAbsolutePaths(t *testing.T) {
 }
 
 func TestResolveAbsolutePaths_StatError(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create a file that we'll test
@@ -314,6 +323,7 @@ func TestResolveAbsolutePaths_StatError(t *testing.T) {
 }
 
 func TestResolveAbsolutePaths_AbsoluteInput(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create a file with absolute path
@@ -331,6 +341,7 @@ func TestResolveAbsolutePaths_AbsoluteInput(t *testing.T) {
 }
 
 func TestParseTargetsFromDatabase(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -439,6 +450,7 @@ my+target:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parseTargetsFromDatabase(tt.input)
 			assert.Equal(t, tt.expected, result.Targets)
 		})
@@ -446,6 +458,7 @@ my+target:
 }
 
 func TestIsSpecialTarget(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		target   string
@@ -565,6 +578,7 @@ func TestIsSpecialTarget(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := isSpecialTarget(tt.target)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -572,6 +586,7 @@ func TestIsSpecialTarget(t *testing.T) {
 }
 
 func TestResolveMakefilePath(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		input       string
@@ -601,6 +616,7 @@ func TestResolveMakefilePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result, err := ResolveMakefilePath(tt.input)
 
 			if tt.expectError {
@@ -614,7 +630,9 @@ func TestResolveMakefilePath(t *testing.T) {
 }
 
 func TestValidateMakefileExists(t *testing.T) {
+	t.Parallel()
 	t.Run("file exists", func(t *testing.T) {
+		t.Parallel()
 		tmpDir := t.TempDir()
 		makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -626,12 +644,14 @@ func TestValidateMakefileExists(t *testing.T) {
 	})
 
 	t.Run("file does not exist", func(t *testing.T) {
+		t.Parallel()
 		err := ValidateMakefileExists("/nonexistent/path/Makefile")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "not found")
 	})
 
 	t.Run("path is directory", func(t *testing.T) {
+		t.Parallel()
 		tmpDir := t.TempDir()
 
 		err := ValidateMakefileExists(tmpDir)
@@ -641,6 +661,7 @@ func TestValidateMakefileExists(t *testing.T) {
 }
 
 func TestDefaultExecutor(t *testing.T) {
+	t.Parallel()
 	executor := NewDefaultExecutor()
 	assert.NotNil(t, executor)
 
@@ -659,6 +680,7 @@ func TestDefaultExecutor(t *testing.T) {
 }
 
 func TestDefaultExecutor_ContextCancellation(t *testing.T) {
+	t.Parallel()
 	executor := NewDefaultExecutor()
 
 	// Create an already cancelled context
@@ -671,6 +693,7 @@ func TestDefaultExecutor_ContextCancellation(t *testing.T) {
 }
 
 func TestDefaultExecutor_CommandError(t *testing.T) {
+	t.Parallel()
 	executor := NewDefaultExecutor()
 
 	// Test with a command that doesn't exist
@@ -681,6 +704,7 @@ func TestDefaultExecutor_CommandError(t *testing.T) {
 }
 
 func TestDiscoverMakefileList_ReadError(t *testing.T) {
+	t.Parallel()
 	mock := NewMockCommandExecutor()
 	service := NewService(mock, false)
 
@@ -691,6 +715,7 @@ func TestDiscoverMakefileList_ReadError(t *testing.T) {
 }
 
 func TestDiscoverMakefileList_Success(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -710,6 +735,7 @@ func TestDiscoverMakefileList_Success(t *testing.T) {
 }
 
 func TestDiscoverMakefileList_Verbose(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -725,6 +751,7 @@ func TestDiscoverMakefileList_Verbose(t *testing.T) {
 }
 
 func TestDiscoverMakefileList_EmptyResult(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 

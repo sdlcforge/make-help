@@ -7,6 +7,7 @@ import (
 )
 
 func TestDirectiveType_String(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		dt       DirectiveType
@@ -46,6 +47,7 @@ func TestDirectiveType_String(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := tt.dt.String()
 			assert.Equal(t, tt.expected, result)
 		})

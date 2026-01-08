@@ -237,6 +237,7 @@ test:
 }
 
 func TestCreateHelpTarget_ActualCreation(t *testing.T) {
+	t.Parallel()
 	// Test that without --dry-run, files are actually created
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -380,6 +381,7 @@ build:
 }
 
 func TestFilterOutHelpFiles(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		makefiles []string
@@ -495,6 +497,7 @@ func TestFilterOutHelpFiles(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := filterOutHelpFiles(tt.makefiles, tt.helpFiles...)
 			assert.Equal(t, tt.want, got)
 		})

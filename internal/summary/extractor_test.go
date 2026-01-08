@@ -5,6 +5,7 @@ import (
 )
 
 func TestExtract(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		docs     []string
@@ -260,6 +261,7 @@ func TestExtract(t *testing.T) {
 	extractor := NewExtractor()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := extractor.Extract(tt.docs)
 			resultText := result.PlainText()
 			if resultText != tt.expected {
@@ -270,6 +272,7 @@ func TestExtract(t *testing.T) {
 }
 
 func TestStripMarkdownHeaders(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -305,6 +308,7 @@ func TestStripMarkdownHeaders(t *testing.T) {
 	extractor := NewExtractor()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := extractor.stripMarkdownHeaders(tt.input)
 			if result != tt.expected {
 				t.Errorf("stripMarkdownHeaders() = %q, want %q", result, tt.expected)
@@ -314,6 +318,7 @@ func TestStripMarkdownHeaders(t *testing.T) {
 }
 
 func TestStripMarkdownFormatting(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -366,6 +371,7 @@ func TestStripMarkdownFormatting(t *testing.T) {
 	extractor := NewExtractor()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := extractor.stripMarkdownFormatting(tt.input)
 			if result != tt.expected {
 				t.Errorf("stripMarkdownFormatting() = %q, want %q", result, tt.expected)
@@ -375,6 +381,7 @@ func TestStripMarkdownFormatting(t *testing.T) {
 }
 
 func TestStripHTMLTags(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -405,6 +412,7 @@ func TestStripHTMLTags(t *testing.T) {
 	extractor := NewExtractor()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := extractor.stripHTMLTags(tt.input)
 			if result != tt.expected {
 				t.Errorf("stripHTMLTags() = %q, want %q", result, tt.expected)
@@ -414,6 +422,7 @@ func TestStripHTMLTags(t *testing.T) {
 }
 
 func TestNormalizeWhitespace(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -459,6 +468,7 @@ func TestNormalizeWhitespace(t *testing.T) {
 	extractor := NewExtractor()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := extractor.normalizeWhitespace(tt.input)
 			if result != tt.expected {
 				t.Errorf("normalizeWhitespace() = %q, want %q", result, tt.expected)
@@ -468,6 +478,7 @@ func TestNormalizeWhitespace(t *testing.T) {
 }
 
 func TestExtractFirstSentence(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -523,6 +534,7 @@ func TestExtractFirstSentence(t *testing.T) {
 	extractor := NewExtractor()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := extractor.extractFirstSentence(tt.input)
 			if result != tt.expected {
 				t.Errorf("extractFirstSentence() = %q, want %q", result, tt.expected)
@@ -533,6 +545,7 @@ func TestExtractFirstSentence(t *testing.T) {
 
 // TestNewExtractor verifies that all regex patterns compile successfully
 func TestNewExtractor(t *testing.T) {
+	t.Parallel()
 	extractor := NewExtractor()
 
 	if extractor.sentenceRegex == nil {
@@ -570,6 +583,7 @@ func TestNewExtractor(t *testing.T) {
 // TestExtractEdgeCases verifies edge case handling for summary extraction.
 // These tests cover scenarios that might be problematic for sentence boundary detection.
 func TestExtractEdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		docs     []string
@@ -781,6 +795,7 @@ func TestExtractEdgeCases(t *testing.T) {
 	extractor := NewExtractor()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := extractor.Extract(tt.docs)
 			resultText := result.PlainText()
 			if resultText != tt.expected {

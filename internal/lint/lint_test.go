@@ -8,6 +8,7 @@ import (
 )
 
 func TestCheckUndocumentedPhony_NoWarnings(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{},
 		PhonyTargets: map[string]bool{
@@ -28,6 +29,7 @@ func TestCheckUndocumentedPhony_NoWarnings(t *testing.T) {
 }
 
 func TestCheckUndocumentedPhony_WithUndocumented(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{},
 		PhonyTargets: map[string]bool{
@@ -73,6 +75,7 @@ func TestCheckUndocumentedPhony_WithUndocumented(t *testing.T) {
 }
 
 func TestCheckUndocumentedPhony_ImplicitAliases(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{},
 		PhonyTargets: map[string]bool{
@@ -94,6 +97,7 @@ func TestCheckUndocumentedPhony_ImplicitAliases(t *testing.T) {
 }
 
 func TestCheckUndocumentedPhony_GeneratedHelpTargets(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{},
 		PhonyTargets: map[string]bool{
@@ -127,6 +131,7 @@ func TestCheckUndocumentedPhony_GeneratedHelpTargets(t *testing.T) {
 }
 
 func TestCheckSummaryPunctuation_AllValid(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -164,6 +169,7 @@ func TestCheckSummaryPunctuation_AllValid(t *testing.T) {
 }
 
 func TestCheckSummaryPunctuation_MissingPunctuation(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -204,6 +210,7 @@ func TestCheckSummaryPunctuation_MissingPunctuation(t *testing.T) {
 }
 
 func TestCheckSummaryPunctuation_AllPunctuationTypes(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -241,6 +248,7 @@ func TestCheckSummaryPunctuation_AllPunctuationTypes(t *testing.T) {
 }
 
 func TestLint_MultipleChecks(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -285,6 +293,7 @@ func TestLint_MultipleChecks(t *testing.T) {
 }
 
 func TestFormatWarning_WithLine(t *testing.T) {
+	t.Parallel()
 	w := Warning{
 		File:     "Makefile",
 		Line:     42,
@@ -301,6 +310,7 @@ func TestFormatWarning_WithLine(t *testing.T) {
 }
 
 func TestFormatWarning_WithoutLine(t *testing.T) {
+	t.Parallel()
 	w := Warning{
 		File:     "Makefile",
 		Line:     0,
@@ -318,6 +328,7 @@ func TestFormatWarning_WithoutLine(t *testing.T) {
 // Tests for CheckOrphanAliases
 
 func TestCheckOrphanAliases_NoWarnings(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -356,6 +367,7 @@ func TestCheckOrphanAliases_NoWarnings(t *testing.T) {
 }
 
 func TestCheckOrphanAliases_WithOrphans(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -427,6 +439,7 @@ func TestCheckOrphanAliases_WithOrphans(t *testing.T) {
 // Tests for CheckLongSummaries
 
 func TestCheckLongSummaries_NoWarnings(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -464,6 +477,7 @@ func TestCheckLongSummaries_NoWarnings(t *testing.T) {
 }
 
 func TestCheckLongSummaries_WithLong(t *testing.T) {
+	t.Parallel()
 	longSummary := []string{"This is a very long summary that exceeds the eighty character limit and should trigger a warning."}
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
@@ -517,6 +531,7 @@ func TestCheckLongSummaries_WithLong(t *testing.T) {
 }
 
 func TestCheckLongSummaries_BoundaryCase(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -561,6 +576,7 @@ func TestCheckLongSummaries_BoundaryCase(t *testing.T) {
 // Tests for CheckEmptyDocumentation
 
 func TestCheckEmptyDocumentation_NoWarnings(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -592,6 +608,7 @@ func TestCheckEmptyDocumentation_NoWarnings(t *testing.T) {
 }
 
 func TestCheckEmptyDocumentation_LeadingEmpty(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -626,6 +643,7 @@ func TestCheckEmptyDocumentation_LeadingEmpty(t *testing.T) {
 }
 
 func TestCheckEmptyDocumentation_TrailingEmpty(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -660,6 +678,7 @@ func TestCheckEmptyDocumentation_TrailingEmpty(t *testing.T) {
 }
 
 func TestCheckEmptyDocumentation_InternalEmpty(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -690,6 +709,7 @@ func TestCheckEmptyDocumentation_InternalEmpty(t *testing.T) {
 // Tests for CheckMissingVarDescriptions
 
 func TestCheckMissingVarDescriptions_NoWarnings(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -725,6 +745,7 @@ func TestCheckMissingVarDescriptions_NoWarnings(t *testing.T) {
 }
 
 func TestCheckMissingVarDescriptions_WithMissing(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -792,6 +813,7 @@ func TestCheckMissingVarDescriptions_WithMissing(t *testing.T) {
 // Tests for CheckInconsistentNaming
 
 func TestCheckInconsistentNaming_NoWarnings(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -836,6 +858,7 @@ func TestCheckInconsistentNaming_NoWarnings(t *testing.T) {
 }
 
 func TestCheckInconsistentNaming_WithInvalid(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -894,6 +917,7 @@ func TestCheckInconsistentNaming_WithInvalid(t *testing.T) {
 // Tests for CheckCircularDependencies
 
 func TestCheckCircularDependencies_NoWarnings(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel:    &model.HelpModel{},
 		MakefilePath: "Makefile",
@@ -921,6 +945,7 @@ func TestCheckCircularDependencies_NoWarnings(t *testing.T) {
 }
 
 func TestCheckCircularDependencies_SimpleCycle(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel:    &model.HelpModel{},
 		MakefilePath: "Makefile",
@@ -961,6 +986,7 @@ func TestCheckCircularDependencies_SimpleCycle(t *testing.T) {
 }
 
 func TestCheckCircularDependencies_LongerCycle(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel:    &model.HelpModel{},
 		MakefilePath: "Makefile",
@@ -1003,6 +1029,7 @@ func TestCheckCircularDependencies_LongerCycle(t *testing.T) {
 // Tests for CheckRedundantDirectives
 
 func TestCheckRedundantDirectives_NoWarnings(t *testing.T) {
+	t.Parallel()
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
 			Categories: []model.Category{
@@ -1044,6 +1071,7 @@ func TestCheckRedundantDirectives_NoWarnings(t *testing.T) {
 }
 
 func TestCheckRedundantDirectives_NotAliasOnDocumented(t *testing.T) {
+	t.Parallel()
 	// !notalias on a documented target is redundant
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
@@ -1100,6 +1128,7 @@ func TestCheckRedundantDirectives_NotAliasOnDocumented(t *testing.T) {
 }
 
 func TestCheckRedundantDirectives_NotAliasOnHasRecipe(t *testing.T) {
+	t.Parallel()
 	// !notalias on a target with a recipe is redundant
 	ctx := &CheckContext{
 		HelpModel:    &model.HelpModel{},
@@ -1139,6 +1168,7 @@ func TestCheckRedundantDirectives_NotAliasOnHasRecipe(t *testing.T) {
 }
 
 func TestCheckRedundantDirectives_NotAliasOnNonPhony(t *testing.T) {
+	t.Parallel()
 	// !notalias on a non-.PHONY target is redundant
 	ctx := &CheckContext{
 		HelpModel:    &model.HelpModel{},
@@ -1176,6 +1206,7 @@ func TestCheckRedundantDirectives_NotAliasOnNonPhony(t *testing.T) {
 }
 
 func TestCheckRedundantDirectives_NotAliasMultipleDeps(t *testing.T) {
+	t.Parallel()
 	// !notalias on a target with multiple dependencies is redundant
 	ctx := &CheckContext{
 		HelpModel:    &model.HelpModel{},
@@ -1217,6 +1248,7 @@ func TestCheckRedundantDirectives_NotAliasMultipleDeps(t *testing.T) {
 }
 
 func TestCheckRedundantDirectives_NotAliasNonPhonyDep(t *testing.T) {
+	t.Parallel()
 	// !notalias on a target whose dependency is not .PHONY is redundant
 	ctx := &CheckContext{
 		HelpModel:    &model.HelpModel{},
@@ -1257,6 +1289,7 @@ func TestCheckRedundantDirectives_NotAliasNonPhonyDep(t *testing.T) {
 }
 
 func TestCheckRedundantDirectives_SelfAlias(t *testing.T) {
+	t.Parallel()
 	// A target that has itself as an alias
 	ctx := &CheckContext{
 		HelpModel: &model.HelpModel{
@@ -1312,6 +1345,7 @@ func TestCheckRedundantDirectives_SelfAlias(t *testing.T) {
 }
 
 func TestCheckRedundantDirectives_ValidNotAlias(t *testing.T) {
+	t.Parallel()
 	// !notalias that is actually useful - target would be implicit alias without it
 	ctx := &CheckContext{
 		HelpModel:    &model.HelpModel{},

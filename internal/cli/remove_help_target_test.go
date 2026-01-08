@@ -11,6 +11,7 @@ import (
 )
 
 func TestRunRemoveHelpTarget_Success(t *testing.T) {
+	t.Parallel()
 	// Create a temp Makefile with a help target
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -50,6 +51,7 @@ help:
 }
 
 func TestRunRemoveHelpTarget_Verbose(t *testing.T) {
+	t.Parallel()
 	// Create a temp Makefile
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -71,6 +73,7 @@ build:
 }
 
 func TestRunRemoveHelpTarget_InvalidMakefile(t *testing.T) {
+	t.Parallel()
 	config := NewConfig()
 	config.MakefilePath = "/nonexistent/Makefile"
 
@@ -79,6 +82,7 @@ func TestRunRemoveHelpTarget_InvalidMakefile(t *testing.T) {
 }
 
 func TestRunRemoveHelpTarget_ResolutionError(t *testing.T) {
+	t.Parallel()
 	config := NewConfig()
 	config.MakefilePath = "/nonexistent/deeply/nested/path/Makefile"
 

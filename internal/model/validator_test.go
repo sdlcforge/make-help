@@ -9,6 +9,7 @@ import (
 )
 
 func TestValidateCategorization_NoCategories(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		HasCategories: false,
 		Categories: []Category{
@@ -22,6 +23,7 @@ func TestValidateCategorization_NoCategories(t *testing.T) {
 }
 
 func TestValidateCategorization_AllCategorized(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		HasCategories: true,
 		Categories: []Category{
@@ -36,6 +38,7 @@ func TestValidateCategorization_AllCategorized(t *testing.T) {
 }
 
 func TestValidateCategorization_AllUncategorized(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		HasCategories: true,
 		Categories: []Category{
@@ -49,6 +52,7 @@ func TestValidateCategorization_AllUncategorized(t *testing.T) {
 }
 
 func TestValidateCategorization_MixedWithoutDefault(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		HasCategories: true,
 		Categories: []Category{
@@ -64,6 +68,7 @@ func TestValidateCategorization_MixedWithoutDefault(t *testing.T) {
 }
 
 func TestValidateCategorization_MixedWithDefault(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		HasCategories: true,
 		Categories: []Category{
@@ -78,6 +83,7 @@ func TestValidateCategorization_MixedWithDefault(t *testing.T) {
 }
 
 func TestApplyDefaultCategory_NoUncategorized(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		HasCategories: true,
 		Categories: []Category{
@@ -93,6 +99,7 @@ func TestApplyDefaultCategory_NoUncategorized(t *testing.T) {
 }
 
 func TestApplyDefaultCategory_EmptyDefaultCategory(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		HasCategories: true,
 		Categories: []Category{
@@ -108,6 +115,7 @@ func TestApplyDefaultCategory_EmptyDefaultCategory(t *testing.T) {
 }
 
 func TestApplyDefaultCategory_CreateNewCategory(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		HasCategories: true,
 		Categories: []Category{
@@ -133,6 +141,7 @@ func TestApplyDefaultCategory_CreateNewCategory(t *testing.T) {
 }
 
 func TestApplyDefaultCategory_MergeIntoExisting(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		HasCategories: true,
 		Categories: []Category{
@@ -158,6 +167,7 @@ func TestApplyDefaultCategory_MergeIntoExisting(t *testing.T) {
 }
 
 func TestCountTargetsByCategory(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		Categories: []Category{
 			{Name: "Build", Targets: []Target{{Name: "build"}, {Name: "compile"}}},
@@ -174,6 +184,7 @@ func TestCountTargetsByCategory(t *testing.T) {
 }
 
 func TestGetCategoryNames(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		Categories: []Category{
 			{Name: "Build"},
@@ -190,6 +201,7 @@ func TestGetCategoryNames(t *testing.T) {
 }
 
 func TestHasCategory(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		Categories: []Category{
 			{Name: "Build"},
@@ -203,6 +215,7 @@ func TestHasCategory(t *testing.T) {
 }
 
 func TestGetTarget(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		Categories: []Category{
 			{Name: "Build", Targets: []Target{{Name: "build", Summary: []string{"Build summary"}}}},
@@ -223,6 +236,7 @@ func TestGetTarget(t *testing.T) {
 }
 
 func TestGetTargetCount(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		Categories: []Category{
 			{Name: "Build", Targets: []Target{{Name: "build"}, {Name: "compile"}}},
@@ -234,6 +248,7 @@ func TestGetTargetCount(t *testing.T) {
 }
 
 func TestGetTargetCount_EmptyModel(t *testing.T) {
+	t.Parallel()
 	model := &HelpModel{
 		Categories: []Category{},
 	}

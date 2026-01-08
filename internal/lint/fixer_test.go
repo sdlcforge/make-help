@@ -10,6 +10,7 @@ import (
 // Tests for fix functions
 
 func TestFixSummaryPunctuation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		warning  Warning
@@ -46,6 +47,7 @@ func TestFixSummaryPunctuation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			fix := fixSummaryPunctuation(tt.warning)
 			if tt.wantNil {
 				if fix != nil {
@@ -76,6 +78,7 @@ func TestFixSummaryPunctuation(t *testing.T) {
 }
 
 func TestFixEmptyDocumentation(t *testing.T) {
+	t.Parallel()
 	warning := Warning{
 		File:      "/path/to/Makefile",
 		Line:      5,
@@ -104,6 +107,7 @@ func TestFixEmptyDocumentation(t *testing.T) {
 // Tests for CollectFixes
 
 func TestCollectFixes_Empty(t *testing.T) {
+	t.Parallel()
 	checks := AllChecks()
 	fixes := CollectFixes(checks, []Warning{})
 	if len(fixes) != 0 {
@@ -112,6 +116,7 @@ func TestCollectFixes_Empty(t *testing.T) {
 }
 
 func TestCollectFixes_OnlyFixableWarnings(t *testing.T) {
+	t.Parallel()
 	checks := AllChecks()
 	warnings := []Warning{
 		{
@@ -156,6 +161,7 @@ func TestCollectFixes_OnlyFixableWarnings(t *testing.T) {
 }
 
 func TestCollectFixes_UnknownCheckName(t *testing.T) {
+	t.Parallel()
 	checks := AllChecks()
 	warnings := []Warning{
 		{
@@ -175,6 +181,7 @@ func TestCollectFixes_UnknownCheckName(t *testing.T) {
 // Tests for Fixer
 
 func TestFixer_ApplyFixes_Empty(t *testing.T) {
+	t.Parallel()
 	fixer := &Fixer{}
 	result, err := fixer.ApplyFixes([]Fix{})
 	if err != nil {
@@ -189,6 +196,7 @@ func TestFixer_ApplyFixes_Empty(t *testing.T) {
 }
 
 func TestFixer_ApplyFixes_Replace(t *testing.T) {
+	t.Parallel()
 	// Create temp file
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "Makefile")
@@ -237,6 +245,7 @@ build:
 }
 
 func TestFixer_ApplyFixes_Delete(t *testing.T) {
+	t.Parallel()
 	// Create temp file
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "Makefile")
@@ -282,6 +291,7 @@ build:
 }
 
 func TestFixer_ApplyFixes_MultipleFixesSameFile(t *testing.T) {
+	t.Parallel()
 	// Create temp file with multiple issues
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "Makefile")
@@ -356,6 +366,7 @@ test:
 }
 
 func TestFixer_ApplyFixes_DryRun(t *testing.T) {
+	t.Parallel()
 	// Create temp file
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "Makefile")
@@ -397,6 +408,7 @@ build:
 }
 
 func TestFixer_ApplyFixes_ContentMismatch(t *testing.T) {
+	t.Parallel()
 	// Create temp file
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "Makefile")
@@ -431,6 +443,7 @@ build:
 }
 
 func TestFixer_ApplyFixes_LineOutOfRange(t *testing.T) {
+	t.Parallel()
 	// Create temp file
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "Makefile")
@@ -463,6 +476,7 @@ build:
 }
 
 func TestFixer_ApplyFixes_PreservesPermissions(t *testing.T) {
+	t.Parallel()
 	// Create temp file with specific permissions
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "Makefile")
@@ -501,6 +515,7 @@ build:
 }
 
 func TestFixer_ApplyFixes_MultipleFiles(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create two files
@@ -563,6 +578,7 @@ test:
 // Tests for validateFix helper
 
 func TestValidateFix(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		fix     Fix
@@ -627,6 +643,7 @@ func TestValidateFix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := validateFix(tt.fix, tt.lines)
 			if tt.wantErr && err == nil {
 				t.Error("expected error, got nil")

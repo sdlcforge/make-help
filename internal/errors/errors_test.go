@@ -8,6 +8,7 @@ import (
 
 // TestErrorsImplementErrorInterface verifies all error types implement error interface.
 func TestErrorsImplementErrorInterface(t *testing.T) {
+	t.Parallel()
 	// This test verifies at compile time that all error types implement error interface.
 	var _ error = &MixedCategorizationError{}
 	var _ error = &UnknownCategoryError{}
@@ -18,18 +19,21 @@ func TestErrorsImplementErrorInterface(t *testing.T) {
 }
 
 func TestMixedCategorizationError(t *testing.T) {
+	t.Parallel()
 	err := NewMixedCategorizationError("found both categorized and uncategorized targets")
 	assert.Contains(t, err.Error(), "mixed categorization")
 	assert.Contains(t, err.Error(), "--default-category")
 }
 
 func TestUnknownCategoryError(t *testing.T) {
+	t.Parallel()
 	err := NewUnknownCategoryError("Unknown", []string{"Build", "Test", "Deploy"})
 	assert.Contains(t, err.Error(), `unknown category "Unknown"`)
 	assert.Contains(t, err.Error(), "Build, Test, Deploy")
 }
 
 func TestMakefileNotFoundError(t *testing.T) {
+	t.Parallel()
 	err := NewMakefileNotFoundError("/path/to/Makefile")
 	assert.Contains(t, err.Error(), "Makefile not found")
 	assert.Contains(t, err.Error(), "/path/to/Makefile")
@@ -37,6 +41,7 @@ func TestMakefileNotFoundError(t *testing.T) {
 }
 
 func TestMakeExecutionError(t *testing.T) {
+	t.Parallel()
 	err := NewMakeExecutionError("make -p", "make: *** No rule to make target")
 	assert.Contains(t, err.Error(), "make command failed")
 	assert.Contains(t, err.Error(), "make -p")
@@ -49,6 +54,7 @@ func TestMakeExecutionError(t *testing.T) {
 }
 
 func TestDuplicateHelpTargetError(t *testing.T) {
+	t.Parallel()
 	err := NewDuplicateHelpTargetError("Makefile:15")
 	assert.Contains(t, err.Error(), "help target already exists")
 	assert.Contains(t, err.Error(), "Makefile:15")
@@ -56,6 +62,7 @@ func TestDuplicateHelpTargetError(t *testing.T) {
 }
 
 func TestValidationError(t *testing.T) {
+	t.Parallel()
 	err := NewValidationError("syntax error", "line 10: unexpected token")
 	assert.Contains(t, err.Error(), "validation failed")
 	assert.Contains(t, err.Error(), "syntax error")

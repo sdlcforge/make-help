@@ -14,6 +14,7 @@ import (
 )
 
 func TestProcessColorFlags(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		noColor     bool
@@ -53,6 +54,7 @@ func TestProcessColorFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Create a temporary command to test flag processing
 			cmd := &cobra.Command{Use: "test"}
 			config := &Config{}
@@ -84,6 +86,7 @@ func TestProcessColorFlags(t *testing.T) {
 }
 
 func TestResolveColorMode(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		mode     ColorMode
@@ -113,6 +116,7 @@ func TestResolveColorMode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			config := &Config{
 				ColorMode: tt.mode,
 			}
@@ -131,6 +135,7 @@ func TestResolveColorMode(t *testing.T) {
 }
 
 func TestParseCategoryOrder(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    []string
@@ -185,6 +190,7 @@ func TestParseCategoryOrder(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parseCategoryOrder(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -192,6 +198,7 @@ func TestParseCategoryOrder(t *testing.T) {
 }
 
 func TestNewConfig(t *testing.T) {
+	t.Parallel()
 	config := NewConfig()
 
 	assert.NotNil(t, config)
@@ -207,6 +214,7 @@ func TestNewConfig(t *testing.T) {
 }
 
 func TestColorModeString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		mode     ColorMode
 		expected string
@@ -231,6 +239,7 @@ func TestColorModeString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.expected, func(t *testing.T) {
+			t.Parallel()
 			result := tt.mode.String()
 			assert.Equal(t, tt.expected, result)
 		})
@@ -238,6 +247,7 @@ func TestColorModeString(t *testing.T) {
 }
 
 func TestNewRootCmd(t *testing.T) {
+	t.Parallel()
 	cmd := NewRootCmd()
 
 	assert.NotNil(t, cmd)
@@ -262,6 +272,7 @@ func TestNewRootCmd(t *testing.T) {
 }
 
 func TestRootCmd_FlagDefaults(t *testing.T) {
+	t.Parallel()
 	cmd := NewRootCmd()
 
 	// Check default values
@@ -340,6 +351,7 @@ all:
 }
 
 func TestRootCmd_MissingMakefile(t *testing.T) {
+	t.Parallel()
 	cmd := NewRootCmd()
 	cmd.SetArgs([]string{"--makefile-path", "/nonexistent/Makefile"})
 
@@ -409,6 +421,7 @@ clean:
 }
 
 func TestIsTerminal(t *testing.T) {
+	t.Parallel()
 	// Test with stdout - may or may not be a terminal
 	result := IsTerminal(os.Stdout.Fd())
 	assert.IsType(t, false, result)
@@ -423,6 +436,7 @@ func TestIsTerminal(t *testing.T) {
 }
 
 func TestRunHelp_Success(t *testing.T) {
+	t.Parallel()
 	// Create a temp Makefile
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -453,6 +467,7 @@ test:
 }
 
 func TestRunHelp_WithOrdering(t *testing.T) {
+	t.Parallel()
 	// Create a temp Makefile with categories
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -485,6 +500,7 @@ deploy:
 }
 
 func TestRunHelp_ResolutionError(t *testing.T) {
+	t.Parallel()
 	config := NewConfig()
 	// Empty path should resolve to current dir which may not have a Makefile
 	config.MakefilePath = "/nonexistent/deeply/nested/path/Makefile"
@@ -494,6 +510,7 @@ func TestRunHelp_ResolutionError(t *testing.T) {
 }
 
 func TestRunHelp_ValidationError(t *testing.T) {
+	t.Parallel()
 	config := NewConfig()
 	config.MakefilePath = "/nonexistent/Makefile"
 
@@ -502,6 +519,7 @@ func TestRunHelp_ValidationError(t *testing.T) {
 }
 
 func TestRunHelp_Verbose(t *testing.T) {
+	t.Parallel()
 	// Create a temp Makefile
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -522,6 +540,7 @@ build:
 }
 
 func TestRunHelp_WithDefaultCategory(t *testing.T) {
+	t.Parallel()
 	// Create a temp Makefile with mixed categorization
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -547,6 +566,7 @@ clean:
 }
 
 func TestRunHelp_CategoryOrder(t *testing.T) {
+	t.Parallel()
 	// Create a temp Makefile with categories
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -573,6 +593,7 @@ test:
 }
 
 func TestRunHelp_InvalidCategoryOrder(t *testing.T) {
+	t.Parallel()
 	// Create a temp Makefile with categories
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -595,6 +616,7 @@ build:
 }
 
 func TestRunHelp_EmptyMakefile(t *testing.T) {
+	t.Parallel()
 	// Create an empty temp Makefile
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -611,6 +633,7 @@ func TestRunHelp_EmptyMakefile(t *testing.T) {
 }
 
 func TestRunHelp_WithInclude(t *testing.T) {
+	t.Parallel()
 	// Create a temp Makefile with include using -include (optional include)
 	// to avoid errors when the file is copied to a temp location
 	tmpDir := t.TempDir()
@@ -643,6 +666,7 @@ clean:
 }
 
 func TestMutualExclusivityFlags(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		args        []string
@@ -665,6 +689,7 @@ func TestMutualExclusivityFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			cmd := NewRootCmd()
 			cmd.SetArgs(tt.args)
 
@@ -682,6 +707,7 @@ func TestMutualExclusivityFlags(t *testing.T) {
 }
 
 func TestRemoveHelpFlagRestrictions(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		args           []string
@@ -762,6 +788,7 @@ func TestRemoveHelpFlagRestrictions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			cmd := NewRootCmd()
 			cmd.SetArgs(tt.args)
 
@@ -784,6 +811,7 @@ func TestRemoveHelpFlagRestrictions(t *testing.T) {
 }
 
 func TestNewFlags(t *testing.T) {
+	t.Parallel()
 	cmd := NewRootCmd()
 
 	// Check that current flags are registered
@@ -889,6 +917,7 @@ all:
 }
 
 func TestDryRunFlagValidation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		args           []string
@@ -917,6 +946,7 @@ func TestDryRunFlagValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			cmd := NewRootCmd()
 			cmd.SetArgs(tt.args)
 
@@ -932,6 +962,7 @@ func TestDryRunFlagValidation(t *testing.T) {
 }
 
 func TestDryRunFlag(t *testing.T) {
+	t.Parallel()
 	cmd := NewRootCmd()
 
 	// Check that dry-run flag is registered
@@ -1010,6 +1041,7 @@ func TestTargetRequiresStdout(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			cmd := NewRootCmd()
 			cmd.SetArgs(tt.args)
 
@@ -1025,6 +1057,7 @@ func TestTargetRequiresStdout(t *testing.T) {
 }
 
 func TestGetDefaultOutput(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		format   string
 		expected string
@@ -1061,6 +1094,7 @@ func TestGetDefaultOutput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.format, func(t *testing.T) {
+			t.Parallel()
 			result := getDefaultOutput(tt.format)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -1068,6 +1102,7 @@ func TestGetDefaultOutput(t *testing.T) {
 }
 
 func TestFormatFlagUsage(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		setup    func() *pflag.Flag
@@ -1131,6 +1166,7 @@ func TestFormatFlagUsage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			flag := tt.setup()
 			result := formatFlagUsage(flag)
 
@@ -1142,6 +1178,7 @@ func TestFormatFlagUsage(t *testing.T) {
 }
 
 func TestShouldShowDefault(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		setup    func() *pflag.Flag
@@ -1205,6 +1242,7 @@ func TestShouldShowDefault(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			flag := tt.setup()
 			result := shouldShowDefault(flag)
 			assert.Equal(t, tt.expected, result)
@@ -1213,6 +1251,7 @@ func TestShouldShowDefault(t *testing.T) {
 }
 
 func TestFlagGroupsFunc(t *testing.T) {
+	t.Parallel()
 	cmd := NewRootCmd()
 
 	// Call flagGroupsFunc to exercise the function

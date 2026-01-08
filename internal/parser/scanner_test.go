@@ -10,6 +10,7 @@ import (
 )
 
 func TestNewScanner(t *testing.T) {
+	t.Parallel()
 	scanner := NewScanner()
 	assert.NotNil(t, scanner)
 	assert.Empty(t, scanner.pendingDocs)
@@ -17,6 +18,7 @@ func TestNewScanner(t *testing.T) {
 }
 
 func TestScanContent_FileDirective(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		content  string
@@ -59,6 +61,7 @@ build:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -74,6 +77,7 @@ build:
 }
 
 func TestScanContent_CategoryDirective(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		content  string
@@ -123,6 +127,7 @@ deploy:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -137,6 +142,7 @@ deploy:
 }
 
 func TestScanContent_VarDirective(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		content  string
@@ -170,6 +176,7 @@ serve:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -183,6 +190,7 @@ serve:
 }
 
 func TestScanContent_AliasDirective(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		content  string
@@ -214,6 +222,7 @@ build:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -227,6 +236,7 @@ build:
 }
 
 func TestScanContent_NotAliasDirective(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		content  string
@@ -254,6 +264,7 @@ build:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -267,6 +278,7 @@ build:
 }
 
 func TestScanContent_RegularDocumentation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		content  string
@@ -298,6 +310,7 @@ build:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -311,6 +324,7 @@ build:
 }
 
 func TestScanContent_TargetDetection(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		content   string
@@ -366,6 +380,7 @@ test:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -375,6 +390,7 @@ test:
 }
 
 func TestScanContent_PendingDocsAssociation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		content      string
@@ -423,6 +439,7 @@ build:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -432,6 +449,7 @@ build:
 }
 
 func TestScanContent_RecipeLinesSkipped(t *testing.T) {
+	t.Parallel()
 	content := `## Build the project
 build:
 	go build
@@ -456,6 +474,7 @@ clean:
 }
 
 func TestScanContent_ComplexMakefile(t *testing.T) {
+	t.Parallel()
 	content := `## !file
 ## Main build file for the project
 
@@ -513,6 +532,7 @@ deploy:
 }
 
 func TestScanContent_EmptyContent(t *testing.T) {
+	t.Parallel()
 	scanner := NewScanner()
 	result, err := scanner.ScanContent("", "test.mk")
 	require.NoError(t, err)
@@ -521,6 +541,7 @@ func TestScanContent_EmptyContent(t *testing.T) {
 }
 
 func TestScanContent_NoDocumentation(t *testing.T) {
+	t.Parallel()
 	content := `build:
 	go build
 
@@ -537,6 +558,7 @@ test:
 }
 
 func TestScanContent_OnlyDocumentation(t *testing.T) {
+	t.Parallel()
 	content := `## !file
 ## This is a documentation-only file
 ## With multiple lines`
@@ -551,6 +573,7 @@ func TestScanContent_OnlyDocumentation(t *testing.T) {
 }
 
 func TestScanFile_FileNotFound(t *testing.T) {
+	t.Parallel()
 	scanner := NewScanner()
 	_, err := scanner.ScanFile("/nonexistent/file.mk")
 	assert.Error(t, err)
@@ -558,6 +581,7 @@ func TestScanFile_FileNotFound(t *testing.T) {
 }
 
 func TestScanContent_SourceFileTracking(t *testing.T) {
+	t.Parallel()
 	content := `## !category Build
 ## Build the project
 build:
@@ -577,6 +601,7 @@ build:
 }
 
 func TestScanContent_LineNumberTracking(t *testing.T) {
+	t.Parallel()
 	content := `## Line 1
 ## Line 2
 build:
@@ -600,6 +625,7 @@ test:
 }
 
 func TestScanContent_StatePersistenceAcrossScans(t *testing.T) {
+	t.Parallel()
 	scanner := NewScanner()
 
 	// First scan
@@ -627,6 +653,7 @@ test:
 // TestScanContent_UnicodeHandling tests that the parser handles non-ASCII characters correctly
 // in target names, documentation, and directives.
 func TestScanContent_UnicodeHandling(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		content  string
@@ -697,6 +724,7 @@ install:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -712,6 +740,7 @@ install:
 
 // TestScanContent_LargeFiles tests the parser's ability to handle files with many targets.
 func TestScanContent_LargeFiles(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		numTargets     int
@@ -740,6 +769,7 @@ func TestScanContent_LargeFiles(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Generate content with many targets
 			var builder strings.Builder
 			for i := 1; i <= tt.numTargets; i++ {
@@ -765,6 +795,7 @@ func TestScanContent_LargeFiles(t *testing.T) {
 
 // TestScanContent_LargeFileWithCategories tests large files with category organization.
 func TestScanContent_LargeFileWithCategories(t *testing.T) {
+	t.Parallel()
 	// Generate 200 targets across 10 categories
 	var builder strings.Builder
 	numCategories := 10
@@ -803,6 +834,7 @@ func TestScanContent_LargeFileWithCategories(t *testing.T) {
 // Note: The scanner splits on \n only. Directive values use TrimSpace (removes \r),
 // but regular doc lines preserve \r characters. This tests the current behavior.
 func TestScanContent_MixedLineEndings(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		content  string
@@ -860,6 +892,7 @@ func TestScanContent_MixedLineEndings(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -877,6 +910,7 @@ func TestScanContent_MixedLineEndings(t *testing.T) {
 
 // TestScanContent_MalformedDirectives tests behavior with incomplete or malformed directives.
 func TestScanContent_MalformedDirectives(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		content  string
@@ -1009,6 +1043,7 @@ build:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -1024,6 +1059,7 @@ build:
 
 // TestScanContent_EdgeCaseTargetNames tests unusual but valid target name formats.
 func TestScanContent_EdgeCaseTargetNames(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		content string
@@ -1068,6 +1104,7 @@ build_go_binary:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)
@@ -1078,6 +1115,7 @@ build_go_binary:
 
 // TestScanContent_EdgeCaseWhitespace tests handling of unusual whitespace patterns.
 func TestScanContent_EdgeCaseWhitespace(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		content  string
@@ -1111,6 +1149,7 @@ func TestScanContent_EdgeCaseWhitespace(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := NewScanner()
 			result, err := scanner.ScanContent(tt.content, "test.mk")
 			require.NoError(t, err)

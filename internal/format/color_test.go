@@ -7,6 +7,7 @@ import (
 )
 
 func TestNewColorScheme_WithColors(t *testing.T) {
+	t.Parallel()
 	scheme := NewColorScheme(true)
 
 	assert.NotEmpty(t, scheme.CategoryName, "CategoryName should have color code")
@@ -26,6 +27,7 @@ func TestNewColorScheme_WithColors(t *testing.T) {
 }
 
 func TestNewColorScheme_WithoutColors(t *testing.T) {
+	t.Parallel()
 	scheme := NewColorScheme(false)
 
 	assert.Empty(t, scheme.CategoryName, "CategoryName should be empty")

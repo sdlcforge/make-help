@@ -10,6 +10,7 @@ import (
 
 // TestTextFormatter_RenderHelp_EmptyModel tests rendering an empty help model
 func TestTextFormatter_RenderHelp_EmptyModel(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{}
 
@@ -31,6 +32,7 @@ func TestTextFormatter_RenderHelp_EmptyModel(t *testing.T) {
 
 // TestTextFormatter_RenderHelp_WithTargets tests rendering with basic targets
 func TestTextFormatter_RenderHelp_WithTargets(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -71,6 +73,7 @@ func TestTextFormatter_RenderHelp_WithTargets(t *testing.T) {
 
 // TestTextFormatter_RenderHelp_WithCategories tests rendering with categories
 func TestTextFormatter_RenderHelp_WithCategories(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		HasCategories: true,
@@ -114,6 +117,7 @@ func TestTextFormatter_RenderHelp_WithCategories(t *testing.T) {
 
 // TestTextFormatter_RenderHelp_WithColors tests ANSI color codes
 func TestTextFormatter_RenderHelp_WithColors(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: true})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -155,6 +159,7 @@ func TestTextFormatter_RenderHelp_WithColors(t *testing.T) {
 
 // TestTextFormatter_RenderHelp_NoColors tests plain text output
 func TestTextFormatter_RenderHelp_NoColors(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -187,6 +192,7 @@ func TestTextFormatter_RenderHelp_NoColors(t *testing.T) {
 
 // TestTextFormatter_RenderDetailedTarget tests detailed target rendering
 func TestTextFormatter_RenderDetailedTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: false})
 	target := &model.Target{
 		Name:    "build",
@@ -234,6 +240,7 @@ func TestTextFormatter_RenderDetailedTarget(t *testing.T) {
 
 // TestTextFormatter_RenderBasicTarget tests basic target rendering
 func TestTextFormatter_RenderBasicTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: false})
 
 	var buf bytes.Buffer
@@ -257,6 +264,7 @@ func TestTextFormatter_RenderBasicTarget(t *testing.T) {
 
 // TestTextFormatter_ContentType tests content type
 func TestTextFormatter_ContentType(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{})
 
 	contentType := formatter.ContentType()
@@ -267,6 +275,7 @@ func TestTextFormatter_ContentType(t *testing.T) {
 
 // TestTextFormatter_DefaultExtension tests default extension
 func TestTextFormatter_DefaultExtension(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{})
 
 	ext := formatter.DefaultExtension()
@@ -277,6 +286,7 @@ func TestTextFormatter_DefaultExtension(t *testing.T) {
 
 // TestTextFormatter_WithFileDocumentation tests file documentation rendering
 func TestTextFormatter_WithFileDocumentation(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -307,6 +317,7 @@ func TestTextFormatter_WithFileDocumentation(t *testing.T) {
 
 // TestTextFormatter_WithIncludedFiles tests included files rendering
 func TestTextFormatter_WithIncludedFiles(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -347,6 +358,7 @@ func TestTextFormatter_WithIncludedFiles(t *testing.T) {
 
 // TestTextFormatter_WithVariables tests target variables rendering
 func TestTextFormatter_WithVariables(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -381,6 +393,7 @@ func TestTextFormatter_WithVariables(t *testing.T) {
 
 // TestTextFormatter_WithAliases tests target aliases rendering
 func TestTextFormatter_WithAliases(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -412,6 +425,7 @@ func TestTextFormatter_WithAliases(t *testing.T) {
 
 // TestTextFormatter_ComplexModel tests a complex help model
 func TestTextFormatter_ComplexModel(t *testing.T) {
+	t.Parallel()
 	formatter := NewTextFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{

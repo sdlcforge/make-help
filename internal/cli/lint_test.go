@@ -10,6 +10,7 @@ import (
 )
 
 func TestRunLint_Success(t *testing.T) {
+	t.Parallel()
 	// Create a well-formed Makefile with proper punctuation
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -37,6 +38,7 @@ build:
 }
 
 func TestRunLint_WithWarnings(t *testing.T) {
+	t.Parallel()
 	// Create a Makefile with lint issues (e.g., undocumented .PHONY target)
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -64,6 +66,7 @@ undocumented:
 }
 
 func TestRunLint_Verbose(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -90,6 +93,7 @@ build:
 }
 
 func TestRunLint_InvalidMakefile(t *testing.T) {
+	t.Parallel()
 	config := NewConfig()
 	config.MakefilePath = "/nonexistent/Makefile"
 	config.Lint = true
@@ -99,6 +103,7 @@ func TestRunLint_InvalidMakefile(t *testing.T) {
 }
 
 func TestRunLint_WithFix(t *testing.T) {
+	t.Parallel()
 	// Create a Makefile with fixable issues
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -126,6 +131,7 @@ build:
 }
 
 func TestRunLint_WithFixDryRun(t *testing.T) {
+	t.Parallel()
 	// Create a Makefile with fixable issues
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")

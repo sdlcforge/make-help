@@ -7,6 +7,7 @@ import (
 )
 
 func TestParseCommandLineFromHelpFile(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		cmdLine     string
@@ -157,6 +158,7 @@ func TestParseCommandLineFromHelpFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			config := NewConfig()
 			err := ParseCommandLineFromHelpFile(tt.cmdLine, config)
 

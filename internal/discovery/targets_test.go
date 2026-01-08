@@ -7,6 +7,7 @@ import (
 )
 
 func TestParseTargetsFromDatabase_PhonyStatus(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name             string
 		input            string
@@ -145,6 +146,7 @@ clean:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parseTargetsFromDatabase(tt.input)
 
 			assert.Equal(t, tt.expectedTargets, result.Targets, "targets mismatch")
@@ -154,6 +156,7 @@ clean:
 }
 
 func TestParseTargetsFromDatabase_ReturnStruct(t *testing.T) {
+	t.Parallel()
 	input := `# Make database
 .PHONY: clean
 build:

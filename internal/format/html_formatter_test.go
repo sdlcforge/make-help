@@ -10,6 +10,7 @@ import (
 
 // TestHTMLFormatter_RenderHelp_EmptyModel tests rendering an empty help model
 func TestHTMLFormatter_RenderHelp_EmptyModel(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{}
 
@@ -37,6 +38,7 @@ func TestHTMLFormatter_RenderHelp_EmptyModel(t *testing.T) {
 
 // TestHTMLFormatter_RenderHelp_WithTargets tests rendering with basic targets
 func TestHTMLFormatter_RenderHelp_WithTargets(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -80,6 +82,7 @@ func TestHTMLFormatter_RenderHelp_WithTargets(t *testing.T) {
 
 // TestHTMLFormatter_RenderHelp_WithCategories tests rendering with categories
 func TestHTMLFormatter_RenderHelp_WithCategories(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		HasCategories: true,
@@ -123,6 +126,7 @@ func TestHTMLFormatter_RenderHelp_WithCategories(t *testing.T) {
 
 // TestHTMLFormatter_RenderHelp_WithCSS tests CSS embedding
 func TestHTMLFormatter_RenderHelp_WithCSS(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: true})
 	helpModel := &model.HelpModel{}
 
@@ -144,6 +148,7 @@ func TestHTMLFormatter_RenderHelp_WithCSS(t *testing.T) {
 
 // TestHTMLFormatter_RenderHelp_WithoutCSS tests no CSS embedding when color disabled
 func TestHTMLFormatter_RenderHelp_WithoutCSS(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{}
 
@@ -162,6 +167,7 @@ func TestHTMLFormatter_RenderHelp_WithoutCSS(t *testing.T) {
 
 // TestHTMLFormatter_RenderHelp_HTMLEscaping tests proper HTML escaping
 func TestHTMLFormatter_RenderHelp_HTMLEscaping(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -206,6 +212,7 @@ func TestHTMLFormatter_RenderHelp_HTMLEscaping(t *testing.T) {
 
 // TestHTMLFormatter_RenderHelp_WithFileDocumentation tests file documentation rendering
 func TestHTMLFormatter_RenderHelp_WithFileDocumentation(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -239,6 +246,7 @@ func TestHTMLFormatter_RenderHelp_WithFileDocumentation(t *testing.T) {
 
 // TestHTMLFormatter_RenderHelp_WithIncludedFiles tests included files rendering
 func TestHTMLFormatter_RenderHelp_WithIncludedFiles(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -278,6 +286,7 @@ func TestHTMLFormatter_RenderHelp_WithIncludedFiles(t *testing.T) {
 
 // TestHTMLFormatter_RenderHelp_WithVariables tests target variables rendering
 func TestHTMLFormatter_RenderHelp_WithVariables(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -318,6 +327,7 @@ func TestHTMLFormatter_RenderHelp_WithVariables(t *testing.T) {
 
 // TestHTMLFormatter_RenderHelp_WithAliases tests target aliases rendering
 func TestHTMLFormatter_RenderHelp_WithAliases(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -352,6 +362,7 @@ func TestHTMLFormatter_RenderHelp_WithAliases(t *testing.T) {
 
 // TestHTMLFormatter_RenderHelp_WithRichText tests RichText rendering
 func TestHTMLFormatter_RenderHelp_WithRichText(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -391,6 +402,7 @@ func TestHTMLFormatter_RenderHelp_WithRichText(t *testing.T) {
 
 // TestHTMLFormatter_RenderDetailedTarget tests detailed target rendering
 func TestHTMLFormatter_RenderDetailedTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	target := &model.Target{
 		Name:    "build",
@@ -444,6 +456,7 @@ func TestHTMLFormatter_RenderDetailedTarget(t *testing.T) {
 
 // TestHTMLFormatter_RenderBasicTarget tests basic target rendering
 func TestHTMLFormatter_RenderBasicTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 
 	var buf bytes.Buffer
@@ -467,6 +480,7 @@ func TestHTMLFormatter_RenderBasicTarget(t *testing.T) {
 
 // TestHTMLFormatter_ContentType tests content type
 func TestHTMLFormatter_ContentType(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{})
 
 	contentType := formatter.ContentType()
@@ -477,6 +491,7 @@ func TestHTMLFormatter_ContentType(t *testing.T) {
 
 // TestHTMLFormatter_DefaultExtension tests default extension
 func TestHTMLFormatter_DefaultExtension(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{})
 
 	ext := formatter.DefaultExtension()
@@ -487,6 +502,7 @@ func TestHTMLFormatter_DefaultExtension(t *testing.T) {
 
 // TestHTMLFormatter_NilModel tests error handling for nil model
 func TestHTMLFormatter_NilModel(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{})
 
 	var buf bytes.Buffer
@@ -502,6 +518,7 @@ func TestHTMLFormatter_NilModel(t *testing.T) {
 
 // TestHTMLFormatter_NilTarget tests error handling for nil target
 func TestHTMLFormatter_NilTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{})
 
 	var buf bytes.Buffer
@@ -517,6 +534,7 @@ func TestHTMLFormatter_NilTarget(t *testing.T) {
 
 // TestIsValidURL tests URL scheme validation
 func TestIsValidURL(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		url      string
@@ -559,6 +577,7 @@ func TestIsValidURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+		t.Parallel()
 			result := isValidURL(tt.url)
 			if result != tt.expected {
 				t.Errorf("isValidURL(%q) = %v, want %v", tt.url, result, tt.expected)
@@ -569,6 +588,7 @@ func TestIsValidURL(t *testing.T) {
 
 // TestHTMLFormatter_UnsafeURLsRenderedAsPlainText tests that unsafe URLs are not rendered as links
 func TestHTMLFormatter_UnsafeURLsRenderedAsPlainText(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -611,6 +631,7 @@ func TestHTMLFormatter_UnsafeURLsRenderedAsPlainText(t *testing.T) {
 
 // TestHTMLFormatter_SafeURLsRenderedAsLinks tests that safe URLs are rendered as links
 func TestHTMLFormatter_SafeURLsRenderedAsLinks(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -647,6 +668,7 @@ func TestHTMLFormatter_SafeURLsRenderedAsLinks(t *testing.T) {
 
 // TestHTMLFormatter_MixedURLs tests rendering with both safe and unsafe URLs
 func TestHTMLFormatter_MixedURLs(t *testing.T) {
+	t.Parallel()
 	formatter := NewHTMLFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{

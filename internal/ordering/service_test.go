@@ -49,6 +49,7 @@ func createTestModel() *model.HelpModel {
 }
 
 func TestNewService(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, false, false, []string{})
 
 	assert.NotNil(t, service)
@@ -56,6 +57,7 @@ func TestNewService(t *testing.T) {
 }
 
 func TestApplyOrdering_DefaultAlphabeticalCategories(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, false, false, []string{})
 	helpModel := createTestModel()
 
@@ -69,6 +71,7 @@ func TestApplyOrdering_DefaultAlphabeticalCategories(t *testing.T) {
 }
 
 func TestApplyOrdering_DefaultAlphabeticalTargets(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, false, false, []string{})
 	helpModel := createTestModel()
 
@@ -86,6 +89,7 @@ func TestApplyOrdering_DefaultAlphabeticalTargets(t *testing.T) {
 }
 
 func TestApplyOrdering_KeepOrderCategories(t *testing.T) {
+	t.Parallel()
 	service := NewService(true, false, false, []string{})
 	helpModel := createTestModel()
 
@@ -99,6 +103,7 @@ func TestApplyOrdering_KeepOrderCategories(t *testing.T) {
 }
 
 func TestApplyOrdering_KeepOrderTargets(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, true, false, []string{})
 	helpModel := createTestModel()
 
@@ -116,6 +121,7 @@ func TestApplyOrdering_KeepOrderTargets(t *testing.T) {
 }
 
 func TestApplyOrdering_KeepOrderBoth(t *testing.T) {
+	t.Parallel()
 	service := NewService(true, true, false, []string{})
 	helpModel := createTestModel()
 
@@ -137,6 +143,7 @@ func TestApplyOrdering_KeepOrderBoth(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, false, false, []string{"Development", "CI"})
 	helpModel := createTestModel()
 
@@ -150,6 +157,7 @@ func TestApplyOrdering_ExplicitCategoryOrder(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder_AllSpecified(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, false, false, []string{"CI", "Development", "Deployment"})
 	helpModel := createTestModel()
 
@@ -162,6 +170,7 @@ func TestApplyOrdering_ExplicitCategoryOrder_AllSpecified(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder_UnknownCategory(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, false, false, []string{"Development", "NonExistent", "CI"})
 	helpModel := createTestModel()
 
@@ -177,6 +186,7 @@ func TestApplyOrdering_ExplicitCategoryOrder_UnknownCategory(t *testing.T) {
 }
 
 func TestApplyOrdering_ExplicitCategoryOrder_WithKeepOrderTargets(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, true, false, []string{"Deployment"})
 	helpModel := createTestModel()
 
@@ -192,6 +202,7 @@ func TestApplyOrdering_ExplicitCategoryOrder_WithKeepOrderTargets(t *testing.T) 
 }
 
 func TestApplyOrdering_EmptyModel(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, false, false, []string{})
 	helpModel := &model.HelpModel{
 		Categories:    []model.Category{},
@@ -205,6 +216,7 @@ func TestApplyOrdering_EmptyModel(t *testing.T) {
 }
 
 func TestApplyOrdering_SingleCategory(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, false, false, []string{})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -230,6 +242,7 @@ func TestApplyOrdering_SingleCategory(t *testing.T) {
 }
 
 func TestSortCategoriesAlphabetically(t *testing.T) {
+	t.Parallel()
 	categories := []model.Category{
 		{Name: "Zebra"},
 		{Name: "apple"},
@@ -244,6 +257,7 @@ func TestSortCategoriesAlphabetically(t *testing.T) {
 }
 
 func TestSortCategoriesByDiscoveryOrder(t *testing.T) {
+	t.Parallel()
 	categories := []model.Category{
 		{Name: "Third", DiscoveryOrder: 3},
 		{Name: "First", DiscoveryOrder: 1},
@@ -258,6 +272,7 @@ func TestSortCategoriesByDiscoveryOrder(t *testing.T) {
 }
 
 func TestSortTargetsAlphabetically(t *testing.T) {
+	t.Parallel()
 	targets := []model.Target{
 		{Name: "zebra"},
 		{Name: "Apple"},
@@ -272,6 +287,7 @@ func TestSortTargetsAlphabetically(t *testing.T) {
 }
 
 func TestSortTargetsByDiscoveryOrder(t *testing.T) {
+	t.Parallel()
 	targets := []model.Target{
 		{Name: "third", DiscoveryOrder: 3},
 		{Name: "first", DiscoveryOrder: 1},
@@ -286,6 +302,7 @@ func TestSortTargetsByDiscoveryOrder(t *testing.T) {
 }
 
 func TestApplyExplicitCategoryOrder_PartialOrder(t *testing.T) {
+	t.Parallel()
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
 			{Name: "E"},
@@ -311,6 +328,7 @@ func TestApplyExplicitCategoryOrder_PartialOrder(t *testing.T) {
 }
 
 func TestApplyExplicitCategoryOrder_DuplicatesInOrder(t *testing.T) {
+	t.Parallel()
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
 			{Name: "A"},
@@ -331,6 +349,7 @@ func TestApplyExplicitCategoryOrder_DuplicatesInOrder(t *testing.T) {
 }
 
 func TestService_String(t *testing.T) {
+	t.Parallel()
 	service := NewService(true, false, false, []string{"Build", "Deploy"})
 
 	result := service.String()
@@ -340,6 +359,7 @@ func TestService_String(t *testing.T) {
 }
 
 func TestApplyOrdering_CaseInsensitiveSorting(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, false, false, []string{})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -368,6 +388,7 @@ func TestApplyOrdering_CaseInsensitiveSorting(t *testing.T) {
 }
 
 func TestApplyOrdering_PreservesOtherFields(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, false, false, []string{})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -422,6 +443,7 @@ func TestApplyOrdering_PreservesOtherFields(t *testing.T) {
 }
 
 func TestApplyOrdering_KeepOrderFiles(t *testing.T) {
+	t.Parallel()
 	service := NewService(false, false, true, []string{})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -460,6 +482,7 @@ func TestApplyOrdering_KeepOrderFiles(t *testing.T) {
 }
 
 func TestSortFilesAlphabetically_EntryPointFirst(t *testing.T) {
+	t.Parallel()
 	files := []model.FileDoc{
 		{
 			SourceFile:     "make/zulu.mk",

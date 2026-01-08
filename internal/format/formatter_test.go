@@ -7,6 +7,7 @@ import (
 
 // TestNewFormatter tests the formatter factory function
 func TestNewFormatter(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		formatType  string
@@ -74,6 +75,7 @@ func TestNewFormatter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			formatter, err := NewFormatter(tt.formatType, config)
 
 			if tt.wantErr {
@@ -128,6 +130,7 @@ func TestNewFormatter(t *testing.T) {
 
 // TestFormatterInterface verifies that all formatters implement the Formatter interface
 func TestFormatterInterface(t *testing.T) {
+	t.Parallel()
 	config := &FormatterConfig{UseColor: false}
 
 	// Test that each formatter implements the interface
@@ -157,6 +160,7 @@ func TestFormatterInterface(t *testing.T) {
 
 // TestFormatterContentTypes verifies content types for each formatter
 func TestFormatterContentTypes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		formatter   Formatter
@@ -197,6 +201,7 @@ func TestFormatterContentTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := tt.formatter.ContentType(); got != tt.wantContent {
 				t.Errorf("ContentType() = %q, want %q", got, tt.wantContent)
 			}
@@ -209,7 +214,9 @@ func TestFormatterContentTypes(t *testing.T) {
 
 // TestFormatterNilConfig verifies that NewMakeFormatter and NewTextFormatter handle nil config
 func TestFormatterNilConfig(t *testing.T) {
+	t.Parallel()
 	t.Run("NewMakeFormatter with nil config", func(t *testing.T) {
+		t.Parallel()
 		formatter := NewMakeFormatter(nil)
 		if formatter == nil {
 			t.Error("NewMakeFormatter(nil) should not return nil")
@@ -217,6 +224,7 @@ func TestFormatterNilConfig(t *testing.T) {
 	})
 
 	t.Run("NewTextFormatter with nil config", func(t *testing.T) {
+		t.Parallel()
 		formatter := NewTextFormatter(nil)
 		if formatter == nil {
 			t.Error("NewTextFormatter(nil) should not return nil")
@@ -224,6 +232,7 @@ func TestFormatterNilConfig(t *testing.T) {
 	})
 
 	t.Run("NewHTMLFormatter with nil config", func(t *testing.T) {
+		t.Parallel()
 		formatter := NewHTMLFormatter(nil)
 		if formatter == nil {
 			t.Error("NewHTMLFormatter(nil) should not return nil")
@@ -231,6 +240,7 @@ func TestFormatterNilConfig(t *testing.T) {
 	})
 
 	t.Run("NewMarkdownFormatter with nil config", func(t *testing.T) {
+		t.Parallel()
 		formatter := NewMarkdownFormatter(nil)
 		if formatter == nil {
 			t.Error("NewMarkdownFormatter(nil) should not return nil")
@@ -238,6 +248,7 @@ func TestFormatterNilConfig(t *testing.T) {
 	})
 
 	t.Run("NewJSONFormatter with nil config", func(t *testing.T) {
+		t.Parallel()
 		formatter := NewJSONFormatter(nil)
 		if formatter == nil {
 			t.Error("NewJSONFormatter(nil) should not return nil")
@@ -247,6 +258,7 @@ func TestFormatterNilConfig(t *testing.T) {
 
 // TestFormatterConfigValidate tests the FormatterConfig Validate method
 func TestFormatterConfigValidate(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		config *FormatterConfig
@@ -279,6 +291,7 @@ func TestFormatterConfigValidate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := tt.config.Validate()
 			if err != nil {
 				t.Errorf("Validate() unexpected error = %v", err)
@@ -290,6 +303,7 @@ func TestFormatterConfigValidate(t *testing.T) {
 // TestNewFormatterWithUseColorNilScheme tests that NewFormatter accepts UseColor=true with nil ColorScheme
 // (formatters create default color schemes, so this is valid)
 func TestNewFormatterWithUseColorNilScheme(t *testing.T) {
+	t.Parallel()
 	config := &FormatterConfig{
 		UseColor:    true,
 		ColorScheme: nil,
@@ -299,6 +313,7 @@ func TestNewFormatterWithUseColorNilScheme(t *testing.T) {
 
 	for _, formatType := range formatTypes {
 		t.Run("NewFormatter "+formatType+" with UseColor and nil ColorScheme", func(t *testing.T) {
+			t.Parallel()
 			formatter, err := NewFormatter(formatType, config)
 
 			if err != nil {
@@ -315,6 +330,7 @@ func TestNewFormatterWithUseColorNilScheme(t *testing.T) {
 
 // TestFormatterErrorMessages verifies that error messages include the formatter name
 func TestFormatterErrorMessages(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		formatter      Formatter
@@ -349,6 +365,7 @@ func TestFormatterErrorMessages(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name+" RenderHelp nil model", func(t *testing.T) {
+			t.Parallel()
 			err := tt.formatter.RenderHelp(nil, nil)
 			if err == nil {
 				t.Error("RenderHelp(nil, nil) should return error")
@@ -363,6 +380,7 @@ func TestFormatterErrorMessages(t *testing.T) {
 		})
 
 		t.Run(tt.name+" RenderDetailedTarget nil target", func(t *testing.T) {
+			t.Parallel()
 			err := tt.formatter.RenderDetailedTarget(nil, nil)
 			if err == nil {
 				t.Error("RenderDetailedTarget(nil, nil) should return error")

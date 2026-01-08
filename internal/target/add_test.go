@@ -40,6 +40,7 @@ func (m *MockExecutor) ExecuteContext(ctx context.Context, cmd string, args ...s
 }
 
 func TestAddService_AddTarget_CreateHelpMk(t *testing.T) {
+	t.Parallel()
 	// Setup
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -92,6 +93,7 @@ test:
 }
 
 func TestAddService_AddTarget_CreateMakeDirectory(t *testing.T) {
+	t.Parallel()
 	// Setup
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -147,6 +149,7 @@ all:
 }
 
 func TestAddService_AddTarget_ExplicitTargetFile(t *testing.T) {
+	t.Parallel()
 	// Setup
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -189,6 +192,7 @@ func TestAddService_AddTarget_ExplicitTargetFile(t *testing.T) {
 }
 
 func TestAddService_AddTarget_FlagPassThrough(t *testing.T) {
+	t.Parallel()
 	// NOTE: This test is skipped because AddService uses the deprecated generateHelpTarget
 	// placeholder. Flag pass-through is tested via CLI integration tests in
 	// create_help_target_test.go which exercises the full generator pipeline.
@@ -235,6 +239,7 @@ func TestAddService_AddTarget_FlagPassThrough(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Create mock executor
 			executor := NewMockExecutor()
 			executor.outputs["make -n -f "+makefilePath] = ""
@@ -259,6 +264,7 @@ func TestAddService_AddTarget_FlagPassThrough(t *testing.T) {
 }
 
 func TestAddService_ValidateMakefile_SyntaxError(t *testing.T) {
+	t.Parallel()
 	// Setup
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -286,6 +292,7 @@ func TestAddService_ValidateMakefile_SyntaxError(t *testing.T) {
 }
 
 func TestAddService_VerboseOutput(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 	targetFileRelPath := "custom.mk" // Relative path
@@ -310,6 +317,7 @@ func TestAddService_VerboseOutput(t *testing.T) {
 }
 
 func TestAddService_DetermineTargetFileReadError(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -329,6 +337,7 @@ func TestAddService_DetermineTargetFileReadError(t *testing.T) {
 }
 
 func TestDetermineTargetFile(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name              string
 		makefileContent   string
@@ -375,6 +384,7 @@ func TestDetermineTargetFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tmpDir := t.TempDir()
 			makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -402,6 +412,7 @@ func TestDetermineTargetFile(t *testing.T) {
 }
 
 func TestDetermineTargetFile_NumberedFiles(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name            string
 		makefileContent string
@@ -462,6 +473,7 @@ func TestDetermineTargetFile_NumberedFiles(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tmpDir := t.TempDir()
 			makefilePath := filepath.Join(tmpDir, "Makefile")
 			makeDir := filepath.Join(tmpDir, "make")

@@ -4,6 +4,7 @@ import "testing"
 
 // TestEscapeForMakefileEcho tests the escapeForMakefileEcho function with all special characters
 func TestEscapeForMakefileEcho(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -78,6 +79,7 @@ func TestEscapeForMakefileEcho(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+		t.Parallel()
 			result := escapeForMakefileEcho(tt.input)
 			if result != tt.expected {
 				t.Errorf("escapeForMakefileEcho(%q) = %q, want %q", tt.input, result, tt.expected)
@@ -88,6 +90,7 @@ func TestEscapeForMakefileEcho(t *testing.T) {
 
 // TestEscapeForMakefileEcho_SecurityCases tests specific security-related escape scenarios
 func TestEscapeForMakefileEcho_SecurityCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		input       string
@@ -122,6 +125,7 @@ func TestEscapeForMakefileEcho_SecurityCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+		t.Parallel()
 			result := escapeForMakefileEcho(tt.input)
 
 			// Verify no raw special characters remain

@@ -10,6 +10,7 @@ import (
 )
 
 func TestRemoveService_RemoveTarget_InlineTarget(t *testing.T) {
+	t.Parallel()
 	// Setup
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -59,6 +60,7 @@ test:
 }
 
 func TestRemoveService_RemoveTarget_IncludeDirective(t *testing.T) {
+	t.Parallel()
 	// Setup
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -119,6 +121,7 @@ help:
 }
 
 func TestRemoveService_RemoveTarget_BothInlineAndInclude(t *testing.T) {
+	t.Parallel()
 	// Setup
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -170,6 +173,7 @@ test:
 }
 
 func TestRemoveService_RemoveTarget_NoHelpTarget(t *testing.T) {
+	t.Parallel()
 	// Setup
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -207,6 +211,7 @@ test:
 }
 
 func TestRemoveService_RemoveIncludeDirectives(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		input          string
@@ -302,6 +307,7 @@ all:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tmpDir := t.TempDir()
 			makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -324,6 +330,7 @@ all:
 }
 
 func TestRemoveService_RemoveInlineHelpTarget(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		input        string
@@ -386,6 +393,7 @@ test:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tmpDir := t.TempDir()
 			makefilePath := filepath.Join(tmpDir, "Makefile")
 
@@ -408,6 +416,7 @@ test:
 }
 
 func TestRemoveService_RemoveHelpTargetFiles(t *testing.T) {
+	t.Parallel()
 	// Setup with help file
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -438,6 +447,7 @@ func TestRemoveService_RemoveHelpTargetFiles(t *testing.T) {
 }
 
 func TestRemoveService_RemoveHelpTargetFiles_NoFile(t *testing.T) {
+	t.Parallel()
 	// Setup without help file
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
@@ -456,6 +466,7 @@ func TestRemoveService_RemoveHelpTargetFiles_NoFile(t *testing.T) {
 }
 
 func TestRemoveService_ValidateMakefile_SyntaxError(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	makefilePath := filepath.Join(tmpDir, "Makefile")
 

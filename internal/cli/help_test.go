@@ -10,6 +10,7 @@ import (
 )
 
 func TestRunDetailedHelp_DocumentedTarget(t *testing.T) {
+	t.Parallel()
 	// Use the with_undocumented.mk fixture which has the "build" target with full docs
 	fixturePath := filepath.Join("..", "..", "test", "fixtures", "makefiles", "with_undocumented.mk")
 	absPath, err := filepath.Abs(fixturePath)
@@ -32,6 +33,7 @@ func TestRunDetailedHelp_DocumentedTarget(t *testing.T) {
 }
 
 func TestRunDetailedHelp_UndocumentedTarget(t *testing.T) {
+	t.Parallel()
 	// Use the with_undocumented.mk fixture which has an "undocumented" target
 	fixturePath := filepath.Join("..", "..", "test", "fixtures", "makefiles", "with_undocumented.mk")
 	absPath, err := filepath.Abs(fixturePath)
@@ -50,6 +52,7 @@ func TestRunDetailedHelp_UndocumentedTarget(t *testing.T) {
 }
 
 func TestRunDetailedHelp_NonexistentTarget(t *testing.T) {
+	t.Parallel()
 	// Use any valid Makefile
 	fixturePath := filepath.Join("..", "..", "test", "fixtures", "makefiles", "basic.mk")
 	absPath, err := filepath.Abs(fixturePath)
@@ -67,6 +70,7 @@ func TestRunDetailedHelp_NonexistentTarget(t *testing.T) {
 }
 
 func TestRunDetailedHelp_InvalidMakefile(t *testing.T) {
+	t.Parallel()
 	config := &Config{
 		MakefilePath: "/nonexistent/path/to/Makefile",
 		Target:       "build",
@@ -79,6 +83,7 @@ func TestRunDetailedHelp_InvalidMakefile(t *testing.T) {
 }
 
 func TestRunDetailedHelp_WithColor(t *testing.T) {
+	t.Parallel()
 	fixturePath := filepath.Join("..", "..", "test", "fixtures", "makefiles", "with_undocumented.mk")
 	absPath, err := filepath.Abs(fixturePath)
 	require.NoError(t, err)

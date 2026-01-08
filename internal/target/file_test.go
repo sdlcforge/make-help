@@ -12,6 +12,7 @@ import (
 )
 
 func TestAtomicWriteFile(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		data    []byte
@@ -40,6 +41,7 @@ func TestAtomicWriteFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Create temp directory
 			tmpDir := t.TempDir()
 			targetFile := filepath.Join(tmpDir, "test.txt")
@@ -70,6 +72,7 @@ func TestAtomicWriteFile(t *testing.T) {
 }
 
 func TestAtomicWriteFileOverwrite(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	targetFile := filepath.Join(tmpDir, "test.txt")
 
@@ -88,6 +91,7 @@ func TestAtomicWriteFileOverwrite(t *testing.T) {
 }
 
 func TestAtomicWriteFileInvalidDirectory(t *testing.T) {
+	t.Parallel()
 	// Attempt to write to non-existent directory
 	err := AtomicWriteFile("/nonexistent/directory/test.txt", []byte("test"), 0644)
 	assert.Error(t, err)
@@ -95,6 +99,7 @@ func TestAtomicWriteFileInvalidDirectory(t *testing.T) {
 }
 
 func TestAtomicWriteFileNoTempFilesLeft(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	targetFile := filepath.Join(tmpDir, "test.txt")
 
@@ -112,7 +117,9 @@ func TestAtomicWriteFileNoTempFilesLeft(t *testing.T) {
 }
 
 func TestAtomicWriteFileErrorCases(t *testing.T) {
+	t.Parallel()
 	t.Run("invalid permissions on write", func(t *testing.T) {
+		t.Parallel()
 		tmpDir := t.TempDir()
 		targetFile := filepath.Join(tmpDir, "test.txt")
 
@@ -131,6 +138,7 @@ func TestAtomicWriteFileErrorCases(t *testing.T) {
 	})
 
 	t.Run("file in subdirectory", func(t *testing.T) {
+		t.Parallel()
 		tmpDir := t.TempDir()
 		subDir := filepath.Join(tmpDir, "subdir")
 		err := os.MkdirAll(subDir, 0755)
@@ -152,6 +160,7 @@ func TestAtomicWriteFileErrorCases(t *testing.T) {
 // TestAtomicWriteFileConcurrentSameFile verifies that multiple goroutines
 // writing to the same file concurrently don't cause data corruption.
 func TestAtomicWriteFileConcurrentSameFile(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	targetFile := filepath.Join(tmpDir, "concurrent.txt")
 
@@ -205,6 +214,7 @@ func TestAtomicWriteFileConcurrentSameFile(t *testing.T) {
 // TestAtomicWriteFileConcurrentDifferentFiles verifies that multiple goroutines
 // writing to different files concurrently work correctly.
 func TestAtomicWriteFileConcurrentDifferentFiles(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	const (
@@ -261,6 +271,7 @@ func TestAtomicWriteFileConcurrentDifferentFiles(t *testing.T) {
 // TestAtomicWriteFileConcurrentNoTempFilesLeftBehind specifically tests
 // that no temp files remain after concurrent operations complete.
 func TestAtomicWriteFileConcurrentNoTempFilesLeftBehind(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	targetFile := filepath.Join(tmpDir, "test.txt")
 
@@ -312,6 +323,7 @@ func TestAtomicWriteFileConcurrentNoTempFilesLeftBehind(t *testing.T) {
 // TestAtomicWriteFileConcurrentMixedOperations tests concurrent writes
 // to the same file with different content sizes to stress-test the function.
 func TestAtomicWriteFileConcurrentMixedOperations(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	targetFile := filepath.Join(tmpDir, "mixed.txt")
 

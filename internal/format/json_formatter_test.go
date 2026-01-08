@@ -11,6 +11,7 @@ import (
 
 // TestJSONFormatter_RenderHelp_EmptyModel tests rendering an empty help model
 func TestJSONFormatter_RenderHelp_EmptyModel(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{}
 
@@ -41,6 +42,7 @@ func TestJSONFormatter_RenderHelp_EmptyModel(t *testing.T) {
 
 // TestJSONFormatter_RenderHelp_WithTargets tests rendering with basic targets
 func TestJSONFormatter_RenderHelp_WithTargets(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -109,6 +111,7 @@ func TestJSONFormatter_RenderHelp_WithTargets(t *testing.T) {
 
 // TestJSONFormatter_RenderHelp_WithCategories tests rendering with categories
 func TestJSONFormatter_RenderHelp_WithCategories(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		HasCategories: true,
@@ -162,6 +165,7 @@ func TestJSONFormatter_RenderHelp_WithCategories(t *testing.T) {
 
 // TestJSONFormatter_RenderHelp_WithVariablesAndAliases tests variables and aliases
 func TestJSONFormatter_RenderHelp_WithVariablesAndAliases(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		Categories: []model.Category{
@@ -219,6 +223,7 @@ func TestJSONFormatter_RenderHelp_WithVariablesAndAliases(t *testing.T) {
 
 // TestJSONFormatter_RenderHelp_WithFileDocumentation tests file documentation
 func TestJSONFormatter_RenderHelp_WithFileDocumentation(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -252,6 +257,7 @@ func TestJSONFormatter_RenderHelp_WithFileDocumentation(t *testing.T) {
 
 // TestJSONFormatter_RenderHelp_WithIncludedFiles tests included files
 func TestJSONFormatter_RenderHelp_WithIncludedFiles(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -314,6 +320,7 @@ func TestJSONFormatter_RenderHelp_WithIncludedFiles(t *testing.T) {
 
 // TestJSONFormatter_RenderDetailedTarget tests detailed target rendering
 func TestJSONFormatter_RenderDetailedTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{UseColor: false})
 	target := &model.Target{
 		Name:    "build",
@@ -374,6 +381,7 @@ func TestJSONFormatter_RenderDetailedTarget(t *testing.T) {
 
 // TestJSONFormatter_RenderBasicTarget tests basic target rendering
 func TestJSONFormatter_RenderBasicTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{UseColor: false})
 
 	var buf bytes.Buffer
@@ -403,6 +411,7 @@ func TestJSONFormatter_RenderBasicTarget(t *testing.T) {
 
 // TestJSONFormatter_ContentType tests content type
 func TestJSONFormatter_ContentType(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{})
 
 	contentType := formatter.ContentType()
@@ -413,6 +422,7 @@ func TestJSONFormatter_ContentType(t *testing.T) {
 
 // TestJSONFormatter_DefaultExtension tests default extension
 func TestJSONFormatter_DefaultExtension(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{})
 
 	ext := formatter.DefaultExtension()
@@ -423,6 +433,7 @@ func TestJSONFormatter_DefaultExtension(t *testing.T) {
 
 // TestJSONFormatter_NilModel tests nil model handling
 func TestJSONFormatter_NilModel(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{})
 
 	var buf bytes.Buffer
@@ -438,6 +449,7 @@ func TestJSONFormatter_NilModel(t *testing.T) {
 
 // TestJSONFormatter_NilTarget tests nil target handling
 func TestJSONFormatter_NilTarget(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{})
 
 	var buf bytes.Buffer
@@ -453,6 +465,7 @@ func TestJSONFormatter_NilTarget(t *testing.T) {
 
 // TestJSONFormatter_ComplexModel tests a complex help model
 func TestJSONFormatter_ComplexModel(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{UseColor: false})
 	helpModel := &model.HelpModel{
 		FileDocs: []model.FileDoc{
@@ -554,6 +567,7 @@ func TestJSONFormatter_ComplexModel(t *testing.T) {
 
 // TestJSONFormatter_PlainTextSummary tests that summaries use plain text
 func TestJSONFormatter_PlainTextSummary(t *testing.T) {
+	t.Parallel()
 	formatter := NewJSONFormatter(&FormatterConfig{UseColor: false})
 
 	// Create a summary (stored as plain string in []string)
