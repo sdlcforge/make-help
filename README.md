@@ -4,6 +4,43 @@
 
 Static help generation for Makefiles with rich documentation support and linting.
 
+## Quick start
+
+```makefile
+## !file
+## My Project Makefile
+
+## !category Build
+## Build the application
+build:
+	go build -o myapp ./cmd/myapp
+
+## !category Test
+## !var TEST_TYPES May be 'unit' (default) or 'integeration'
+## Run all test types.
+test:
+	./scripts/run-tests.sh $(TEST_TYPES)
+```
+
+```bash
+make-help && make help
+```
+Outputs:
+```
+Usage: make [<target>...] [<ENV_VAR>=<value>...]
+
+My Project Makefile
+
+Targets:
+
+Build:
+  - build: Build the application
+
+Test:
+  - test: Run all tests
+    Vars: TEST_TYPES May be 'unit' (default) or 'integeration'
+```
+
 ## Why make-help?
 
 Makefiles are powerful but lack a built-in help system. As projects grow, developers accumulate dozens of targets with no easy way to discover or document them.
@@ -46,48 +83,6 @@ bun install -g @sdlcforge/make-help
 npm install --save-dev @sdlcforge/make-help
 bun install --save-dev --trust true @sdlcforge/make-help
 ```
-
-## Quick start
-
-### 1. Document your Makefile
-
-Add documentation comments using the `##` prefix:
-
-```makefile
-## !file
-## My Project Makefile
-## This file contains build and deployment targets.
-
-## !category Build
-## Build the application
-build:
-	go build -o myapp ./cmd/myapp
-
-## !category Test
-## Run all tests
-test:
-	go test ./...
-
-## !category Deploy
-## !var ENV Target environment (dev, staging, prod)
-## Deploy the application
-deploy:
-	./scripts/deploy.sh $(ENV)
-```
-
-### 2. Generate static help file
-
-```bash
-make-help # generates './make/help.mk' or './make/00-help.mk' and includes it from 'Makefile'
-```
-
-Run `make update-help` or add 'update-help' to your 'build' target to regenerate the help when source files change.
-
-### 3. Use the help system
-
-Now you can run:
-- `make help` - displays help summary
-- `make help-build` - detailed documentation for the build target
 
 ## Usage
 
@@ -445,4 +440,4 @@ The summary extraction algorithm is a Go port of the [extract-topic](https://www
 - **Issues**: Report bugs and request features via GitHub Issues
 - **Discussions**: Ask questions in GitHub Discussions
 
-Last reviewed: 2026-01-04T00:27Z
+Last reviewed: 2026-01-07
