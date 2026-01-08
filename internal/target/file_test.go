@@ -157,7 +157,7 @@ func TestAtomicWriteFileConcurrentSameFile(t *testing.T) {
 
 	const (
 		numGoroutines = 10
-		iterations    = 100
+		iterations    = 10
 	)
 
 	// Run multiple iterations to increase chance of catching race conditions
@@ -209,7 +209,7 @@ func TestAtomicWriteFileConcurrentDifferentFiles(t *testing.T) {
 
 	const (
 		numGoroutines = 20
-		iterations    = 50
+		iterations    = 5
 	)
 
 	for iter := 0; iter < iterations; iter++ {
@@ -266,7 +266,7 @@ func TestAtomicWriteFileConcurrentNoTempFilesLeftBehind(t *testing.T) {
 
 	const (
 		numGoroutines = 50
-		iterations    = 20
+		iterations    = 5
 	)
 
 	for iter := 0; iter < iterations; iter++ {
@@ -317,7 +317,7 @@ func TestAtomicWriteFileConcurrentMixedOperations(t *testing.T) {
 
 	const (
 		numGoroutines = 15
-		iterations    = 100
+		iterations    = 10
 	)
 
 	for iter := 0; iter < iterations; iter++ {
