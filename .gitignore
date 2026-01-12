@@ -12,3 +12,5 @@
 /bin/
 /*.star.md
 /coverage.out
+*~
+.DS_Store
