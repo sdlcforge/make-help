@@ -6,40 +6,41 @@ Static help generation for Makefiles with rich documentation support and linting
 
 ## Quick start
 
-```makefile
-## !file
-## My Project Makefile
-
-## !category Build
-## Build the application
-build:
-	go build -o myapp ./cmd/myapp
-
-## !category Test
-## !var TEST_TYPES May be 'unit' (default) or 'integeration'
-## Run all test types.
-test:
-	./scripts/run-tests.sh $(TEST_TYPES)
-```
-
-```bash
-make-help && make help
-```
-Outputs:
-```
-Usage: make [<target>...] [<ENV_VAR>=<value>...]
-
-My Project Makefile
-
-Targets:
-
-Build:
-  - build: Build the application
-
-Test:
-  - test: Run all tests
-    Vars: TEST_TYPES May be 'unit' (default) or 'integeration'
-```
+1. Annotate the helpfile with some docs. If you skip this, it will still document the avaliable targets without explanation.
+	```makefile
+	## !file
+	## My Project Makefile
+	
+	## !category Build
+	## Build the application
+	build:
+		go build -o myapp ./cmd/myapp
+	
+	## !category Test
+	## !var TEST_TYPES May be 'unit' (default) or 'integeration'
+	## Run all test types.
+	test:
+		./scripts/run-tests.sh $(TEST_TYPES)
+	```
+2. Run `make-help` to generate the docs:
+	```bash
+	make-help && make help
+	```
+	Outputs:
+	```
+	Usage: make [<target>...] [<ENV_VAR>=<value>...]
+	
+	My Project Makefile
+	
+	Targets:
+	
+	Build:
+	  - build: Build the application
+	
+	Test:
+	  - test: Run all tests
+	    Vars: TEST_TYPES May be 'unit' (default) or 'integeration'
+	```
 
 ## Why make-help?
 
