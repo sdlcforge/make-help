@@ -6,7 +6,8 @@ Static help generation for Makefiles with rich documentation support and linting
 
 ## Quick start
 
-1. Annotate the helpfile with some docs. If you skip this, it will still document the avaliable targets without explanation.
+1. [Install `make-help`.](#installation)
+2. Annotate the helpfile with some docs. If you skip this, it will still document the avaliable targets without explanation.
 	```makefile
 	## !file
 	## My Project Makefile
@@ -22,7 +23,7 @@ Static help generation for Makefiles with rich documentation support and linting
 	test:
 		./scripts/run-tests.sh $(TEST_TYPES)
 	```
-2. Run `make-help` to generate the docs:
+3. Run `make-help` to generate the docs:
 	```bash
 	make-help && make help
 	```
