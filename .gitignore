@@ -1,16 +1,17 @@
+# dirs
 /.claude/settings.local.json
 /.vscode
 /.yalc
+/bin/
 /dist
 /node_modules
 /qa
 /test-staging
-/yalc.lock
 /worktrees
+# files
 /*.log
 /*.pid
-/bin/
 /*.star.md
+CLAUDE.md
 /coverage.out
-*~
-.DS_Store
+/yalc.lock
