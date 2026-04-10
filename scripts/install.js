@@ -185,18 +185,15 @@ function tryGoBuild() {
   }
 }
 
-async function main() {
+/**
+ * Install by downloading a pre-built binary from GitHub releases.
+ */
+async function installFromDownload() {
   const platform = PLATFORM_MAP[process.platform];
   const arch = ARCH_MAP[process.arch];
 
   if (!platform || !arch) {
-    console.error(`Unsupported platform: ${process.platform}/${process.arch}`);
-    console.error('Falling back to source build...');
-    if (!tryGoBuild()) {
-      process.exit(1);
-    }
-
-    return;
+    throw new Error(`Unsupported platform: ${process.platform}/${process.arch}`);
   }
 
   const ext = isWindows ? 'zip' : 'tar.gz';
@@ -205,17 +202,42 @@ async function main() {
 
   console.log(`Installing make-help v${version} (${platform}/${arch})...`);
 
+  const buf = await download(url);
+
+  if (isWindows) {
+    extractZip(buf, output);
+  }
+  else {
+    await extractTarGz(buf, output);
+  }
+
+  console.log(`Successfully installed ${output}`);
+}
+
+/**
+ * Install by building from Go source. Requires Go on PATH.
+ */
+function installFromSource() {
+  if (!tryGoBuild()) {
+    console.error('Build from source failed.');
+    console.error('Make sure Go is installed and in your PATH.');
+    console.error('Install Go from: https://go.dev/dl/');
+    process.exit(1);
+  }
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const forceBuild = args.includes('--build');
+
+  if (forceBuild) {
+    installFromSource();
+
+    return;
+  }
+
   try {
-    const buf = await download(url);
-
-    if (isWindows) {
-      extractZip(buf, output);
-    }
-    else {
-      await extractTarGz(buf, output);
-    }
-
-    console.log(`Successfully installed ${output}`);
+    await installFromDownload();
   }
   catch (err) {
     console.error(`Download failed: ${err.message}`);
