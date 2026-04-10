@@ -209,7 +209,26 @@ func runCreateHelpTarget(config *Config) error {
 		fmt.Fprintf(os.Stderr, "Total makefiles discovered: %d, after filtering help files: %d\n", len(makefiles), len(filteredMakefiles))
 	}
 
-	// 10. Generate help file content
+	// 10. Resolve dynamic mode
+	dynamicMode := false
+	switch config.DynamicMode {
+	case DynamicForced:
+		dynamicMode = true
+	case StaticForced:
+		dynamicMode = false
+	case DynamicAuto:
+		dynamicMode = discovery.DetectDynamicMode(filepath.Dir(makefilePath))
+	}
+
+	if config.Verbose {
+		if dynamicMode {
+			fmt.Fprintf(os.Stderr, "Using dynamic help mode\n")
+		} else {
+			fmt.Fprintf(os.Stderr, "Using static help mode\n")
+		}
+	}
+
+	// 11. Generate help file content
 	// Use the raw command line (always captured from os.Args in PreRunE)
 	genConfig := &target.GeneratorConfig{
 		UseColor:            config.UseColor,
@@ -225,6 +244,9 @@ func runCreateHelpTarget(config *Config) error {
 		IncludeTargets:      parseIncludeTargets(config.IncludeTargets),
 		IncludeAllPhony:     config.IncludeAllPhony,
 		CommandLine:         config.CommandLine,
+		DynamicMode:         dynamicMode,
+		NoDynamicWarning:    config.NoDynamicWarning,
+		UpdateOpts:          config.UpdateOpts,
 	}
 	content, err := target.GenerateHelpFile(genConfig)
 	if err != nil {

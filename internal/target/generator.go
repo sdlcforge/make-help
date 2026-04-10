@@ -23,6 +23,17 @@ type GeneratorConfig struct {
 	// UseColor controls whether ANSI color codes are embedded in the output
 	UseColor bool
 
+	// DynamicMode generates a help target that runs make-help on the fly
+	// with a static no-color fallback
+	DynamicMode bool
+
+	// NoDynamicWarning suppresses the fallback warning in dynamic mode
+	NoDynamicWarning bool
+
+	// UpdateOpts overrides the options in the generated update-help target.
+	// If empty, mirrors the original invocation options (minus --makefile-path).
+	UpdateOpts string
+
 	// HelpCategory is the category name for generated help targets (help, update-help).
 	// Defaults to "Help" if empty.
 	HelpCategory string
@@ -78,10 +89,35 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	if len(relativeMakefiles) > 0 {
 		buf.WriteString(fmt.Sprintf("MAKE_HELP_MAKEFILES := %s\n", strings.Join(relativeMakefiles, " ")))
 	}
+
+	// In dynamic mode, add the MAKE_HELP_OPTS variable for option forwarding
+	if config.DynamicMode {
+		buf.WriteString("\n")
+		buf.WriteString("## !var MAKE_HELP_OPTS Options forwarded to make-help during dynamic help generation\n")
+		buf.WriteString("MAKE_HELP_OPTS ?=\n")
+	}
 	buf.WriteString("\n")
 
-	// Main help target with static content
-	// If source Makefiles use categories, add category directive for consistency
+	if config.DynamicMode {
+		if err := generateDynamicTargets(config, renderer, &buf); err != nil {
+			return "", err
+		}
+	} else {
+		if err := generateStaticTargets(config, renderer, &buf); err != nil {
+			return "", err
+		}
+	}
+
+	// Auto-regeneration target
+	buf.WriteString("\n")
+	buf.WriteString(generateRegenerationTarget(config))
+
+	return buf.String(), nil
+}
+
+// generateStaticTargets generates the traditional static help targets with embedded @printf statements.
+func generateStaticTargets(config *GeneratorConfig, renderer format.LineRenderer, buf *strings.Builder) error {
+	// Category directive for help target
 	if config.HelpModel.HasCategories {
 		helpCategory := config.HelpCategory
 		if helpCategory == "" {
@@ -111,7 +147,7 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	// Render help content
 	helpLines, err := renderer.RenderHelpLines(config.HelpModel)
 	if err != nil {
-		return "", fmt.Errorf("failed to render help content: %w", err)
+		return fmt.Errorf("failed to render help content: %w", err)
 	}
 
 	for _, line := range helpLines {
@@ -132,11 +168,113 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 		}
 	}
 
-	// Auto-regeneration target
-	buf.WriteString("\n")
-	buf.WriteString(generateRegenerationTarget(config))
+	return nil
+}
 
-	return buf.String(), nil
+// generateDynamicTargets generates help targets that execute make-help on the fly
+// with a static no-color fallback.
+func generateDynamicTargets(config *GeneratorConfig, renderer format.LineRenderer, buf *strings.Builder) error {
+	// Create a no-color renderer for the static fallback text
+	noColorRenderer := format.NewMakeFormatter(&format.FormatterConfig{
+		UseColor:    false,
+		MakefileDir: config.MakefileDir,
+	})
+
+	// Category directive for help target
+	if config.HelpModel.HasCategories {
+		helpCategory := config.HelpCategory
+		if helpCategory == "" {
+			helpCategory = "Help"
+		}
+		buf.WriteString(fmt.Sprintf("## !category %s\n", helpCategory))
+	}
+	buf.WriteString(".PHONY: help\n")
+	buf.WriteString("## Displays help for available targets.\n")
+	buf.WriteString("help:\n")
+
+	// Dynamic execution with fallback
+	buf.WriteString("\t@make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output - $(MAKE_HELP_OPTS) 2>/dev/null || \\\n")
+	buf.WriteString("\t npx --yes make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output - $(MAKE_HELP_OPTS) 2>/dev/null || { \\\n")
+
+	// Generate static fallback lines (always no-color)
+	fallbackLines, err := noColorRenderer.RenderHelpLines(config.HelpModel)
+	if err != nil {
+		return fmt.Errorf("failed to render fallback help content: %w", err)
+	}
+
+	// Insert warning after the usage line and its following blank line
+	fallbackWithWarning := insertDynamicWarning(fallbackLines, config.NoDynamicWarning)
+
+	for i, line := range fallbackWithWarning {
+		if i < len(fallbackWithWarning)-1 {
+			buf.WriteString(fmt.Sprintf("\t  printf '%%b\\n' \"%s\"; \\\n", line))
+		} else {
+			buf.WriteString(fmt.Sprintf("\t  printf '%%b\\n' \"%s\"; \\\n", line))
+		}
+	}
+	buf.WriteString("\t}\n")
+
+	// Generate dynamic help-<target> targets
+	for _, category := range config.HelpModel.Categories {
+		for _, target := range category.Targets {
+			buf.WriteString("\n")
+			buf.WriteString(fmt.Sprintf(".PHONY: help-%s\n", target.Name))
+			buf.WriteString(fmt.Sprintf("help-%s:\n", target.Name))
+
+			// Dynamic execution
+			buf.WriteString(fmt.Sprintf("\t@make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output - --target %s $(MAKE_HELP_OPTS) 2>/dev/null || \\\n", target.Name))
+			buf.WriteString(fmt.Sprintf("\t npx --yes make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output - --target %s $(MAKE_HELP_OPTS) 2>/dev/null || { \\\n", target.Name))
+
+			// Static fallback for this target (no-color)
+			detailedLines := noColorRenderer.RenderDetailedTargetLines(&target)
+			for _, line := range detailedLines {
+				buf.WriteString(fmt.Sprintf("\t  printf '%%b\\n' \"%s\"; \\\n", line))
+			}
+			buf.WriteString("\t}\n")
+		}
+	}
+
+	return nil
+}
+
+// insertDynamicWarning inserts the dynamic fallback warning after the usage line
+// and its following blank line. If suppressWarning is true, returns lines unchanged.
+func insertDynamicWarning(lines []string, suppressWarning bool) []string {
+	if suppressWarning {
+		return lines
+	}
+
+	warningLine := "WARNING: Dynamic execution failed; this is a pre-processed, static result."
+
+	// Find the first blank line after the usage line (typically line index 1)
+	// The usage line is usually the first non-empty line
+	insertAfter := -1
+	foundUsage := false
+	for i, line := range lines {
+		if !foundUsage && line != "" {
+			foundUsage = true
+			continue
+		}
+		if foundUsage && line == "" {
+			insertAfter = i
+			break
+		}
+	}
+
+	if insertAfter < 0 {
+		// Fallback: insert at the beginning
+		result := make([]string, 0, len(lines)+3)
+		result = append(result, "", warningLine, "")
+		result = append(result, lines...)
+		return result
+	}
+
+	// Insert: blank line, warning, blank line after the usage+blank
+	result := make([]string, 0, len(lines)+2)
+	result = append(result, lines[:insertAfter+1]...)
+	result = append(result, warningLine, "")
+	result = append(result, lines[insertAfter+1:]...)
+	return result
 }
 
 // buildRegenerateFlags builds the flag string for the regeneration comment.
@@ -184,6 +322,14 @@ func buildRegenerateFlags(config *GeneratorConfig) string {
 		flags = append(flags, fmt.Sprintf("--help-category %s", config.HelpCategory))
 	}
 
+	// Add dynamic mode flags
+	if config.DynamicMode {
+		flags = append(flags, "--dynamic")
+	}
+	if config.NoDynamicWarning {
+		flags = append(flags, "--no-dynamic-warning")
+	}
+
 	if len(flags) == 0 {
 		return ""
 	}
@@ -192,11 +338,20 @@ func buildRegenerateFlags(config *GeneratorConfig) string {
 
 // generateRegenerationTarget creates the update-help target.
 // This is an explicit target users can run to regenerate help.mk.
+// The generated command mirrors the original invocation options (without --makefile-path),
+// unless --update-opts is set, in which case that string is used instead.
 func generateRegenerationTarget(config *GeneratorConfig) string {
 	var buf strings.Builder
 
-	// Build flags to pass to regeneration command (same flags used for original generation)
-	flags := buildRegenerateFlags(config)
+	// Determine the flags for regeneration
+	var flags string
+	if config.UpdateOpts != "" {
+		// User provided explicit override for update-help options
+		flags = " " + config.UpdateOpts
+	} else {
+		// Mirror the original invocation options (buildRegenerateFlags omits --makefile-path)
+		flags = buildRegenerateFlags(config)
+	}
 
 	// If source Makefiles use categories, add category directive for consistency
 	// (uses same category as the help target)

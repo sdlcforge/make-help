@@ -110,6 +110,16 @@ Documentation directives (in ## comments):
 				return fmt.Errorf("--fix requires --lint")
 			}
 
+			// --no-dynamic-warning requires --dynamic (error with --static)
+			if config.NoDynamicWarning && config.DynamicMode == StaticForced {
+				return fmt.Errorf("--no-dynamic-warning cannot be used with --static")
+			}
+
+			// --dynamic/--static only valid for file generation mode
+			if config.DynamicMode != DynamicAuto && config.Output == "-" {
+				return fmt.Errorf("--dynamic/--static are only valid for file generation mode (not with --output -)")
+			}
+
 			// Validate --help-file-rel-path is a relative path (no leading /)
 			if config.HelpFileRelPath != "" && strings.HasPrefix(config.HelpFileRelPath, "/") {
 				return fmt.Errorf("--help-file-rel-path must be a relative path (no leading '/')")
@@ -170,6 +180,10 @@ Documentation directives (in ## comments):
 	annotateFlag(rootCmd, "category-order", outputGroupLabel)
 	annotateFlag(rootCmd, "default-category", outputGroupLabel)
 	annotateFlag(rootCmd, "help-category", outputGroupLabel)
+	annotateFlag(rootCmd, "dynamic", outputGroupLabel)
+	annotateFlag(rootCmd, "static", outputGroupLabel)
+	annotateFlag(rootCmd, "no-dynamic-warning", outputGroupLabel)
+	annotateFlag(rootCmd, "update-opts", outputGroupLabel)
 
 	annotateFlag(rootCmd, "verbose", miscGroupLabel)
 
@@ -200,6 +214,9 @@ func validateRemoveHelpFlags(config *Config) error {
 		{config.DefaultCategory != "", "--default-category"},
 		{config.Format != "make", "--format"},
 		{config.Output != "" && config.Output != getDefaultOutput("make"), "--output"},
+		{config.DynamicMode != DynamicAuto, "--dynamic/--static"},
+		{config.NoDynamicWarning, "--no-dynamic-warning"},
+		{config.UpdateOpts != "", "--update-opts"},
 	}
 
 	for _, flag := range incompatibleFlags {

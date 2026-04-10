@@ -67,6 +67,18 @@ func setupFlags(cmd *cobra.Command, config *Config) {
 	cmd.Flags().StringVar(&config.HelpCategory,
 		"help-category", "Help", "Category name for generated help targets (help, update-help)")
 
+	// Dynamic/static mode flags (mutually exclusive, processed manually like color flags)
+	var dynamicFlag bool
+	var staticFlag bool
+	cmd.Flags().BoolVar(&dynamicFlag,
+		"dynamic", false, "Generate dynamic help target (runs make-help on the fly with static fallback)")
+	cmd.Flags().BoolVar(&staticFlag,
+		"static", false, "Generate static help target (embed help text in printf statements)")
+	cmd.Flags().BoolVar(&config.NoDynamicWarning,
+		"no-dynamic-warning", false, "Suppress fallback warning in dynamic mode (requires --dynamic)")
+	cmd.Flags().StringVar(&config.UpdateOpts,
+		"update-opts", "", "Override options for the generated update-help target")
+
 	// Misc flags
 	cmd.PersistentFlags().BoolVarP(&config.Verbose,
 		"verbose", "v", false, "Enable verbose output for debugging")
@@ -89,6 +101,20 @@ func processFlagsAfterParse(cmd *cobra.Command, config *Config) error {
 		config.ColorMode = ColorNever
 	} else {
 		config.ColorMode = ColorAuto
+	}
+
+	// Process dynamic/static flags
+	dynamicChanged := cmd.Flags().Lookup("dynamic").Changed
+	staticChanged := cmd.Flags().Lookup("static").Changed
+
+	if dynamicChanged && staticChanged {
+		return fmt.Errorf("cannot use both --dynamic and --static flags")
+	}
+
+	if dynamicChanged {
+		config.DynamicMode = DynamicForced
+	} else if staticChanged {
+		config.DynamicMode = StaticForced
 	}
 
 	// Process --keep-order-all flag
