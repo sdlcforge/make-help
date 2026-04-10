@@ -8,6 +8,8 @@
   "files": [
     "cmd/",
     "internal/",
+    "go.mod",
+    "go.sum",
     "scripts/"
   ],
   "scripts": {
