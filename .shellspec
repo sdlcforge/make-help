@@ -1,0 +1,3 @@
+--default-path test
+--pattern '*_spec.sh'
+--shell bash

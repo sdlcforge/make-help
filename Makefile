@@ -29,8 +29,13 @@ test.integration:
 	go test -tags=integration ./test/integration/...
 .PHONY: test.integration
 
-## Run all tests (unit + integration).
-test.all: test.unit test.integration
+## Test the npm install script (download + source build).
+test.install:
+	shellspec test/integration/install_spec.sh
+.PHONY: test.install
+
+## Run all tests (unit + integration + install).
+test.all: test.unit test.integration test.install
 .PHONY: test.all
 
 ## !category Quality
