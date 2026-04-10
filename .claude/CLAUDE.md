@@ -170,5 +170,6 @@ standalone:
 **Want numbered prefix for help file**: Place other numbered files (e.g., `10-foo.mk`) in `./make/` directory first
 **Lint shows fixed warnings**: With `--lint --fix`, only unfixed warnings should appear; fixed ones are hidden
 **Check version**: Use `--version` flag to display version information
+**Colors not showing / unwanted colors**: Default is auto-detect from terminal; use `--color` to force on or `--no-color` to force off
 
 Last reviewed: 2026-01-03T00:00Z
