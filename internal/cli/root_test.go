@@ -810,6 +810,78 @@ func TestRemoveHelpFlagRestrictions(t *testing.T) {
 	}
 }
 
+func TestDynamicStaticFlagValidation(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name           string
+		args           []string
+		expectedErrMsg string
+	}{
+		{
+			name:           "dynamic and static together",
+			args:           []string{"--dynamic", "--static"},
+			expectedErrMsg: "cannot use both --dynamic and --static flags",
+		},
+		{
+			name:           "no-dynamic-warning without dynamic",
+			args:           []string{"--no-dynamic-warning"},
+			expectedErrMsg: "--no-dynamic-warning requires --dynamic",
+		},
+		{
+			name:           "no-dynamic-warning with static",
+			args:           []string{"--static", "--no-dynamic-warning"},
+			expectedErrMsg: "--no-dynamic-warning requires --dynamic",
+		},
+		{
+			name:           "dynamic with stdout mode",
+			args:           []string{"--dynamic", "--output", "-"},
+			expectedErrMsg: "--dynamic/--static is only valid for file generation mode",
+		},
+		{
+			name:           "static with stdout mode",
+			args:           []string{"--static", "--output", "-"},
+			expectedErrMsg: "--dynamic/--static is only valid for file generation mode",
+		},
+		{
+			name:           "dynamic with lint",
+			args:           []string{"--dynamic", "--lint"},
+			expectedErrMsg: "--dynamic/--static is only valid for file generation mode",
+		},
+		{
+			name:           "dynamic with remove-help",
+			args:           []string{"--dynamic", "--remove-help"},
+			expectedErrMsg: "--remove-help cannot be used with --dynamic/--static",
+		},
+		{
+			name:           "update-opts with stdout mode",
+			args:           []string{"--update-opts", "foo", "--output", "-"},
+			expectedErrMsg: "--update-opts is only valid for file generation mode",
+		},
+		{
+			name:           "help-category with stdout mode",
+			args:           []string{"--help-category", "Custom", "--output", "-"},
+			expectedErrMsg: "--help-category is only valid for file generation mode",
+		},
+		{
+			name:           "help-file-rel-path with stdout mode",
+			args:           []string{"--help-file-rel-path", "foo.mk", "--output", "-"},
+			expectedErrMsg: "--help-file-rel-path is only valid for file generation mode",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			cmd := NewRootCmd()
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), tt.expectedErrMsg)
+		})
+	}
+}
+
 func TestNewFlags(t *testing.T) {
 	t.Parallel()
 	cmd := NewRootCmd()
@@ -825,6 +897,10 @@ func TestNewFlags(t *testing.T) {
 	assert.NotNil(t, flags.Lookup("dry-run"))
 	assert.NotNil(t, flags.Lookup("format"))
 	assert.NotNil(t, flags.Lookup("output"))
+	assert.NotNil(t, flags.Lookup("dynamic"))
+	assert.NotNil(t, flags.Lookup("static"))
+	assert.NotNil(t, flags.Lookup("no-dynamic-warning"))
+	assert.NotNil(t, flags.Lookup("update-opts"))
 
 	// Verify deprecated/removed flags are not present
 	assert.Nil(t, flags.Lookup("create-help-target"))

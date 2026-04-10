@@ -122,10 +122,16 @@ standalone:
 
 ### Adding a CLI flag
 1. Add to `Config` struct in `internal/cli/config.go`
-2. Register in `internal/cli/root.go` `NewRootCmd()`
-3. Use in appropriate service
-4. Add integration test coverage
-5. Update `README.md` flags table and `docs/architecture/components.md`
+2. Register in `setupFlags()` in `internal/cli/command.go`
+3. Add to a flag group annotation in `NewRootCmd()` in `internal/cli/root.go`
+4. Add validation in `PreRunE` following the funnel order (see `docs/architecture/design-decisions.md#funnel-ordered-flag-validation`):
+   - Mutual exclusion? → `processFlagsAfterParse()` in `command.go`
+   - Mode-restricted? → mode checks in `PreRunE` (e.g., `validateRemoveHelpFlags`)
+   - Requires another flag? → requirement checks in `PreRunE`
+   - File-gen only? → add one entry to `validateFileGenOnlyFlags()` table in `root.go`
+5. Use in appropriate service
+6. Add integration test coverage
+7. Update `README.md` flags table and `docs/architecture/components.md`
 
 ## Critical context for AI agents
 
