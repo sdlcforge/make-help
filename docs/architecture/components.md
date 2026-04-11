@@ -77,11 +77,17 @@ When generating a help file (default mode), creates a Makefile include with:
 - Auto-regeneration target that regenerates help.mk when source Makefiles change
 - Fallback chain: tries `make-help`, then `npx make-help`, then shows error
 
-**Error Handling:**
-- Invalid flag combinations (e.g., `--target` without `--output -`)
+**Flag Validation (funnel-ordered — see [design decisions](design-decisions.md#funnel-ordered-flag-validation)):**
+
+Validated in `PreRunE` using a four-phase funnel that produces the most helpful error first:
+
+1. **Mutual exclusions** (`processFlagsAfterParse`): `--color`/`--no-color`, `--dynamic`/`--static`
+2. **Mode restrictions**: `--remove-help` allowlist (`validateRemoveHelpFlags`), then `--lint` rules
+3. **Requirement checks**: `--target` requires `--output -`, `--fix` requires `--lint`, `--no-dynamic-warning` requires `--dynamic`
+4. **Scope checks** (`validateFileGenOnlyFlags`): File-gen-only flags (`--dynamic`, `--static`, `--update-opts`, `--help-file-rel-path`, `--help-category`) rejected in other modes
+
+**Other Error Handling:**
 - File path validation via `ResolveMakefilePath()` and `ValidateMakefileExists()`
-- Conflicting color flags (`--color` + `--no-color`)
-- Mode flag restrictions (enforced in PreRunE validation)
 
 ### 2 Discovery Service
 

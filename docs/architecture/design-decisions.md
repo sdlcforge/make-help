@@ -6,6 +6,7 @@ This document records the key architectural and design decisions made in the mak
 
 - [CLI Design](#cli-design)
   - [Flags Instead of Subcommands](#flags-instead-of-subcommands)
+  - [Funnel-Ordered Flag Validation](#funnel-ordered-flag-validation)
 - [Parsing and Processing](#parsing-and-processing)
   - [Stateful Single-Pass Parsing](#stateful-single-pass-parsing)
   - [Discovery Order Tracking](#discovery-order-tracking)
@@ -57,6 +58,35 @@ This document records the key architectural and design decisions made in the mak
 - ⚠️ Flag validation must ensure mutual exclusivity
 
 **Implementation**: See `internal/cli/root.go:120-144` where the `RunE` function dispatches based on flag combinations.
+
+### Funnel-Ordered Flag Validation
+
+**Decision**: Validate CLI flags in a fixed four-phase "funnel" order: mutual exclusions → mode restrictions → requirement checks → scope checks. Each phase narrows the space of valid states before the next phase runs.
+
+**Context**: The CLI has five implicit modes (file-gen, stdout, detailed-target, lint, remove-help) determined by flag combinations. Flags interact in complex ways — some are mutually exclusive, some require others, and some are only valid in specific modes. With 20+ flags, ad-hoc `if` checks were producing confusing error messages when the check order didn't match user intent.
+
+**Rationale**:
+1. **Most helpful error first**: Mode conflicts (e.g., `--remove-help` with `--dynamic`) are checked before requirement checks (e.g., `--target` requires `--output -`), so users see the fundamental problem rather than a downstream symptom
+2. **Table-driven scope checks**: Adding a new file-gen-only flag is one line in a table rather than N individual checks against each incompatible mode
+3. **Predictable ordering**: Contributors can reason about which error message a given flag combination will produce
+
+**Phases**:
+1. **Mutual exclusions** (`processFlagsAfterParse`): Pairs that can never coexist — `--color`/`--no-color`, `--dynamic`/`--static`
+2. **Mode restrictions** (`PreRunE`): Most restrictive modes first — `--remove-help` allowlist, then `--lint` rules
+3. **Requirement checks** (`PreRunE`): Flag A requires flag B — `--fix` requires `--lint`, `--no-dynamic-warning` requires `--dynamic`, `--target` requires `--output -`
+4. **Scope checks** (`validateFileGenOnlyFlags`): Table-driven check that file-generation-only flags (`--dynamic`, `--static`, `--update-opts`, `--help-file-rel-path`, `--help-category`) aren't used in other modes
+
+**Alternatives Considered**:
+- **Per-mode validation functions**: Each mode validates its own flags. Cleaner separation but duplicates shared checks and makes it hard to see all validation in one place.
+- **Declarative constraint DSL**: Define relationships like `requires("fix", "lint")` and auto-generate checks. Over-engineered for the current flag count.
+
+**Consequences**:
+- ✅ Error messages match user intent (mode conflicts surface before requirement errors)
+- ✅ Adding file-gen-only flags is O(1) — one table entry
+- ✅ Validation logic is auditable in one place (`PreRunE` + two helper functions)
+- ⚠️ Phase ordering is load-bearing — reordering phases changes which error users see
+
+**Implementation**: See `internal/cli/root.go` `PreRunE`, `validateRemoveHelpFlags()`, and `validateFileGenOnlyFlags()`.
 
 ---
 

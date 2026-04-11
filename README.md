@@ -149,7 +149,7 @@ make-help --remove-help                # Remove generated help files and include
 
 **Output/formatting:**
 - `--category-order <list>` - Explicit category order (comma-separated)
-- `--color` / `--no-color` - Force or disable colored output
+- `--color` / `--no-color` - Force or disable colored output (default: auto-detect from terminal)
 - `--default-category <name>` - Default category for uncategorized targets
 - `--format <type>` - Output format: make, text, html, markdown (default: make)
 - `--help-category <name>` - Category for generated help targets (default: `Help`)
@@ -315,6 +315,8 @@ Targets:
 ```
 
 ### Color scheme
+
+By default, `make-help` auto-detects whether stdout is a terminal. Colors are enabled when output goes to a terminal and disabled when piped or redirected. Use `--color` to force colors on or `--no-color` to force them off.
 
 When colors are enabled:
 

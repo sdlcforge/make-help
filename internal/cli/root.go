@@ -47,7 +47,11 @@ Documentation directives (in ## comments):
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			// Process flags that need special handling
+			// Flag validation uses a four-phase funnel order so the most helpful
+			// error surfaces first. See docs/architecture/design-decisions.md
+			// "Funnel-Ordered Flag Validation" for rationale.
+			//
+			// Phase 1: Mutual exclusions (--color/--no-color, --dynamic/--static)
 			if err := processFlagsAfterParse(cmd, config); err != nil {
 				return err
 			}
@@ -71,28 +75,18 @@ Documentation directives (in ## comments):
 
 			// Resolve output destination
 			if config.Output == "" {
-				// Use format-specific default
 				config.Output = getDefaultOutput(config.Format)
 			}
 
-			// --remove-help only allows --verbose and --makefile-path (check this first, before other validations)
+			// Phase 2: Mode restrictions (most restrictive first)
+			// --remove-help: only --verbose and --makefile-path allowed
 			if config.RemoveHelpTarget {
 				if err := validateRemoveHelpFlags(config); err != nil {
 					return err
 				}
 			}
 
-			// --target requires --output - (stdout mode)
-			if config.Target != "" && config.Output != "-" {
-				return fmt.Errorf("--target requires --output - (stdout mode)")
-			}
-
-			// --dry-run cannot be used with stdout mode
-			if config.DryRun && config.Output == "-" {
-				return fmt.Errorf("--dry-run cannot be used with --output -")
-			}
-
-			// --lint validations
+			// --lint mode validations
 			if config.Lint {
 				if config.Output == "-" {
 					return fmt.Errorf("--lint cannot be used with --output -")
@@ -105,14 +99,35 @@ Documentation directives (in ## comments):
 				}
 			}
 
-			// --fix requires --lint
+			// Phase 3: Requirement checks (flag A requires flag B present)
+			if config.Target != "" && config.Output != "-" {
+				return fmt.Errorf("--target requires --output - (stdout mode)")
+			}
 			if config.Fix && !config.Lint {
 				return fmt.Errorf("--fix requires --lint")
 			}
+			if config.NoDynamicWarning && config.DynamicMode != DynamicForced {
+				return fmt.Errorf("--no-dynamic-warning requires --dynamic")
+			}
 
-			// Validate --help-file-rel-path is a relative path (no leading /)
+			// --dry-run is only for file generation (and --lint --fix)
+			if config.DryRun && config.Output == "-" {
+				return fmt.Errorf("--dry-run cannot be used with --output -")
+			}
+
+			// Validate --help-file-rel-path format
 			if config.HelpFileRelPath != "" && strings.HasPrefix(config.HelpFileRelPath, "/") {
 				return fmt.Errorf("--help-file-rel-path must be a relative path (no leading '/')")
+			}
+
+			// Phase 4: Scope checks (file-generation-only flags)
+			isFileGenMode := config.Output != "-" &&
+				!config.Lint &&
+				!config.RemoveHelpTarget &&
+				config.Target == ""
+
+			if err := validateFileGenOnlyFlags(config, isFileGenMode); err != nil {
+				return err
 			}
 
 			return nil
@@ -170,6 +185,10 @@ Documentation directives (in ## comments):
 	annotateFlag(rootCmd, "category-order", outputGroupLabel)
 	annotateFlag(rootCmd, "default-category", outputGroupLabel)
 	annotateFlag(rootCmd, "help-category", outputGroupLabel)
+	annotateFlag(rootCmd, "dynamic", outputGroupLabel)
+	annotateFlag(rootCmd, "static", outputGroupLabel)
+	annotateFlag(rootCmd, "no-dynamic-warning", outputGroupLabel)
+	annotateFlag(rootCmd, "update-opts", outputGroupLabel)
 
 	annotateFlag(rootCmd, "verbose", miscGroupLabel)
 
@@ -200,11 +219,41 @@ func validateRemoveHelpFlags(config *Config) error {
 		{config.DefaultCategory != "", "--default-category"},
 		{config.Format != "make", "--format"},
 		{config.Output != "" && config.Output != getDefaultOutput("make"), "--output"},
+		{config.DynamicMode != DynamicAuto, "--dynamic/--static"},
+		{config.NoDynamicWarning, "--no-dynamic-warning"},
+		{config.UpdateOpts != "", "--update-opts"},
 	}
 
 	for _, flag := range incompatibleFlags {
 		if flag.isSet {
 			return fmt.Errorf("--remove-help cannot be used with %s", flag.flagName)
+		}
+	}
+
+	return nil
+}
+
+// validateFileGenOnlyFlags checks that flags only valid in file generation mode
+// are not used with other modes (stdout, lint, remove-help, target).
+func validateFileGenOnlyFlags(config *Config, isFileGenMode bool) error {
+	if isFileGenMode {
+		return nil
+	}
+
+	fileGenOnlyFlags := []struct {
+		isSet    bool
+		flagName string
+	}{
+		{config.DynamicMode != DynamicAuto, "--dynamic/--static"},
+		{config.NoDynamicWarning, "--no-dynamic-warning"},
+		{config.UpdateOpts != "", "--update-opts"},
+		{config.HelpFileRelPath != "", "--help-file-rel-path"},
+		{config.HelpCategory != "Help", "--help-category"},
+	}
+
+	for _, flag := range fileGenOnlyFlags {
+		if flag.isSet {
+			return fmt.Errorf("%s is only valid for file generation mode", flag.flagName)
 		}
 	}
 

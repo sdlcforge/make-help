@@ -723,3 +723,273 @@ func TestGenerateHelpFile_CustomHelpFilename(t *testing.T) {
 		t.Error("Should not use default 'help.mk' when custom filename is provided")
 	}
 }
+
+func TestGenerateHelpFile_DynamicMode(t *testing.T) {
+	t.Parallel()
+	config := &GeneratorConfig{
+		UseColor:     true,
+		DynamicMode:  true,
+		Makefiles:    []string{"/path/to/Makefile"},
+		MakefileDir:  "/path/to",
+		HelpFilename: "help.mk",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+							SourceFile:    "Makefile",
+							LineNumber:    10,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// Should have MAKE_HELP_OPTS variable
+	if !strings.Contains(result, "MAKE_HELP_OPTS ?=") {
+		t.Error("Missing MAKE_HELP_OPTS variable declaration")
+	}
+
+	// Should have !var directive for MAKE_HELP_OPTS
+	if !strings.Contains(result, "## !var MAKE_HELP_OPTS") {
+		t.Error("Missing !var directive for MAKE_HELP_OPTS")
+	}
+
+	// Should have dynamic execution command
+	if !strings.Contains(result, "make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output - $(MAKE_HELP_OPTS)") {
+		t.Error("Missing dynamic execution command")
+	}
+
+	// Should have npx fallback
+	if !strings.Contains(result, "npx --yes make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output -") {
+		t.Error("Missing npx fallback command")
+	}
+
+	// Should have static fallback block
+	if !strings.Contains(result, "printf '%b\\n'") {
+		t.Error("Missing static fallback printf statements")
+	}
+
+	// Should have WARNING line in fallback
+	if !strings.Contains(result, "WARNING: Dynamic execution failed; this is a pre-processed, static result.") {
+		t.Error("Missing fallback WARNING line")
+	}
+
+	// Should NOT have staleness check (no timestamp comparison in dynamic mode)
+	if strings.Contains(result, "for f in $(MAKE_HELP_MAKEFILES)") {
+		t.Error("Dynamic mode should not have staleness check")
+	}
+
+	// Dynamic help-<target> targets
+	if !strings.Contains(result, "make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output - --target build") {
+		t.Error("Missing dynamic help-build target")
+	}
+
+	// update-help should include --dynamic flag
+	if !strings.Contains(result, "update-help:") {
+		t.Error("Missing update-help target")
+	}
+}
+
+func TestGenerateHelpFile_DynamicMode_NoWarning(t *testing.T) {
+	t.Parallel()
+	config := &GeneratorConfig{
+		UseColor:         true,
+		DynamicMode:      true,
+		NoDynamicWarning: true,
+		Makefiles:        []string{"/path/to/Makefile"},
+		MakefileDir:      "/path/to",
+		HelpFilename:     "help.mk",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// Should NOT have WARNING line
+	if strings.Contains(result, "WARNING: Dynamic execution failed") {
+		t.Error("WARNING line should be suppressed with NoDynamicWarning")
+	}
+
+	// Should still have dynamic execution
+	if !strings.Contains(result, "make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output -") {
+		t.Error("Missing dynamic execution command")
+	}
+}
+
+func TestGenerateHelpFile_DynamicMode_FallbackNoColor(t *testing.T) {
+	t.Parallel()
+	config := &GeneratorConfig{
+		UseColor:     true, // Color enabled, but fallback should be no-color
+		DynamicMode:  true,
+		Makefiles:    []string{"/path/to/Makefile"},
+		MakefileDir:  "/path/to",
+		HelpFilename: "help.mk",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	// The static fallback block (inside { ... }) should not contain ANSI color codes
+	fallbackIdx := strings.Index(result, "|| { \\")
+	if fallbackIdx < 0 {
+		t.Fatal("Could not find fallback block")
+	}
+	fallbackBlock := result[fallbackIdx:]
+
+	if strings.Contains(fallbackBlock, "\\033[") {
+		t.Error("Fallback block should not contain ANSI color codes")
+	}
+}
+
+func TestGenerateHelpFile_DynamicMode_ValidMakefile(t *testing.T) {
+	t.Parallel()
+	if _, err := exec.LookPath("make"); err != nil {
+		t.Skip("make command not available")
+	}
+
+	tmpDir := t.TempDir()
+
+	config := &GeneratorConfig{
+		UseColor:     false,
+		DynamicMode:  true,
+		Makefiles:    []string{filepath.Join(tmpDir, "Makefile")},
+		MakefileDir:  tmpDir,
+		HelpFilename: "help.mk",
+		HelpModel: &model.HelpModel{
+			Categories: []model.Category{
+				{
+					Name: "Build",
+					Targets: []model.Target{
+						{
+							Name:          "build",
+							Documentation: []string{"Build the application"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := GenerateHelpFile(config)
+	if err != nil {
+		t.Fatalf("GenerateHelpFile failed: %v", err)
+	}
+
+	helpMkPath := filepath.Join(tmpDir, "help.mk")
+	if err := os.WriteFile(helpMkPath, []byte(result), 0644); err != nil {
+		t.Fatalf("Failed to write temp help.mk: %v", err)
+	}
+
+	makefileContent := "include help.mk\n\n.PHONY: build\nbuild:\n\t@echo building\n"
+	makefilePath := filepath.Join(tmpDir, "Makefile")
+	if err := os.WriteFile(makefilePath, []byte(makefileContent), 0644); err != nil {
+		t.Fatalf("Failed to write temp Makefile: %v", err)
+	}
+
+	// Run make -n to validate generated Makefile syntax
+	cmd := exec.Command("make", "-n", "-f", makefilePath, "help")
+	cmd.Dir = tmpDir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Errorf("Dynamic mode generated Makefile has syntax errors:\n%s\nError: %v", output, err)
+	}
+}
+
+func TestBuildRegenerateFlags_Dynamic(t *testing.T) {
+	t.Parallel()
+	config := &GeneratorConfig{
+		DynamicMode:      true,
+		NoDynamicWarning: true,
+		HelpModel:        &model.HelpModel{},
+	}
+
+	flags := buildRegenerateFlags(config)
+	if !strings.Contains(flags, "--dynamic") {
+		t.Error("Missing --dynamic flag")
+	}
+	if !strings.Contains(flags, "--no-dynamic-warning") {
+		t.Error("Missing --no-dynamic-warning flag")
+	}
+}
+
+func TestGenerateRegenerationTarget_UpdateOpts(t *testing.T) {
+	t.Parallel()
+	config := &GeneratorConfig{
+		UpdateOpts: "--color --keep-order-all",
+		HelpModel:  &model.HelpModel{},
+	}
+
+	result := generateRegenerationTarget(config)
+	if !strings.Contains(result, "--color --keep-order-all") {
+		t.Error("Missing custom update-opts in regeneration target")
+	}
+	// Should NOT contain auto-generated flags like --no-color
+	if strings.Contains(result, "--no-color") {
+		t.Error("Should use custom update-opts, not auto-generated flags")
+	}
+}
+
+func TestInsertDynamicWarning(t *testing.T) {
+	t.Parallel()
+
+	lines := []string{
+		"Usage: make [<target>...] [<ENV_VAR>=<value>...]",
+		"",
+		"Targets:",
+		"  - build: Build the app",
+	}
+
+	// With warning
+	result := insertDynamicWarning(lines, false)
+	if len(result) != 6 {
+		t.Errorf("Expected 6 lines, got %d: %v", len(result), result)
+	}
+	if result[2] != "WARNING: Dynamic execution failed; this is a pre-processed, static result." {
+		t.Errorf("Expected warning at index 2, got: %s", result[2])
+	}
+
+	// Without warning (suppressed)
+	result = insertDynamicWarning(lines, true)
+	if len(result) != 4 {
+		t.Errorf("Expected 4 lines (unchanged), got %d", len(result))
+	}
+}

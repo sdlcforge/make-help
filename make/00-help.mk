@@ -1,6 +1,6 @@
 # generated-by: make-help
 # command: ./bin/make-help
-# date: 2026-01-08T06:11:08 UTC
+# date: 2026-04-10T22:28:53 UTC
 # ---
 # DO NOT EDIT
 
@@ -40,7 +40,8 @@ help:
 	@printf '%b\n' ""
 	@printf '%b\n' "\033[1;36mTest:\033[0m"
 	@printf '%b\n' "  - \033[1;32mtest\033[0m \033[0;33mt, t\033[0m: \033[0;37mRun unit tests.\033[0m"
-	@printf '%b\n' "  - \033[1;32mtest.all\033[0m: \033[0;37mRun all tests (unit + integration).\033[0m"
+	@printf '%b\n' "  - \033[1;32mtest.all\033[0m: \033[0;37mRun all tests (unit + integration + install).\033[0m"
+	@printf '%b\n' "  - \033[1;32mtest.install\033[0m: \033[0;37mTest the npm install script (download + source build).\033[0m"
 	@printf '%b\n' "  - \033[1;32mtest.integration\033[0m: \033[0;37mRun integration tests.\033[0m"
 	@printf '%b\n' "  - \033[1;32mtest.unit\033[0m: \033[0;37mRun unit tests.\033[0m"
 
@@ -49,35 +50,35 @@ help-all:
 	@printf '%b\n' "\033[1;32mTarget: all\033[0m"
 	@printf '%b\n' "\033[0;37mBuilds the make-help binary and generated diagram SVG files.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: Makefile:91"
+	@printf '%b\n' "Source: Makefile:98"
 
 .PHONY: help-build
 help-build:
 	@printf '%b\n' "\033[1;32mTarget: build\033[0m"
 	@printf '%b\n' "\033[0;37mBuilds the make-help binary.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: Makefile:66"
+	@printf '%b\n' "Source: Makefile:73"
 
 .PHONY: help-clean
 help-clean:
 	@printf '%b\n' "\033[1;32mTarget: clean\033[0m"
 	@printf '%b\n' "\033[0;37mDeletes all built artifacts.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: Makefile:70"
+	@printf '%b\n' "Source: Makefile:77"
 
 .PHONY: help-clean.all
 help-clean.all:
 	@printf '%b\n' "\033[1;32mTarget: clean.all\033[0m"
 	@printf '%b\n' "\033[0;37mDeletes all built artifacts and generated diagram SVG files.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: Makefile:80"
+	@printf '%b\n' "Source: Makefile:87"
 
 .PHONY: help-clean.diagrams
 help-clean.diagrams:
 	@printf '%b\n' "\033[1;32mTarget: clean.diagrams\033[0m"
 	@printf '%b\n' "\033[0;37mRemove generated diagram SVG files.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: Makefile:75"
+	@printf '%b\n' "Source: Makefile:82"
 
 .PHONY: help-diagrams
 help-diagrams:
@@ -85,14 +86,14 @@ help-diagrams:
 	@printf '%b\n' "\033[0;37mGenerate SVG diagrams from Mermaid files.\033[0m"
 	@printf '%b\n' "\033[0;37mRequires mermaid-cli: npm install -g @mermaid-js/mermaid-cli\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: Makefile:59"
+	@printf '%b\n' "Source: Makefile:66"
 
 .PHONY: help-prepack
 help-prepack:
 	@printf '%b\n' "\033[1;32mTarget: prepack\033[0m"
 	@printf '%b\n' "\033[0;37mPrepares the package for publishing (generates coverage badge, placeholder binary).\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: Makefile:95"
+	@printf '%b\n' "Source: Makefile:102"
 
 .PHONY: help-help
 help-help:
@@ -106,28 +107,28 @@ help-update-help:
 	@printf '%b\n' "\033[1;32mTarget: update-help\033[0m"
 	@printf '%b\n' "\033[0;37mRegenerates help.mk from source Makefiles.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: make/00-help.mk:164"
+	@printf '%b\n' "Source: make/00-help.mk:173"
 
 .PHONY: help-lint
 help-lint:
 	@printf '%b\n' "\033[1;32mTarget: lint\033[0m"
 	@printf '%b\n' "\033[0;37mRun golangci-lint.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: Makefile:38"
+	@printf '%b\n' "Source: Makefile:43"
 
 .PHONY: help-lint-fix
 help-lint-fix:
 	@printf '%b\n' "\033[1;32mTarget: lint-fix\033[0m"
 	@printf '%b\n' "\033[0;37mRun golangci-lint with auto-fix.\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: Makefile:43"
+	@printf '%b\n' "Source: Makefile:50"
 
 .PHONY: help-qa
 help-qa:
 	@printf '%b\n' "\033[1;32mTarget: qa\033[0m"
 	@printf '%b\n' "\033[0;37mRun all quality checks (test.all + lint).\033[0m"
 	@printf '%b\n' ""
-	@printf '%b\n' "Source: Makefile:48"
+	@printf '%b\n' "Source: Makefile:55"
 
 .PHONY: help-test
 help-test:
@@ -140,7 +141,14 @@ help-test:
 .PHONY: help-test.all
 help-test.all:
 	@printf '%b\n' "\033[1;32mTarget: test.all\033[0m"
-	@printf '%b\n' "\033[0;37mRun all tests (unit + integration).\033[0m"
+	@printf '%b\n' "\033[0;37mRun all tests (unit + integration + install).\033[0m"
+	@printf '%b\n' ""
+	@printf '%b\n' "Source: Makefile:38"
+
+.PHONY: help-test.install
+help-test.install:
+	@printf '%b\n' "\033[1;32mTarget: test.install\033[0m"
+	@printf '%b\n' "\033[0;37mTest the npm install script (download + source build).\033[0m"
 	@printf '%b\n' ""
 	@printf '%b\n' "Source: Makefile:33"
 

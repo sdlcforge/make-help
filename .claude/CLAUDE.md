@@ -122,10 +122,16 @@ standalone:
 
 ### Adding a CLI flag
 1. Add to `Config` struct in `internal/cli/config.go`
-2. Register in `internal/cli/root.go` `NewRootCmd()`
-3. Use in appropriate service
-4. Add integration test coverage
-5. Update `README.md` flags table and `docs/architecture/components.md`
+2. Register in `setupFlags()` in `internal/cli/command.go`
+3. Add to a flag group annotation in `NewRootCmd()` in `internal/cli/root.go`
+4. Add validation in `PreRunE` following the funnel order (see `docs/architecture/design-decisions.md#funnel-ordered-flag-validation`):
+   - Mutual exclusion? → `processFlagsAfterParse()` in `command.go`
+   - Mode-restricted? → mode checks in `PreRunE` (e.g., `validateRemoveHelpFlags`)
+   - Requires another flag? → requirement checks in `PreRunE`
+   - File-gen only? → add one entry to `validateFileGenOnlyFlags()` table in `root.go`
+5. Use in appropriate service
+6. Add integration test coverage
+7. Update `README.md` flags table and `docs/architecture/components.md`
 
 ## Critical context for AI agents
 
@@ -170,5 +176,6 @@ standalone:
 **Want numbered prefix for help file**: Place other numbered files (e.g., `10-foo.mk`) in `./make/` directory first
 **Lint shows fixed warnings**: With `--lint --fix`, only unfixed warnings should appear; fixed ones are hidden
 **Check version**: Use `--version` flag to display version information
+**Colors not showing / unwanted colors**: Default is auto-detect from terminal; use `--color` to force on or `--no-color` to force off
 
 Last reviewed: 2026-01-03T00:00Z

@@ -14,6 +14,20 @@ const (
 	ColorNever
 )
 
+// DynamicMode represents whether generated help targets execute dynamically or embed static text.
+type DynamicMode int
+
+const (
+	// DynamicAuto auto-detects from package.json dependency presence.
+	DynamicAuto DynamicMode = iota
+
+	// DynamicForced forces dynamic help target generation (--dynamic).
+	DynamicForced
+
+	// StaticForced forces static help target generation (--static).
+	StaticForced
+)
+
 // String returns the string representation of ColorMode.
 func (c ColorMode) String() string {
 	switch c {
@@ -23,6 +37,20 @@ func (c ColorMode) String() string {
 		return "always"
 	case ColorNever:
 		return "never"
+	default:
+		return "unknown"
+	}
+}
+
+// String returns the string representation of DynamicMode.
+func (d DynamicMode) String() string {
+	switch d {
+	case DynamicAuto:
+		return "auto"
+	case DynamicForced:
+		return "dynamic"
+	case StaticForced:
+		return "static"
 	default:
 		return "unknown"
 	}
@@ -103,6 +131,18 @@ type Config struct {
 	// "-" means stdout, otherwise it's a file path.
 	// Output is empty by default; resolved to format-specific default in PreRunE
 	Output string
+
+	// DynamicMode controls whether generated help targets execute make-help dynamically
+	// or embed static text. Auto-detected from package.json when not explicitly set.
+	DynamicMode DynamicMode
+
+	// NoDynamicWarning suppresses the fallback warning in dynamic mode.
+	// Only valid with --dynamic (error with --static).
+	NoDynamicWarning bool
+
+	// UpdateOpts overrides the options used in the generated update-help target.
+	// If empty, the update-help target mirrors the original invocation options.
+	UpdateOpts string
 
 	// Derived state (computed at runtime)
 
