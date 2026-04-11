@@ -9,7 +9,9 @@ import (
 func TestFindPackageJSON_InCurrentDir(t *testing.T) {
 	dir := t.TempDir()
 	pkgFile := filepath.Join(dir, "package.json")
-	os.WriteFile(pkgFile, []byte(`{}`), 0644)
+	if err := os.WriteFile(pkgFile, []byte(`{}`), 0644); err != nil {
+		t.Fatalf("failed to write package.json: %v", err)
+	}
 
 	result, err := FindPackageJSON(dir)
 	if err != nil {
@@ -23,9 +25,13 @@ func TestFindPackageJSON_InCurrentDir(t *testing.T) {
 func TestFindPackageJSON_InParentDir(t *testing.T) {
 	parent := t.TempDir()
 	child := filepath.Join(parent, "subdir")
-	os.Mkdir(child, 0755)
+	if err := os.Mkdir(child, 0755); err != nil {
+		t.Fatalf("failed to create subdir: %v", err)
+	}
 	pkgFile := filepath.Join(parent, "package.json")
-	os.WriteFile(pkgFile, []byte(`{}`), 0644)
+	if err := os.WriteFile(pkgFile, []byte(`{}`), 0644); err != nil {
+		t.Fatalf("failed to write package.json: %v", err)
+	}
 
 	result, err := FindPackageJSON(child)
 	if err != nil {
@@ -51,7 +57,9 @@ func TestFindPackageJSON_NotFound(t *testing.T) {
 func TestIsMakeHelpDependency_InDeps(t *testing.T) {
 	dir := t.TempDir()
 	pkgFile := filepath.Join(dir, "package.json")
-	os.WriteFile(pkgFile, []byte(`{"dependencies":{"make-help":"^1.0.0"}}`), 0644)
+	if err := os.WriteFile(pkgFile, []byte(`{"dependencies":{"make-help":"^1.0.0"}}`), 0644); err != nil {
+		t.Fatalf("failed to write package.json: %v", err)
+	}
 
 	isDep, err := IsMakeHelpDependency(pkgFile)
 	if err != nil {
@@ -65,7 +73,9 @@ func TestIsMakeHelpDependency_InDeps(t *testing.T) {
 func TestIsMakeHelpDependency_InDevDeps(t *testing.T) {
 	dir := t.TempDir()
 	pkgFile := filepath.Join(dir, "package.json")
-	os.WriteFile(pkgFile, []byte(`{"devDependencies":{"make-help":"^1.0.0"}}`), 0644)
+	if err := os.WriteFile(pkgFile, []byte(`{"devDependencies":{"make-help":"^1.0.0"}}`), 0644); err != nil {
+		t.Fatalf("failed to write package.json: %v", err)
+	}
 
 	isDep, err := IsMakeHelpDependency(pkgFile)
 	if err != nil {
@@ -79,7 +89,9 @@ func TestIsMakeHelpDependency_InDevDeps(t *testing.T) {
 func TestIsMakeHelpDependency_ScopedName(t *testing.T) {
 	dir := t.TempDir()
 	pkgFile := filepath.Join(dir, "package.json")
-	os.WriteFile(pkgFile, []byte(`{"devDependencies":{"@sdlcforge/make-help":"^1.0.0"}}`), 0644)
+	if err := os.WriteFile(pkgFile, []byte(`{"devDependencies":{"@sdlcforge/make-help":"^1.0.0"}}`), 0644); err != nil {
+		t.Fatalf("failed to write package.json: %v", err)
+	}
 
 	isDep, err := IsMakeHelpDependency(pkgFile)
 	if err != nil {
@@ -93,7 +105,9 @@ func TestIsMakeHelpDependency_ScopedName(t *testing.T) {
 func TestIsMakeHelpDependency_NotPresent(t *testing.T) {
 	dir := t.TempDir()
 	pkgFile := filepath.Join(dir, "package.json")
-	os.WriteFile(pkgFile, []byte(`{"dependencies":{"express":"^4.0.0"}}`), 0644)
+	if err := os.WriteFile(pkgFile, []byte(`{"dependencies":{"express":"^4.0.0"}}`), 0644); err != nil {
+		t.Fatalf("failed to write package.json: %v", err)
+	}
 
 	isDep, err := IsMakeHelpDependency(pkgFile)
 	if err != nil {
@@ -107,7 +121,9 @@ func TestIsMakeHelpDependency_NotPresent(t *testing.T) {
 func TestDetectDynamicMode_WithDependency(t *testing.T) {
 	dir := t.TempDir()
 	pkgFile := filepath.Join(dir, "package.json")
-	os.WriteFile(pkgFile, []byte(`{"devDependencies":{"@sdlcforge/make-help":"^1.0.0"}}`), 0644)
+	if err := os.WriteFile(pkgFile, []byte(`{"devDependencies":{"@sdlcforge/make-help":"^1.0.0"}}`), 0644); err != nil {
+		t.Fatalf("failed to write package.json: %v", err)
+	}
 
 	if !DetectDynamicMode(dir) {
 		t.Error("expected dynamic mode to be detected")
@@ -117,7 +133,9 @@ func TestDetectDynamicMode_WithDependency(t *testing.T) {
 func TestDetectDynamicMode_WithoutDependency(t *testing.T) {
 	dir := t.TempDir()
 	pkgFile := filepath.Join(dir, "package.json")
-	os.WriteFile(pkgFile, []byte(`{"dependencies":{"express":"^4.0.0"}}`), 0644)
+	if err := os.WriteFile(pkgFile, []byte(`{"dependencies":{"express":"^4.0.0"}}`), 0644); err != nil {
+		t.Fatalf("failed to write package.json: %v", err)
+	}
 
 	if DetectDynamicMode(dir) {
 		t.Error("expected static mode (no make-help dependency)")
