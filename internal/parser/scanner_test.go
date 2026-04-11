@@ -773,8 +773,8 @@ func TestScanContent_LargeFiles(t *testing.T) {
 			// Generate content with many targets
 			var builder strings.Builder
 			for i := 1; i <= tt.numTargets; i++ {
-				builder.WriteString(fmt.Sprintf("## Build target %d\n", i))
-				builder.WriteString(fmt.Sprintf("target%d:\n", i))
+				fmt.Fprintf(&builder, "## Build target %d\n", i)
+				fmt.Fprintf(&builder, "target%d:\n", i)
 				builder.WriteString("\t@echo \"building\"\n\n")
 			}
 
@@ -802,10 +802,10 @@ func TestScanContent_LargeFileWithCategories(t *testing.T) {
 	targetsPerCategory := 20
 
 	for catNum := 1; catNum <= numCategories; catNum++ {
-		builder.WriteString(fmt.Sprintf("## !category Category%d\n", catNum))
+		fmt.Fprintf(&builder, "## !category Category%d\n", catNum)
 		for targetNum := 1; targetNum <= targetsPerCategory; targetNum++ {
-			builder.WriteString(fmt.Sprintf("## Target %d in category %d\n", targetNum, catNum))
-			builder.WriteString(fmt.Sprintf("cat%d_target%d:\n", catNum, targetNum))
+			fmt.Fprintf(&builder, "## Target %d in category %d\n", targetNum, catNum)
+			fmt.Fprintf(&builder, "cat%d_target%d:\n", catNum, targetNum)
 			builder.WriteString("\t@echo \"building\"\n\n")
 		}
 	}

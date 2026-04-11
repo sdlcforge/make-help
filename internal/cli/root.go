@@ -440,7 +440,7 @@ func formatFlagUsage(flag *pflag.Flag) string {
 
 	// Add default value if meaningful (not empty, false, [], etc.)
 	if shouldShowDefault(flag) {
-		sb.WriteString(fmt.Sprintf(" (default %s)", flag.DefValue))
+		fmt.Fprintf(&sb, " (default %s)", flag.DefValue)
 	}
 
 	sb.WriteString("\n")

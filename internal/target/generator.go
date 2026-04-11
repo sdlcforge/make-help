@@ -75,8 +75,8 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	if commandLine == "" {
 		commandLine = "make-help" + buildRegenerateFlags(config)
 	}
-	buf.WriteString(fmt.Sprintf("# command: %s\n", commandLine))
-	buf.WriteString(fmt.Sprintf("# date: %s\n", time.Now().UTC().Format("2006-01-02T15:04:05 UTC")))
+	fmt.Fprintf(&buf, "# command: %s\n", commandLine)
+	fmt.Fprintf(&buf, "# date: %s\n", time.Now().UTC().Format("2006-01-02T15:04:05 UTC"))
 	buf.WriteString("# ---\n")
 	buf.WriteString("# DO NOT EDIT\n")
 	buf.WriteString("\n")
@@ -87,7 +87,7 @@ func GenerateHelpFile(config *GeneratorConfig) (string, error) {
 	// Makefile dependencies
 	relativeMakefiles := relativizeMakefilePaths(config.Makefiles, config.MakefileDir)
 	if len(relativeMakefiles) > 0 {
-		buf.WriteString(fmt.Sprintf("MAKE_HELP_MAKEFILES := %s\n", strings.Join(relativeMakefiles, " ")))
+		fmt.Fprintf(&buf, "MAKE_HELP_MAKEFILES := %s\n", strings.Join(relativeMakefiles, " "))
 	}
 
 	// In dynamic mode, add the MAKE_HELP_OPTS variable for option forwarding
@@ -123,7 +123,7 @@ func generateStaticTargets(config *GeneratorConfig, renderer format.LineRenderer
 		if helpCategory == "" {
 			helpCategory = "Help"
 		}
-		buf.WriteString(fmt.Sprintf("## !category %s\n", helpCategory))
+		fmt.Fprintf(buf, "## !category %s\n", helpCategory)
 	}
 	buf.WriteString(".PHONY: help\n")
 	buf.WriteString("## Displays help for available targets.\n")
@@ -135,11 +135,11 @@ func generateStaticTargets(config *GeneratorConfig, renderer format.LineRenderer
 		helpFilename = "help.mk"
 	}
 	buf.WriteString("\t@for f in $(MAKE_HELP_MAKEFILES); do \\\n")
-	buf.WriteString(fmt.Sprintf("\t  if [ \"$$f\" -nt \"$(MAKE_HELP_DIR)%s\" ]; then \\\n", helpFilename))
+	fmt.Fprintf(buf, "\t  if [ \"$$f\" -nt \"$(MAKE_HELP_DIR)%s\" ]; then \\\n", helpFilename)
 	if config.UseColor {
-		buf.WriteString(fmt.Sprintf("\t    printf '\\033[0;33mWarning: %%s is newer than %s. Run make update-help to refresh.\\033[0m\\n' \"$$f\"; \\\n", helpFilename))
+		fmt.Fprintf(buf, "\t    printf '\\033[0;33mWarning: %%s is newer than %s. Run make update-help to refresh.\\033[0m\\n' \"$$f\"; \\\n", helpFilename)
 	} else {
-		buf.WriteString(fmt.Sprintf("\t    printf 'Warning: %%s is newer than %s. Run make update-help to refresh.\\n' \"$$f\"; \\\n", helpFilename))
+		fmt.Fprintf(buf, "\t    printf 'Warning: %%s is newer than %s. Run make update-help to refresh.\\n' \"$$f\"; \\\n", helpFilename)
 	}
 	buf.WriteString("\t  fi; \\\n")
 	buf.WriteString("\tdone\n")
@@ -151,19 +151,19 @@ func generateStaticTargets(config *GeneratorConfig, renderer format.LineRenderer
 	}
 
 	for _, line := range helpLines {
-		buf.WriteString(fmt.Sprintf("\t@printf '%%b\\n' \"%s\"\n", line))
+		fmt.Fprintf(buf, "\t@printf '%%b\\n' \"%s\"\n", line)
 	}
 
 	// Generate help-<target> targets for each documented target
 	for _, category := range config.HelpModel.Categories {
 		for _, target := range category.Targets {
 			buf.WriteString("\n")
-			buf.WriteString(fmt.Sprintf(".PHONY: help-%s\n", target.Name))
-			buf.WriteString(fmt.Sprintf("help-%s:\n", target.Name))
+			fmt.Fprintf(buf, ".PHONY: help-%s\n", target.Name)
+			fmt.Fprintf(buf, "help-%s:\n", target.Name)
 
 			detailedLines := renderer.RenderDetailedTargetLines(&target)
 			for _, line := range detailedLines {
-				buf.WriteString(fmt.Sprintf("\t@printf '%%b\\n' \"%s\"\n", line))
+				fmt.Fprintf(buf, "\t@printf '%%b\\n' \"%s\"\n", line)
 			}
 		}
 	}
@@ -186,7 +186,7 @@ func generateDynamicTargets(config *GeneratorConfig, renderer format.LineRendere
 		if helpCategory == "" {
 			helpCategory = "Help"
 		}
-		buf.WriteString(fmt.Sprintf("## !category %s\n", helpCategory))
+		fmt.Fprintf(buf, "## !category %s\n", helpCategory)
 	}
 	buf.WriteString(".PHONY: help\n")
 	buf.WriteString("## Displays help for available targets.\n")
@@ -207,9 +207,9 @@ func generateDynamicTargets(config *GeneratorConfig, renderer format.LineRendere
 
 	for i, line := range fallbackWithWarning {
 		if i < len(fallbackWithWarning)-1 {
-			buf.WriteString(fmt.Sprintf("\t  printf '%%b\\n' \"%s\"; \\\n", line))
+			fmt.Fprintf(buf, "\t  printf '%%b\\n' \"%s\"; \\\n", line)
 		} else {
-			buf.WriteString(fmt.Sprintf("\t  printf '%%b\\n' \"%s\"; \\\n", line))
+			fmt.Fprintf(buf, "\t  printf '%%b\\n' \"%s\"; \\\n", line)
 		}
 	}
 	buf.WriteString("\t}\n")
@@ -218,17 +218,17 @@ func generateDynamicTargets(config *GeneratorConfig, renderer format.LineRendere
 	for _, category := range config.HelpModel.Categories {
 		for _, target := range category.Targets {
 			buf.WriteString("\n")
-			buf.WriteString(fmt.Sprintf(".PHONY: help-%s\n", target.Name))
-			buf.WriteString(fmt.Sprintf("help-%s:\n", target.Name))
+			fmt.Fprintf(buf, ".PHONY: help-%s\n", target.Name)
+			fmt.Fprintf(buf, "help-%s:\n", target.Name)
 
 			// Dynamic execution
-			buf.WriteString(fmt.Sprintf("\t@make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output - --target %s $(MAKE_HELP_OPTS) 2>/dev/null || \\\n", target.Name))
-			buf.WriteString(fmt.Sprintf("\t npx --yes make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output - --target %s $(MAKE_HELP_OPTS) 2>/dev/null || { \\\n", target.Name))
+			fmt.Fprintf(buf, "\t@make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output - --target %s $(MAKE_HELP_OPTS) 2>/dev/null || \\\n", target.Name)
+			fmt.Fprintf(buf, "\t npx --yes make-help --makefile-path $(MAKE_HELP_DIR)Makefile --output - --target %s $(MAKE_HELP_OPTS) 2>/dev/null || { \\\n", target.Name)
 
 			// Static fallback for this target (no-color)
 			detailedLines := noColorRenderer.RenderDetailedTargetLines(&target)
 			for _, line := range detailedLines {
-				buf.WriteString(fmt.Sprintf("\t  printf '%%b\\n' \"%s\"; \\\n", line))
+				fmt.Fprintf(buf, "\t  printf '%%b\\n' \"%s\"; \\\n", line)
 			}
 			buf.WriteString("\t}\n")
 		}
@@ -360,13 +360,13 @@ func generateRegenerationTarget(config *GeneratorConfig) string {
 		if helpCategory == "" {
 			helpCategory = "Help"
 		}
-		buf.WriteString(fmt.Sprintf("## !category %s\n", helpCategory))
+		fmt.Fprintf(&buf, "## !category %s\n", helpCategory)
 	}
 	buf.WriteString(".PHONY: update-help\n")
 	buf.WriteString("## Regenerates help.mk from source Makefiles.\n")
 	buf.WriteString("update-help:\n")
-	buf.WriteString(fmt.Sprintf("\t@make-help --makefile-path $(MAKE_HELP_DIR)Makefile%s || \\\n", flags))
-	buf.WriteString(fmt.Sprintf("\t npx make-help --makefile-path $(MAKE_HELP_DIR)Makefile%s || \\\n", flags))
+	fmt.Fprintf(&buf, "\t@make-help --makefile-path $(MAKE_HELP_DIR)Makefile%s || \\\n", flags)
+	fmt.Fprintf(&buf, "\t npx make-help --makefile-path $(MAKE_HELP_DIR)Makefile%s || \\\n", flags)
 	buf.WriteString("\t echo \"make-help not found; install with 'go install github.com/sdlcforge/make-help/cmd/make-help@latest' or 'npm install -g make-help'\"\n")
 
 	return buf.String()

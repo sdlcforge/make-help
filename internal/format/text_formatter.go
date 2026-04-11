@@ -219,7 +219,7 @@ func (f *TextFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) 
 	// Source information
 	if target.SourceFile != "" {
 		relPath := makeRelativePath(target.SourceFile, f.config.MakefileDir)
-		buf.WriteString(fmt.Sprintf("\nSource: %s:%d\n", relPath, target.LineNumber))
+		fmt.Fprintf(&buf, "\nSource: %s:%d\n", relPath, target.LineNumber)
 	}
 
 	_, err := w.Write([]byte(buf.String()))
@@ -248,7 +248,7 @@ func (f *TextFormatter) RenderBasicTarget(name string, sourceFile string, lineNu
 	// Source information (if available)
 	if sourceFile != "" {
 		relPath := makeRelativePath(sourceFile, f.config.MakefileDir)
-		buf.WriteString(fmt.Sprintf("\nSource: %s:%d\n", relPath, lineNumber))
+		fmt.Fprintf(&buf, "\nSource: %s:%d\n", relPath, lineNumber)
 	}
 
 	_, err := w.Write([]byte(buf.String()))

@@ -207,7 +207,7 @@ func (f *HTMLFormatter) RenderDetailedTarget(target *model.Target, w io.Writer) 
 	buf.WriteString("<html>\n")
 	buf.WriteString("<head>\n")
 	buf.WriteString("  <meta charset=\"UTF-8\">\n")
-	buf.WriteString(fmt.Sprintf("  <title>Target: %s</title>\n", html.EscapeString(target.Name)))
+	fmt.Fprintf(&buf, "  <title>Target: %s</title>\n", html.EscapeString(target.Name))
 
 	if f.config.UseColor {
 		buf.WriteString("  <style>\n")
@@ -287,7 +287,7 @@ func (f *HTMLFormatter) RenderBasicTarget(name string, sourceFile string, lineNu
 	buf.WriteString("<html>\n")
 	buf.WriteString("<head>\n")
 	buf.WriteString("  <meta charset=\"UTF-8\">\n")
-	buf.WriteString(fmt.Sprintf("  <title>Target: %s</title>\n", html.EscapeString(name)))
+	fmt.Fprintf(&buf, "  <title>Target: %s</title>\n", html.EscapeString(name))
 
 	if f.config.UseColor {
 		buf.WriteString("  <style>\n")
