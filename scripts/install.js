@@ -186,9 +186,53 @@ function tryGoBuild() {
 }
 
 /**
- * Install by downloading a pre-built binary from GitHub releases.
+ * Query the GitHub API for the latest release version.
+ * @returns {Promise<string>} The latest release version (without leading 'v')
  */
-async function installFromDownload() {
+function fetchLatestReleaseVersion() {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname : 'api.github.com',
+      path     : '/repos/sdlcforge/make-help/releases/latest',
+      headers  : { 'User-Agent' : 'make-help-installer' },
+    };
+    https.get(options, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        // Follow redirect
+        https.get(res.headers.location, { headers : options.headers }, (res2) => {
+          const chunks = [];
+          res2.on('data', (chunk) => chunks.push(chunk));
+          res2.on('end', () => {
+            const body = JSON.parse(Buffer.concat(chunks).toString());
+            resolve(body.name.replace(/^v/, ''));
+          });
+          res2.on('error', reject);
+        }).on('error', reject);
+
+        return;
+      }
+      if (res.statusCode !== 200) {
+        reject(new Error(`GitHub API returned HTTP ${res.statusCode}`));
+
+        return;
+      }
+      const chunks = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => {
+        const body = JSON.parse(Buffer.concat(chunks).toString());
+        resolve(body.name.replace(/^v/, ''));
+      });
+      res.on('error', reject);
+    }).on('error', reject);
+  });
+}
+
+/**
+ * Download and extract a pre-built binary for a specific version.
+ * @param {string} ver - The version to download
+ * @returns {Promise<void>}
+ */
+async function downloadVersion(ver) {
   const platform = PLATFORM_MAP[process.platform];
   const arch = ARCH_MAP[process.arch];
 
@@ -197,10 +241,10 @@ async function installFromDownload() {
   }
 
   const ext = isWindows ? 'zip' : 'tar.gz';
-  const filename = `make-help_${version}_${platform}_${arch}.${ext}`;
-  const url = `https://github.com/sdlcforge/make-help/releases/download/v${version}/${filename}`;
+  const filename = `make-help_${ver}_${platform}_${arch}.${ext}`;
+  const url = `https://github.com/sdlcforge/make-help/releases/download/v${ver}/${filename}`;
 
-  console.log(`Installing make-help v${version} (${platform}/${arch})...`);
+  console.log(`Installing make-help v${ver} (${platform}/${arch})...`);
 
   const buf = await download(url);
 
@@ -212,6 +256,35 @@ async function installFromDownload() {
   }
 
   console.log(`Successfully installed ${output}`);
+}
+
+/**
+ * Install by downloading a pre-built binary from GitHub releases.
+ *
+ * First attempts to download the version specified in package.json. If that
+ * version is not yet available (e.g., during `npm publish` where the version
+ * in package.json has been bumped by `npm version` but the GitHub release
+ * hasn't been created yet), falls back to the latest published release. This
+ * fallback allows `make qa` to pass during the publish lifecycle without
+ * requiring a manual pre-release of the binary.
+ */
+async function installFromDownload() {
+  try {
+    await downloadVersion(version);
+  }
+  catch (err) {
+    console.error(`Download for v${version} failed: ${err.message}`);
+    console.error('Querying GitHub for latest available release...');
+
+    const latestVersion = await fetchLatestReleaseVersion();
+    if (latestVersion === version) {
+      // Same version — don't retry, the download genuinely failed
+      throw err;
+    }
+
+    console.log(`Falling back to latest release v${latestVersion}`);
+    await downloadVersion(latestVersion);
+  }
 }
 
 /**
